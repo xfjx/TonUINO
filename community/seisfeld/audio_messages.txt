@@ -1,0 +1,12 @@
+mp3/0100.mp3|Es kann los gehen!
+mp3/0101.mp3|Eine neue Karte wurde erkannt. Bitte lasse die Karte auf der Box liegen, bis der Vorgang abgeschlossen ist. Verwende nun die Lautstärketasten um einen Ordner für die Karte auszuwählen, und bestätige mit der Pausetaste.
+mp3/0102.mp3|Ok, ich habe die Karte mit dem ausgewählten Ordner verknüpft. Verwende nun die Lautstärketasten um den Wiedergabemodus für die Karte auszuwählen, und bestätige mit der Pausetaste.
+mp3/0103.mp3|Hörspielmodus. Einen zufälligen Titel aus dem Ordner wiedergeben.
+mp3/0104.mp3|Albummodus. Den kompletten Ordner wiedergeben.
+mp3/0105.mp3|Partymodus. Den Ordner zufällig wiedergeben.
+mp3/0110.mp3|Ok, ich habe die Karte konfiguriert. Du kannst jetzt die Karte von der Box nehmen.
+mp3/0111.mp3|Bitte lege die zu löschende Karte auf die Box und warte auf die Bestätigung.
+mp3/0112.mp3|OK, ich habe die Karte gelöscht. Du kannst jetzt die Karte von der Box nehmen.
+mp3/0113.mp3|Vorgang abgebrochen.
+mp3/0114.mp3|Beim konfigurieren der Karte ist ein Fehler aufgetreten. Bitte versuche es noch einmal.
+mp3/0115.mp3|Beim löschen der Karte ist ein Fehler aufgetreten. Bitte versuche es noch einmal.
