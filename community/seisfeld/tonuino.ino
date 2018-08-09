@@ -538,7 +538,7 @@ void setup()
 {
   Serial.begin(debugConsoleSpeed);
   while (!Serial);
-  Serial.println(F("sys | DIY NFC JUKEBOX"));
+  Serial.println(F("sys | TonUINO JUKEBOX"));
   Serial.println(F("sys | BY THORSTEN VOß"));
   Serial.println(F("---------------------"));
   Serial.println(F("sys | initializing nfc module"));
