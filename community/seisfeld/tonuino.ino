@@ -859,7 +859,11 @@ void loop()
       // ######################################################################
 
       // nfc tag is unknown but not not blank, ignore
-      else Serial.println(F("nfc | tag is not one of ours"));
+      else {
+        Serial.println(F("nfc | tag is not one of ours"));
+        mfrc522.PICC_HaltA();
+        mfrc522.PCD_StopCrypto1();
+      }
     }
     // # end - nfc tag is successfully read
     // ####################################
