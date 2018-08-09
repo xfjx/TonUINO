@@ -858,7 +858,7 @@ void loop()
       // # end - nfc tag does not have our magic cookie 0x1337 0xb347 on it (0)
       // ######################################################################
 
-      // nfc tag is unknown but not not blank, ignore
+      // nfc tag is unknown but not blank, ignore
       else {
         Serial.println(F("nfc | tag is not one of ours"));
         mfrc522.PICC_HaltA();
