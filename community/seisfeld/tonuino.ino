@@ -432,22 +432,20 @@ nfcTagObject readNfcTagData() {
         tempCookie += (uint32_t) mifareData[2] << 8;
         tempCookie += (uint32_t) mifareData[3];
 
-        // if cookie is not blank return data
+        // cookie is not blank, return data read from nfc tag
         if (tempCookie != 0) {
-          mfrc522.PICC_HaltA();
-          mfrc522.PCD_StopCrypto1();
           nfcTag.returnCode = 1;
           nfcTag.cookie = tempCookie;
           nfcTag.version = mifareData[4];
           nfcTag.assignedFolder = mifareData[5];
           nfcTag.playbackMode = mifareData[6];
-          return nfcTag;
         }
-        else {
-          nfcTag.returnCode = 1;
-          nfcTag.cookie = 0;
-          return nfcTag;
-        }
+        // cookie is blank, return nothing but returnCode
+        else nfcTag.returnCode = 1;
+
+        mfrc522.PICC_HaltA();
+        mfrc522.PCD_StopCrypto1();
+        return nfcTag;
       }
     }
   }
@@ -480,7 +478,6 @@ uint8_t writeNfcTagData(uint8_t mifareData[], uint8_t mifareDataSize) {
 
   mfrc522.PICC_HaltA();
   mfrc522.PCD_StopCrypto1();
-
   return returnCode;
 }
 
@@ -859,11 +856,8 @@ void loop()
       // ######################################################################
 
       // nfc tag is unknown but not blank, ignore
-      else {
-        Serial.println(F("nfc | tag is not one of ours"));
-        mfrc522.PICC_HaltA();
-        mfrc522.PCD_StopCrypto1();
-      }
+      else Serial.println(F("nfc | tag is not one of ours"));
+
     }
     // # end - nfc tag is successfully read
     // ####################################
