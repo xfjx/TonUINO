@@ -16,11 +16,11 @@
   Button B2 (pin A1): volume up (right button)
   Button B3 (pin A2): volume down (left button)
 
-  button actions:
-  ---------------
+  additional button actions:
+  --------------------------
 
-  Hold B2 or B3 for 2 seconds during playback in album mode: Skip to the next/previous track
-  Hold B3 for 2 seconds during playback in party mode: Skip to the next track
+  Hold B2 or B3 for 2 seconds during playback in album mode: Skip to the next or previous track
+  Hold B2 for 2 seconds during playback in party mode: Skip to the next track
 
   Hold both B2 and B3 for 2 seconds during idle: Enter erase nfc tag mode
   Hold both B2 and B3 for 2 seconds during erase nfc tag mode: Cancel erase nfc tag mode
