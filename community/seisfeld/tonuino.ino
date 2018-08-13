@@ -32,21 +32,27 @@
   If a TSOP38238 is connected to pin 5, you can also use an ir remote to remote
   control TonUINO. There are code mappings for the silver apple remote below, but you can
   change them to other codes to match different remotes. This feature can be disabled by
-  commenting a define below, to save some memory. The actions are as follows:
+  commenting a define below, to save some memory.
+
+  There is one function currently only available with the ir remote - box lock.
+  When TonUINO is locked, the buttons on TonUINO as well as the nfc reader are disabled
+  until TonUINO is unlocked again. Playback continues while TonUINO is locked.
 
   During playback:
-  play+pause / center - toggle playback
+  center - toggle box lock
+  play+pause - toggle playback
   up / down - volume up / down
   left / right - previous / next track during album mode, next track during party mode
 
   During idle:
+  center - toggle box lock
   menu - enter erase nfc tag mode
 
   During erase nfc tag mode:
   menu - cancel
 
   During nfc tag setup mode:
-  play+pause / center - confirm
+  play+pause - confirm
   up / right - next option
   down / left - previous option
   menu - cancel
@@ -116,7 +122,11 @@ const uint8_t msgEraseTag = 111;                    // 09
 const uint8_t msgEraseTagConfirm = 112;             // 10
 const uint8_t msgEraseTagError = 115;               // 11
 const uint8_t msgCancel = 113;                      // 12
-const uint8_t msgCount = 12;                        // used to calculate the total ammount of tracks on the sd card
+const uint8_t msgLocked = 116;                      // 13
+const uint8_t msgUnLocked = 117;                    // 14
+const uint8_t msgAdLocked = 1;                      // 15
+const uint8_t msgAdUnLocked = 2;                    // 16
+const uint8_t msgCount = 16;                        // used to calculate the total ammount of tracks on the sd card
 
 // define code mappings for silver apple tv 2 ir remote
 const uint16_t ir1ButtonUp = 0x5057;
@@ -161,6 +171,7 @@ uint8_t playTrack = 1;
 uint16_t totalTrackCount = 0;
 uint16_t folderTrackCount = 0;
 bool initNfcTagPlayback = false;
+bool isLocked = false;
 
 // ############################################################### no configuration below this line ###############################################################
 
@@ -581,9 +592,9 @@ void loop() {
   uint8_t inputEvent = checkInput();
   bool isPlaying = !digitalRead(mp3BusyPin);
 
-  // ######################################################
-  // # main code block, if nfc tag is detected do something
-  if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) {
+  // ################################################################################
+  // # main code block, if nfc tag is detected and TonUINO is not locked do something
+  if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial() && !isLocked) {
     Serial.println(F("nfc | tag detected"));
     nfcTag = readNfcTagData();
     // ##############################
@@ -680,7 +691,7 @@ void loop() {
         do {
           uint8_t inputEvent = checkInput();
           // button 1 (middle) single push or ir remote play+pause / center: confirm selected folder
-          if (inputEvent == B1P || inputEvent == IRP || inputEvent == IRC) {
+          if (inputEvent == B1P || inputEvent == IRP) {
             if (nfcTag.assignedFolder == 0) {
               Serial.println(F("sys |     no folder selected"));
               continue;
@@ -732,7 +743,7 @@ void loop() {
         do {
           uint8_t inputEvent = checkInput();
           // button 1 (middle) single push or ir remote play+pause / center: confirm selected playback mode
-          if (inputEvent == B1P || inputEvent == IRP || inputEvent == IRC) {
+          if (inputEvent == B1P || inputEvent == IRP) {
             if (nfcTag.playbackMode == 0) {
               Serial.println(F("sys |     no playback mode selected"));
               continue;
@@ -855,7 +866,6 @@ void loop() {
 
       // nfc tag is unknown but not blank, ignore
       else Serial.println(F("nfc | tag is not one of ours"));
-
     }
     // # end - nfc tag is successfully read
     // ####################################
@@ -871,8 +881,39 @@ void loop() {
 
   // ##################################################################################
   // # handle button and ir remote events during playback or while waiting for nfc tags
-  // button 1 (middle) single push or ir remote play+pause / center: toggle playback
-  if (inputEvent == B1P || inputEvent == IRP || inputEvent == IRC) {
+  // ir remote center: toggle box lock
+  if (inputEvent == IRC) {
+    // TonUINO is currently playing: toggle box lock, play lock message from advert folder, resume playback
+    if (isPlaying) {
+      if (!isLocked) {
+        Serial.println(F("sys | box locked"));
+        isLocked = true;
+        mp3.playAdvertisement(msgAdLocked);
+      }
+      else {
+        Serial.println(F("sys | box unlocked"));
+        isLocked = false;
+        mp3.playAdvertisement(msgAdUnLocked);
+      }
+    }
+    // TonUINO is currently idle: toggle box lock and play lock message from mp3 folder
+    else {
+      if (!isLocked) {
+        Serial.println(F("sys | box locked"));
+        isLocked = true;
+        initNfcTagPlayback = false;
+        mp3.playMp3FolderTrack(msgLocked);
+      }
+      else {
+        Serial.println(F("sys | box unlocked"));
+        isLocked = false;
+        initNfcTagPlayback = false;
+        mp3.playMp3FolderTrack(msgUnLocked);
+      }
+    }
+  }
+  // button 1 (middle) single push or ir remote play+pause: toggle playback
+  else if ((inputEvent == B1P && !isLocked) || inputEvent == IRP) {
     if (isPlaying) {
       Serial.println(F("sys | pause"));
       mp3.pause();
@@ -883,7 +924,7 @@ void loop() {
     }
   }
   // button 2 (right) single push or ir remote up: increase volume
-  else if ((inputEvent == B2P || inputEvent == IRU) && isPlaying) {
+  else if (((inputEvent == B2P && !isLocked) || inputEvent == IRU) && isPlaying) {
     uint8_t mp3CurrentVolume = mp3.getVolume();
 
     if (mp3CurrentVolume < mp3MaxVolume) {
@@ -897,7 +938,7 @@ void loop() {
     }
   }
   // button 3 (left) single push or ir remote down: decrease volume
-  else if ((inputEvent == B3P || inputEvent == IRD) && isPlaying) {
+  else if (((inputEvent == B3P && !isLocked) || inputEvent == IRD) && isPlaying) {
     uint8_t mp3CurrentVolume = mp3.getVolume();
 
     if (mp3CurrentVolume > 0) {
@@ -911,21 +952,21 @@ void loop() {
     else Serial.println(F("sys | mute"));
   }
   // button 2 (right) single hold or ir remote right, only during album and party mode while playing: next track
-  else if ((inputEvent == B2H || inputEvent == IRR) && (nfcTag.playbackMode == 2 || nfcTag.playbackMode == 3) && isPlaying) {
+  else if (((inputEvent == B2H && !isLocked) || inputEvent == IRR) && (nfcTag.playbackMode == 2 || nfcTag.playbackMode == 3) && isPlaying) {
     Serial.println(F("sys | next track"));
     // bloody hack: decrease volume 1 step because it got increased before due to single button push action
     if (inputEvent == B2H) mp3.decreaseVolume();
     playNextTrack(random(65536), true, true);
   }
   // button 3 (left) single hold or ir remote left, only during album mode while playing: previous track
-  else if ((inputEvent == B3H || inputEvent == IRL) && nfcTag.playbackMode == 2 && isPlaying) {
+  else if (((inputEvent == B3H && !isLocked) || inputEvent == IRL) && nfcTag.playbackMode == 2 && isPlaying) {
     Serial.println(F("sys | previous track"));
     // bloody hack: increase volume 1 step because it got decreased before due to single button push action
     if (inputEvent == B3H) mp3.increaseVolume();
     playNextTrack(random(65536), false, true);
   }
   // button 2 (right) & button 3 (left) multi hold for 2 sec or ir remote menu, only while not playing: erase nfc tag
-  else if ((inputEvent == B23H || inputEvent == IRM) && !isPlaying) {
+  else if (((inputEvent == B23H && !isLocked) || inputEvent == IRM) && !isPlaying) {
     initNfcTagPlayback = false;
     uint8_t writeNfcTagStatus = 0;
     Serial.println(F("sys | waiting for tag to erase"));
