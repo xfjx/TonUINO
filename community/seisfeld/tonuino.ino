@@ -531,8 +531,7 @@ void blinkStatusLed() {
 }
 #endif
 
-void setup()
-{
+void setup() {
   Serial.begin(debugConsoleSpeed);
   while (!Serial);
   Serial.println(F("sys | TonUINO JUKEBOX"));
@@ -578,8 +577,7 @@ void setup()
   mp3.playMp3FolderTrack(msgWelcome);
 }
 
-void loop()
-{
+void loop() {
   uint8_t inputEvent = checkInput();
   bool isPlaying = !digitalRead(mp3BusyPin);
 
