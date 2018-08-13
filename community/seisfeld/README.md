@@ -13,7 +13,9 @@ Hier ist die erste Version der TonUINO Firmware aus der Community. Da ich das Gl
 - **Erweiterung:** Man kann im Sketch die Maximallautstärke zum Schutz der Kinderohren (und der Nerven der Eltern ;-)) zwischnen 0 und 30 festlegen.
 - **Erweiterung:** Wenn man einen passenden IR Empfänger nachrüstet, kann man TonUINO auch fernsteuern. Momentan sind die codes für zwei verschiedene Apple Fernbedienungen hinterlegt, das lässt sich aber für andere Fernbedienungen anpassen.
 - **Erweiterung:** Wenn man eine LED nachrüstet, werden mit dieser LED ein paar nützliche Informationen angezeigt. Man sieht dann z.B. ob TonUINO gerade einen Titel spielt (LED pulsiert langsam), sich im NFC Tag löschen oder anlernen Modus befindet (LED blinkt alle 500ms), oder einfach nur idle ist (LED leuchtet dauerhaft).
+- **Erweiterung:** Man kann mit der IR Fernbedienung die Buttons und den NFC Leser von TonUINO sperren.
 - **Bugfix:** Man kann während man ein NFC Tag anlernt nicht mehr bestätigen ohne vorher wirklich sowohl Ordner als auch Wiedergabemodus ausgewählt zu haben.
+- **Bugfix:** Umgang mit bestimmten Versionen des DFPlayer Mini Moduls verbessert.
 
 ## Dokumentation
 
@@ -21,7 +23,7 @@ Der Sketch ist relativ gut dokumentiert und am Anfang ist auch nochmal alles zus
 
 ## Audio Meldungen
 
-Ihr könnt die benötigten Audiomeldunden natürlich selbst einsprechen (siehe `audio_messages.txt`). Wem das zu aufwendig ist, kann das beigelegte shell script `create_audio_messages.sh` verwenden, welches alle MP3s in einem Rutsch erzeugt. Dazu wird sowohl das `say` Kommando (von MacOS) als auch `ffmpeg` benötigt. Der erzeugte Ordner `mp3` ist so wie er ist auf die SD Karte zu kopieren. Bitte achtet darauf, dass wirklich keine anderen Dateien (Stichwort MacOS...) auf der Karte landen, da das MP3 Modul da sehr pingelig ist.
+Ihr könnt die benötigten Audiomeldunden natürlich selbst einsprechen (siehe `audio_messages.txt`). Wem das zu aufwendig ist, kann das beigelegte shell script `create_audio_messages.sh` verwenden, welches alle MP3s in einem Rutsch erzeugt. Dazu wird sowohl das `say` Kommando (von MacOS) als auch `ffmpeg` benötigt. Die erzeugten Ordner `mp3` und `advert` sind so wie sie sind auf die SD Karte zu kopieren. Bitte achtet darauf, dass wirklich keine anderen Dateien (Stichwort .DS_Store usw. unter MacOS...) auf der Karte landen, da das MP3 Modul da sehr pingelig ist. Details dazu gibt es auch nochmal auf der Homepage des Projekts.
 
 ## Lizenz
 
