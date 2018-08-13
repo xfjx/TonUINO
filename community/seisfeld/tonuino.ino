@@ -162,7 +162,7 @@ uint16_t totalTrackCount = 0;
 uint16_t folderTrackCount = 0;
 bool initNfcTagPlayback = false;
 
-// ############################################################ no variable definitions below this line ############################################################
+// ############################################################### no configuration below this line ###############################################################
 
 // this function needs to be declared here for the first time because it's called in class Mp3Notify
 // the function itself is down below
