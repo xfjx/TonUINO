@@ -445,6 +445,8 @@ nfcTagObject readNfcTagData() {
 
         // cookie is not blank, return data read from nfc tag
         if (tempCookie != 0) {
+          mfrc522.PICC_HaltA();
+          mfrc522.PCD_StopCrypto1();
           nfcTag.returnCode = 1;
           nfcTag.cookie = tempCookie;
           nfcTag.version = mifareData[4];
@@ -454,8 +456,6 @@ nfcTagObject readNfcTagData() {
         // cookie is blank, return nothing but returnCode
         else nfcTag.returnCode = 1;
 
-        mfrc522.PICC_HaltA();
-        mfrc522.PCD_StopCrypto1();
         return nfcTag;
       }
     }
