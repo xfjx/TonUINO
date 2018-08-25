@@ -119,7 +119,6 @@ void setup() {
 
   // DFPlayer Mini initialisieren
   mp3.begin();
-  mp3.reset();
   mp3.setVolume(10);
 
   // RESET --- ALLE DREI KNÖPFE BEIM STARTEN GEDRÜCKT HALTEN -> alle bekannten Karten werden gelöscht
