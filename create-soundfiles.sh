@@ -72,13 +72,13 @@ say -v Anna "Ja, Nummer ansagen." -o 0332.aiff
 sox 0332.aiff 0332.wav pitch 800
 lame -b 128 0332.wav 0332.mp3
 
-#say -v Anna "Bitte lege die Karte erneut auf und warte auf die Bestätigung." -o 0400.aiff
-#sox 0400.aiff 0400.wav pitch 800
-#lame -b 128 0400.wav 0400_wait_for_card.mp3
-
 say -v Anna "OK. Ich habe die Karte konfiguriert." -o 0400.aiff
 sox 0400.aiff 0400.wav pitch 800
 lame -b 128 0400.wav 0400_ok.mp3
+
+say -v Anna "Oh weh! Das hat leider nicht geklappt!." -o 0401.aiff
+sox 0401.aiff 0401.wav pitch 800
+lame -b 128 0401.wav 0401_error.mp3
 
 
 rm *.aiff
