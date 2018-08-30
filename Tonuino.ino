@@ -98,6 +98,8 @@ static void nextTrack() {
       EEPROM.write(myCard.folder, track);
     } else
       mp3.sleep();
+      // Fortschritt zurück setzen
+      EEPROM.write(myCard.folder, 1);
   }
 }
 
