@@ -96,10 +96,11 @@ static void nextTrack() {
       mp3.playFolderTrack(myCard.folder, track);
       // Fortschritt im EEPROM abspeichern
       EEPROM.write(myCard.folder, track);
-    } else
+    } else {
       mp3.sleep();
       // Fortschritt zurück setzen
       EEPROM.write(myCard.folder, 1);
+    }
   }
 }
 
