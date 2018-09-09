@@ -101,7 +101,7 @@ const uint8_t irReceiverPin = 5;                    // pin used for the ir recei
 const uint8_t statusLedPin = 6;                     // pin used for status led
 const uint8_t nfcResetPin = 9;                      // used for spi communication to nfc module
 const uint8_t nfcSlaveSelectPin = 10;               // used for spi communication to nfc module
-const uint8_t rngSeedPin = A5;                      // used to seed the random number generator, should be unconnected
+const uint8_t rngSeedPin = A0;                      // used to seed the random number generator
 const uint8_t buPins[] = { A0, A1, A2 };            // pins used for the buttons
 const uint8_t buCount = sizeof(buPins);             // number of buttons
 const uint8_t mp3StartVolume = 10;                  // initial volume of DFPlayer Mini
@@ -563,15 +563,15 @@ void setup() {
   Serial.println(totalTrackCount);
   pinMode(mp3BusyPin, INPUT);
 
+  Serial.println(F("sys | initializing rng"));
+  randomSeed(analogRead(rngSeedPin));
+
   Serial.println(F("sys | initializing buttons"));
   for (uint8_t i = 0; i < buCount; i++) {
     pinMode(buPins[i], INPUT_PULLUP);
     bounce[i].attach(buPins[i]);
     bounce[i].interval(10);
   }
-
-  Serial.println(F("sys | initializing rng"));
-  randomSeed(analogRead(rngSeedPin));
 
 #if defined(TSOP38238)
   Serial.println(F("sys | initializing ir receiver"));
