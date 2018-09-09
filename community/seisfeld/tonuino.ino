@@ -159,7 +159,6 @@ enum { NOACTION,                                    // NOACTION, 0
 
 // this object stores nfc tag data
 struct nfcTagObject {
-  uint8_t  returnCode;
   uint32_t cookie;
   uint8_t  version;
   uint8_t  assignedFolder;
@@ -393,8 +392,8 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool isInteracti
 }
 
 // reads data from nfc tag
-nfcTagObject readNfcTagData() {
-  nfcTagObject nfcTag;
+uint8_t readNfcTagData() {
+  uint8_t returnCode;
   uint8_t mifareBlock = 4;
   uint8_t mifareData[18];
   uint8_t mifareDataSize = sizeof(mifareData);
@@ -403,19 +402,12 @@ nfcTagObject readNfcTagData() {
   MFRC522::PICC_Type mifareType;
   for (uint8_t i = 0; i < 6; i++) mifareKey.keyByte[i] = 0xFF;
 
-  nfcTag.returnCode = 0;
-  nfcTag.cookie = 0;
-  nfcTag.version = 0;
-  nfcTag.assignedFolder = 0;
-  nfcTag.playbackMode = 0;
-
   // check if card type is supported
   mifareType = mfrc522.PICC_GetType(mfrc522.uid.sak);
   if (mifareType != MFRC522::PICC_TYPE_MIFARE_MINI && mifareType != MFRC522::PICC_TYPE_MIFARE_1K && mifareType != MFRC522::PICC_TYPE_MIFARE_4K) {
     mfrc522.PICC_HaltA();
     mfrc522.PCD_StopCrypto1();
-    nfcTag.returnCode = 255;
-    return nfcTag;
+    returnCode = 255;
   }
   else {
     // check if we can authenticate with mifareKey
@@ -423,8 +415,7 @@ nfcTagObject readNfcTagData() {
     if (mifareStatus != MFRC522::STATUS_OK) {
       mfrc522.PICC_HaltA();
       mfrc522.PCD_StopCrypto1();
-      nfcTag.returnCode = 254;
-      return nfcTag;
+      returnCode = 254;
     }
     else {
       // read data from nfc tag
@@ -432,8 +423,7 @@ nfcTagObject readNfcTagData() {
       if (mifareStatus != MFRC522::STATUS_OK) {
         mfrc522.PICC_HaltA();
         mfrc522.PCD_StopCrypto1();
-        nfcTag.returnCode = 253;
-        return nfcTag;
+        returnCode = 253;
       }
       else {
         // convert 4 byte cookie to 32bit decimal for easier handling
@@ -443,23 +433,21 @@ nfcTagObject readNfcTagData() {
         tempCookie += (uint32_t) mifareData[2] << 8;
         tempCookie += (uint32_t) mifareData[3];
 
-        // cookie is not blank, return data read from nfc tag
+        // if cookie is not blank, update ncfTag object with data read from nfc tag
         if (tempCookie != 0) {
           mfrc522.PICC_HaltA();
           mfrc522.PCD_StopCrypto1();
-          nfcTag.returnCode = 1;
           nfcTag.cookie = tempCookie;
           nfcTag.version = mifareData[4];
           nfcTag.assignedFolder = mifareData[5];
           nfcTag.playbackMode = mifareData[6];
         }
-        // cookie is blank, return nothing but returnCode
-        else nfcTag.returnCode = 1;
-
-        return nfcTag;
+        returnCode = 1;
       }
     }
   }
+
+  return returnCode;
 }
 
 // writes data to nfc tag
@@ -474,7 +462,7 @@ uint8_t writeNfcTagData(uint8_t mifareData[], uint8_t mifareDataSize) {
 
   // check if card type is supported
   mifareType = mfrc522.PICC_GetType(mfrc522.uid.sak);
-  if (mifareType != MFRC522::PICC_TYPE_MIFARE_MINI && mifareType != MFRC522::PICC_TYPE_MIFARE_1K && mifareType != MFRC522::PICC_TYPE_MIFARE_4K) nfcTag.returnCode = 255;
+  if (mifareType != MFRC522::PICC_TYPE_MIFARE_MINI && mifareType != MFRC522::PICC_TYPE_MIFARE_1K && mifareType != MFRC522::PICC_TYPE_MIFARE_4K) returnCode = 255;
   else {
     // check if we can authenticate with mifareKey
     mifareStatus = (MFRC522::StatusCode) mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, mifareTrailerBlock, &mifareKey, &(mfrc522.uid));
@@ -596,10 +584,10 @@ void loop() {
   // # main code block, if nfc tag is detected and TonUINO is not locked do something
   if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial() && !isLocked) {
     Serial.println(F("nfc | tag detected"));
-    nfcTag = readNfcTagData();
+    uint8_t readNfcTagStatus = readNfcTagData();
     // ##############################
     // # nfc tag is successfully read
-    if (nfcTag.returnCode == 1) {
+    if (readNfcTagStatus == 1) {
       Serial.println(F("nfc | successfully read tag"));
       // #######################################################################################################
       // # nfc tag has our magic cookie 0x1337 0xb347 on it (322417479), use data from nfc tag to start playback
@@ -861,19 +849,18 @@ void loop() {
             break;
         }
       }
+      // nfc tag is not blank but unknown, ignore
+      else Serial.println(F("nfc | tag is not one of ours"));
       // # end - nfc tag does not have our magic cookie 0x1337 0xb347 on it (0)
       // ######################################################################
-
-      // nfc tag is unknown but not blank, ignore
-      else Serial.println(F("nfc | tag is not one of ours"));
     }
     // # end - nfc tag is successfully read
     // ####################################
 
     // handle errors that happened during reading from the nfc tag
-    else if (nfcTag.returnCode == 253) Serial.println(F("nfc | read error"));
-    else if (nfcTag.returnCode == 254) Serial.println(F("nfc | authentication failed"));
-    else if (nfcTag.returnCode == 255) Serial.println(F("nfc | tag is not supported"));
+    else if (readNfcTagStatus == 253) Serial.println(F("nfc | read error"));
+    else if (readNfcTagStatus == 254) Serial.println(F("nfc | authentication failed"));
+    else if (readNfcTagStatus == 255) Serial.println(F("nfc | tag is not supported"));
     else Serial.println(F("nfc | unknown error"));
   }
   // # end - main code block
