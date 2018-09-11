@@ -44,7 +44,7 @@ say -v Anna "Admin Funktionen." -o 0316.aiff
 sox 0316.aiff 0316.wav pitch 800
 lame -b 128 0316.wav 0316_admin.mp3
 
-say -v Anna "Bitte lege die zu löschende Karte auf! Zum Abbrechen einfach eine der Lautstärke Taste drücken!" -o 0800.aiff
+say -v Anna "Bitte lege die zu löschende Karte auf! Zum Abbrechen einfach eine der Lautstärke Tasten drücken!" -o 0800.aiff
 sox 0800.aiff 0800.wav pitch 800
 lame -b 128 0800.wav 0800_reset_tag.mp3
 
