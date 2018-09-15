@@ -94,8 +94,8 @@
 
 
 // define global constants
-const uint8_t softwareSerialTxPin = 2;              // software serial tx, wired with 1k ohm to rx pin of DFPlayer Mini
-const uint8_t softwareSerialRxPin = 3;              // software serial rx, wired straight to tx pin of DFPlayer Mini
+const uint8_t softwareSerialTxPin = 3;              // software serial tx, wired with 1k ohm to rx pin of DFPlayer Mini
+const uint8_t softwareSerialRxPin = 2;              // software serial rx, wired straight to tx pin of DFPlayer Mini
 const uint8_t mp3BusyPin = 4;                       // reports play state of DFPlayer Mini, low = playing
 const uint8_t irReceiverPin = 5;                    // pin used for the ir receiver
 const uint8_t statusLedPin = 6;                     // pin used for status led
