@@ -1,7 +1,7 @@
-TonUINO Community Edition
-=========================
+Alternative TonUINO Firmware
+============================
 
-Hier ist die erste Version der TonUINO Firmware aus der Community. Da ich das Glück hatte, beim _Betatest_ dabei sein zu dürfen, habe ich für mich selber mit der Zeit immer weitere Funktionen nachgerüstet. Vielleicht sind diese ja für den ein oder anderen ebenfalls interessant:
+Hier ist eine alternative Version der TonUINO Firmware. Da ich das Glück hatte, beim _Betatest_ von TonUINO dabei sein zu dürfen, habe ich für mich selber mit der Zeit immer weitere Funktionen nachgerüstet. Vielleicht sind diese ja für den ein oder anderen ebenfalls interessant. Die u.a. Änderungen beziehen sich auf die TonUINO Firmware in der Version 1.0. Einige der Funktionen sind mittlerweile auch in der originalen TonUINO Firmware zu finden.
 
 ## Funktionen
 
@@ -27,4 +27,4 @@ Ihr könnt die benötigten Audiomeldunden natürlich selbst einsprechen (siehe `
 
 ## Lizenz
 
-GPL v3. Siehe `LICENSE` Datei.
+GPL v3. Siehe [LICENSE](https://github.com/seisfeld/TonUINO/blob/master/LICENSE) Datei.
