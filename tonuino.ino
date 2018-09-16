@@ -426,6 +426,14 @@ uint8_t readNfcTagData() {
         returnCode = 253;
       }
       else {
+        // print first 16 bytes of sector 1 / block 4 for debug purposes
+        Serial.print(F("nfc |"));
+        for (uint8_t i = 0; i < 16; i++) {
+          Serial.print(mifareData[i] < 0x10 ? " 0" : " ");
+          Serial.print(mifareData[i], HEX);
+        }
+        Serial.println();
+
         // convert 4 byte cookie to 32bit decimal for easier handling
         uint32_t tempCookie;
         tempCookie  = (uint32_t) mifareData[0] << 24;
