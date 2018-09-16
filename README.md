@@ -1,19 +1,30 @@
-# TonUINO
-Die DIY Musikbox (nicht nur) für Kinder
+TonUINO Community Edition
+=========================
 
+Hier ist die erste Version der TonUINO Firmware aus der Community. Da ich das Glück hatte, beim _Betatest_ dabei sein zu dürfen, habe ich für mich selber mit der Zeit immer weitere Funktionen nachgerüstet. Vielleicht sind diese ja für den ein oder anderen ebenfalls interessant:
 
-# Change Log
+## Funktionen
 
-## Version 2.0 (26.08.2018)
+- **Erweiterung:** Die Verknüpfung der einzelnen Ordner zu den NFC Tags wird auf den Tags selbst und nicht mehr im EEPROM des Arduinos gespeichert. Damit gibt es im Prinzip kein Limit mehr für die Anzahl der unterstützten Tags.
+- **Erweiterung:** Die serielle Konsole gibt zu Debug Zwecken allerlei nützlicher Daten aus, so dass man beim basteln zu jeder Zeit weiss was gerade passiert.
+- **Erweiterung:** Man kann das anlernen von NFC Tags abbrechen (beide Laustärketasten 2sec gerückt halten).
+- **Erweiterung:** Wenn TonUINO gerade keinen Titel spielt, kommt man mit "beide Laustärketasten 2sec gerückt halten“ in den NFC Tag löschen Modus, zum abbrechen des selbigen wiederum "beide Laustärketasten 2sec gerückt halten“. Somit kann man zu jeder Zeit auch einzelne NFC Tags wieder löschen um sie danach neu verwenden zu können.
+- **Erweiterung:** Wenn TonUINO gerade einen Titel spielt und sich im Album Modus befindet, kann man mit den beiden Laustärketasten (jeweils 2sec gerückt halten) zum nächsten oder vorherigen Titel springen. Im Party Modus ebenfalls, allerdings dann nur zum nächsten Titel.
+- **Erweiterung:** Man kann im Sketch die Maximallautstärke zum Schutz der Kinderohren (und der Nerven der Eltern ;-)) zwischnen 0 und 30 festlegen.
+- **Erweiterung:** Wenn man einen passenden IR Empfänger nachrüstet, kann man TonUINO auch fernsteuern. Momentan sind die codes für zwei verschiedene Apple Fernbedienungen hinterlegt, das lässt sich aber für andere Fernbedienungen anpassen.
+- **Erweiterung:** Wenn man eine LED nachrüstet, werden mit dieser LED ein paar nützliche Informationen angezeigt. Man sieht dann z.B. ob TonUINO gerade einen Titel spielt (LED pulsiert langsam), sich im NFC Tag löschen oder anlernen Modus befindet (LED blinkt alle 500ms), oder einfach nur idle ist (LED leuchtet dauerhaft).
+- **Erweiterung:** Man kann mit der IR Fernbedienung die Buttons und den NFC Leser von TonUINO sperren.
+- **Bugfix:** Man kann während man ein NFC Tag anlernt nicht mehr bestätigen ohne vorher wirklich sowohl Ordner als auch Wiedergabemodus ausgewählt zu haben.
+- **Bugfix:** Umgang mit bestimmten Versionen des DFPlayer Mini Moduls verbessert.
 
-- Lautstärke wird nun über einen langen Tastendruck geändert
-- bei kurzem Tastendruck wird der nächste / vorherige Track abgespielt (je nach Wiedergabemodus nicht verfügbar)
-- Während der Wiedergabe wird bei langem Tastendruck auf Play/Pause die Nummer des aktuellen Tracks angesagt
-- Neuer Wiedergabemodus: **Einzelmodus**
-  Eine Karte kann mit einer einzelnen Datei aus einem Ordner verknüpft werden. Dadurch sind theoretisch 25000 verschiedene Karten für je eine Datei möglich
-- Neuer Wiedergabemodus: **Hörbuch-Modus**
-  Funktioniert genau wie der Album-Modus. Zusätzlich wir der Fortschritt im EEPROM des Arduinos gespeichert und beim nächsten mal wird bei der jeweils letzten Datei neu gestartet. Leider kann nur der Track, nicht die Stelle im Track gespeichert werden
-- Um mehr als 100 Karten zu unterstützen wird die Konfiguration der Karten nicht mehr im EEPROM gespeichert sondern direkt auf den Karten - die Karte muss daher beim Anlernen aufgelegt bleiben!
-- Durch einen langen Druck auf Play/Pause kann **eine Karte neu konfiguriert** werden
-- In den Auswahldialogen kann durch langen Druck auf die Lautstärketasten jeweils um 10 Ordner oder Dateien vor und zurück gesprungen werden
-- Reset des MP3 Moduls beim Start entfernt - war nicht nötig und hat "Krach" gemacht
+## Dokumentation
+
+Der Sketch ist relativ gut dokumentiert und am Anfang ist auch nochmal alles zusammen gefasst (allerdings auf Englisch). Dort finden sich dann auch nochmal eine generelle Übersicht der Funktionen und Informationen wie man die Pins definiert usw., weil das von Aufbau zu Aufbau verschieden sein kann. Ebenfalls ist dort erklärt wo der optionale IR Empfänger und die LED anzuschliessen sind etc. etc.
+
+## Audio Meldungen
+
+Ihr könnt die benötigten Audiomeldunden natürlich selbst einsprechen (siehe `audio_messages.txt`). Wem das zu aufwendig ist, kann das beigelegte shell script `create_audio_messages.sh` verwenden, welches alle MP3s in einem Rutsch erzeugt. Dazu wird sowohl das `say` Kommando (von MacOS) als auch `ffmpeg` benötigt. Die erzeugten Ordner `mp3` und `advert` sind so wie sie sind auf die SD Karte zu kopieren. Bitte achtet darauf, dass wirklich keine anderen Dateien (Stichwort .DS_Store usw. unter MacOS...) auf der Karte landen, da das MP3 Modul da sehr pingelig ist. Details dazu gibt es auch nochmal auf der Homepage des Projekts.
+
+## Lizenz
+
+GPL v3. Siehe `LICENSE` Datei.
