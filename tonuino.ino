@@ -94,8 +94,8 @@
 
 
 // define global constants
-const uint8_t softwareSerialTxPin = 2;              // software serial tx, wired with 1k ohm to rx pin of DFPlayer Mini
-const uint8_t softwareSerialRxPin = 3;              // software serial rx, wired straight to tx pin of DFPlayer Mini
+const uint8_t softwareSerialTxPin = 3;              // software serial tx, wired with 1k ohm to rx pin of DFPlayer Mini
+const uint8_t softwareSerialRxPin = 2;              // software serial rx, wired straight to tx pin of DFPlayer Mini
 const uint8_t mp3BusyPin = 4;                       // reports play state of DFPlayer Mini, low = playing
 const uint8_t irReceiverPin = 5;                    // pin used for the ir receiver
 const uint8_t statusLedPin = 6;                     // pin used for status led
@@ -426,7 +426,7 @@ uint8_t readNfcTagData() {
         returnCode = 253;
       }
       else {
-        // print first 16 bytes of sector 1 / block 4 for debug purposes
+        // for debug purposes, print the first 16 bytes of sector 1 / block 4
         Serial.print(F("nfc |"));
         for (uint8_t i = 0; i < 16; i++) {
           Serial.print(mifareData[i] < 0x10 ? " 0" : " ");
