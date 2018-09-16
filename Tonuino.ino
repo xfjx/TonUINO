@@ -278,6 +278,7 @@ void loop() {
     if (myCard.cookie == 322417479 && myCard.folder != 0 && myCard.mode != 0) {
 
       knownCard = true;
+      _lastTrackFinished = 0;
       numTracksInFolder = mp3.getFolderTrackCount(myCard.folder);
       Serial.print(numTracksInFolder);
       Serial.print(F(" Dateien in Ordner "));
