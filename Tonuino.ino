@@ -61,7 +61,6 @@ static DFMiniMp3<SoftwareSerial, Mp3Notify> mp3(mySoftwareSerial);
 static uint16_t _lastTrackFinished;
 static void nextTrack(uint16_t track) {
   if (track == _lastTrackFinished) {
-    Serial.println("DFPlayer mit buggy Firmware - doppelter Callback ignoriert");
     return;
    }
    _lastTrackFinished = track;
@@ -283,7 +282,6 @@ void loop() {
       Serial.print(numTracksInFolder);
       Serial.print(F(" Dateien in Ordner "));
       Serial.println(myCard.folder);
-      delay(1000);
 
       // Hörspielmodus: eine zufällige Datei aus dem Ordner
       if (myCard.mode == 1) {
