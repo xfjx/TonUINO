@@ -72,8 +72,8 @@ static void nextTrack(uint16_t track) {
     return;
 
   if (myCard.mode == 1) {
-    Serial.println(F("Hörspielmodus ist aktiv -> Strom sparen"));
-    mp3.sleep();
+    Serial.println(F("Hörspielmodus ist aktiv -> keinen neuen Track spielen"));
+//    mp3.sleep(); // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
   }
   if (myCard.mode == 2) {
     if (currentTrack != numTracksInFolder) {
@@ -81,8 +81,9 @@ static void nextTrack(uint16_t track) {
       mp3.playFolderTrack(myCard.folder, currentTrack);
       Serial.print(F("Albummodus ist aktiv -> nächster Track: "));
       Serial.print(currentTrack);
-    } else
-      mp3.sleep();
+    } else 
+//      mp3.sleep();   // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
+    { }
   }
   if (myCard.mode == 3) {
     currentTrack = random(1, numTracksInFolder + 1);
@@ -92,7 +93,7 @@ static void nextTrack(uint16_t track) {
   }
   if (myCard.mode == 4) {
     Serial.println(F("Einzel Modus aktiv -> Strom sparen"));
-    mp3.sleep();
+//    mp3.sleep();      // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
   }
   if (myCard.mode == 5) {
     if (currentTrack != numTracksInFolder) {
@@ -104,7 +105,7 @@ static void nextTrack(uint16_t track) {
       // Fortschritt im EEPROM abspeichern
       EEPROM.write(myCard.folder, currentTrack);
     } else {
-      mp3.sleep();
+//      mp3.sleep();  // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
       // Fortschritt zurück setzen
       EEPROM.write(myCard.folder, 1);
     }
@@ -251,7 +252,7 @@ void loop() {
       ignoreUpButton = true;
     } else if (upButton.wasReleased()) {
       if (!ignoreUpButton)
-        nextTrack(currentTrack);
+        nextTrack(random(65536));
       else
         ignoreUpButton = false;
     }
@@ -279,6 +280,10 @@ void loop() {
 
       knownCard = true;
       numTracksInFolder = mp3.getFolderTrackCount(myCard.folder);
+      Serial.print(numTracksInFolder);
+      Serial.print(F(" Dateien in Ordner "));
+      Serial.println(myCard.folder);
+      delay(1000);
 
       // Hörspielmodus: eine zufällige Datei aus dem Ordner
       if (myCard.mode == 1) {
