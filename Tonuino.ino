@@ -96,11 +96,10 @@ static void nextTrack() {
       mp3.playFolderTrack(myCard.folder, track);
       // Fortschritt im EEPROM abspeichern
       EEPROM.write(myCard.folder, track);
-    } else {
+    } else
       mp3.sleep();
       // Fortschritt zurück setzen
       EEPROM.write(myCard.folder, 1);
-    }
   }
 }
 
@@ -184,8 +183,9 @@ void setup() {
 
   // DFPlayer Mini initialisieren
   mp3.begin();
+  mp3.reset();
   mp3.setVolume(15);
-
+ 
   // NFC Leser initialisieren
   SPI.begin();        // Init SPI bus
   mfrc522.PCD_Init(); // Init MFRC522
