@@ -94,8 +94,8 @@
 
 
 // define global constants
-const uint8_t softwareSerialTxPin = 3;              // software serial tx, wired with 1k ohm to rx pin of DFPlayer Mini
-const uint8_t softwareSerialRxPin = 2;              // software serial rx, wired straight to tx pin of DFPlayer Mini
+const uint8_t softwareSerialTxPin = 2;              // software serial tx, wired with 1k ohm to rx pin of DFPlayer Mini
+const uint8_t softwareSerialRxPin = 3;              // software serial rx, wired straight to tx pin of DFPlayer Mini
 const uint8_t mp3BusyPin = 4;                       // reports play state of DFPlayer Mini, low = playing
 const uint8_t irReceiverPin = 5;                    // pin used for the ir receiver
 const uint8_t statusLedPin = 6;                     // pin used for status led
@@ -839,6 +839,13 @@ void loop() {
                                    0x00, 0x00, 0x00, 0x00,            // reserved for future use
                                    0x00, 0x00, 0x00, 0x00             // reserved for future use
                                  };
+        // for debug purposes, print the 16 bytes we are going write to the nfc tag
+        Serial.print(F("sys |"));
+        for (uint8_t i = 0; i < 16; i++) {
+          Serial.print(bytesToWrite[i] < 0x10 ? " 0" : " ");
+          Serial.print(bytesToWrite[i], HEX);
+        }
+        Serial.println();
         uint8_t writeNfcTagStatus = writeNfcTagData(bytesToWrite, sizeof(bytesToWrite));
         // handle return codes from events that happened during writing to the nfc tag
         switch (writeNfcTagStatus) {
