@@ -685,10 +685,10 @@ void loop() {
       else if (nfcTag.cookie == 0) {
         Serial.println(F("nfc | tag is blank"));
         Serial.println(F("sys | starting tag setup"));
-        // let user pick the folder to assign
+        // let user select the folder to assign
         initNfcTagPlayback = false;
         bool setAssignedFolder = false;
-        Serial.println(F("sys |   pick folder"));
+        Serial.println(F("sys |   select folder"));
         mp3.playMp3FolderTrack(msgSetupNewTag);
         // loop until folder is assigned
         do {
@@ -737,10 +737,10 @@ void loop() {
         Serial.print(F("sys |     folder "));
         Serial.print(nfcTag.assignedFolder);
         Serial.println(F(" selected"));
-        // let user pick playback mode
+        // let user select playback mode
         initNfcTagPlayback = false;
         bool setPlaybackMode = false;
-        Serial.println(F("sys |   pick playback mode"));
+        Serial.println(F("sys |   select playback mode"));
         mp3.playMp3FolderTrack(msgSetupNewTagFolderAssigned);
         // loop until playback mode is set
         do {
@@ -833,8 +833,8 @@ void loop() {
         Serial.println(F("sys | attempting to save data to tag"));
         uint8_t bytesToWrite[] = {0x13, 0x37, 0xb3, 0x47,            // 0x1337 0xb347 magic cookie to identify our nfc tags
                                   0x01,                              // version 1
-                                  nfcTag.assignedFolder,             // the folder picked by the user
-                                  nfcTag.playbackMode,               // the playback mode picked by the user
+                                  nfcTag.assignedFolder,             // the folder selected by the user
+                                  nfcTag.playbackMode,               // the playback mode selected by the user
                                   0x00,                              // reserved for future use
                                   0x00, 0x00, 0x00, 0x00,            // reserved for future use
                                   0x00, 0x00, 0x00, 0x00             // reserved for future use
