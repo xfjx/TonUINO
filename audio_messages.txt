@@ -6,6 +6,8 @@ mp3/0102.mp3|Ok, ich habe die Karte mit dem ausgewählten Ordner verknüpft. Ver
 mp3/0103.mp3|Hörspielmodus. Einen zufälligen Titel aus dem Ordner wiedergeben.
 mp3/0104.mp3|Albummodus. Den kompletten Ordner wiedergeben.
 mp3/0105.mp3|Partymodus. Den Ordner zufällig wiedergeben.
+mp3/0106.mp3|Lieblingsfolge. Einen bestimmten Titel aus dem Ordner wiedergeben.
+mp3/0109.mp3|Ok, Lieblingsfolge. Verwende nun die Lautstärketasten um die Lieblingsfolge auszuwählen, und bestätige mit der Pausetaste.
 mp3/0110.mp3|Ok, ich habe die Karte konfiguriert. Du kannst jetzt die Karte von der Box nehmen.
 mp3/0111.mp3|Bitte lege die zu löschende Karte auf die Box und warte auf die Bestätigung.
 mp3/0112.mp3|OK, ich habe die Karte gelöscht. Du kannst jetzt die Karte von der Box nehmen.

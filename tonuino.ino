@@ -116,17 +116,19 @@ const uint8_t msgSetupNewTagFolderAssigned = 102;   // 03
 const uint8_t msgSetupNewTagStoryMode = 103;        // 04
 const uint8_t msgSetupNewTagAlbumMode = 104;        // 05
 const uint8_t msgSetupNewTagPartyMode = 105;        // 06
-const uint8_t msgSetupNewTagConfirm = 110;          // 07
-const uint8_t msgSetupNewTagError = 114;            // 08
-const uint8_t msgEraseTag = 111;                    // 09
-const uint8_t msgEraseTagConfirm = 112;             // 10
-const uint8_t msgEraseTagError = 115;               // 11
-const uint8_t msgCancel = 113;                      // 12
-const uint8_t msgLocked = 116;                      // 13
-const uint8_t msgUnLocked = 117;                    // 14
-const uint8_t msgAdLocked = 1;                      // 15
-const uint8_t msgAdUnLocked = 2;                    // 16
-const uint8_t msgCount = 16;                        // used to calculate the total ammount of tracks on the sd card
+const uint8_t msgSetupNewTagSingleMode = 106;       // 07
+const uint8_t msgSetupNewTagSingleModeCont = 109;   // 08
+const uint8_t msgSetupNewTagConfirm = 110;          // 09
+const uint8_t msgSetupNewTagError = 114;            // 10
+const uint8_t msgEraseTag = 111;                    // 11
+const uint8_t msgEraseTagConfirm = 112;             // 12
+const uint8_t msgEraseTagError = 115;               // 13
+const uint8_t msgCancel = 113;                      // 14
+const uint8_t msgLocked = 116;                      // 15
+const uint8_t msgUnLocked = 117;                    // 16
+const uint8_t msgAdLocked = 1;                      // 17
+const uint8_t msgAdUnLocked = 2;                    // 18
+const uint8_t msgCount = 18;                        // used to calculate the total ammount of tracks on the sd card
 
 // define code mappings for silver apple tv 2 ir remote
 const uint16_t ir1ButtonUp = 0x5057;
@@ -163,6 +165,7 @@ struct nfcTagObject {
   uint8_t version;
   uint8_t assignedFolder;
   uint8_t playbackMode;
+  uint8_t assignedTrack;
 } nfcTag;
 
 // define global variables
@@ -389,6 +392,13 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool isInteracti
     Serial.println(folderTrackCount);
     mp3.playFolderTrack(nfcTag.assignedFolder, playTrack);
   }
+
+  // single mode: play a single track in folder
+  // there is no next track in single mode -> stop playback
+  if (nfcTag.playbackMode == 4) {
+    Serial.println(F("mp3 | single mode -> stop"));
+    mp3.stop();
+  }
 }
 
 // reads data from nfc tag
@@ -449,6 +459,7 @@ uint8_t readNfcTagData() {
           nfcTag.version = mifareData[4];
           nfcTag.assignedFolder = mifareData[5];
           nfcTag.playbackMode = mifareData[6];
+          nfcTag.assignedTrack = mifareData[7];
         }
         // if cookie is blank, clear ncfTag object
         else {
@@ -456,6 +467,7 @@ uint8_t readNfcTagData() {
           nfcTag.version = 0;
           nfcTag.assignedFolder = 0;
           nfcTag.playbackMode = 0;
+          nfcTag.assignedTrack = 0;
         }
         returnCode = 1;
       }
@@ -622,6 +634,11 @@ void loop() {
           case 3:
             Serial.println(F("party mode"));
             break;
+          case 4:
+            Serial.println(F("single mode"));
+            Serial.print(F("nfc |    track: "));
+            Serial.println(nfcTag.assignedTrack);
+            break;
           default:
             break;
         }
@@ -671,6 +688,15 @@ void loop() {
             Serial.print(F(" of "));
             Serial.println(folderTrackCount);
             break;
+          // single mode
+          case 4:
+            playTrack = nfcTag.assignedTrack;
+            Serial.println(F("mp3 | single mode -> play single track"));
+            Serial.print(F("mp3 | single mode -> folder "));
+            Serial.print(nfcTag.assignedFolder);
+            Serial.print(F(" -> track "));
+            Serial.println(playTrack);
+            break;
           default:
             break;
         }
@@ -719,6 +745,8 @@ void loop() {
           else if (inputEvent == B23H || inputEvent == IRM) {
             Serial.println(F("sys | tag setup canceled"));
             nfcTag.assignedFolder = 0;
+            nfcTag.playbackMode = 0;
+            nfcTag.assignedTrack = 0;
             mfrc522.PICC_HaltA();
             mfrc522.PCD_StopCrypto1();
             mp3.playMp3FolderTrack(msgCancel);
@@ -755,7 +783,7 @@ void loop() {
           }
           // button 2 (right) single push or ir remote up / right: next playback mode
           else if (inputEvent == B2P || inputEvent == IRU || inputEvent == IRR) {
-            nfcTag.playbackMode = min(nfcTag.playbackMode + 1, 3);
+            nfcTag.playbackMode = min(nfcTag.playbackMode + 1, 4);
             Serial.print(F("sys |     "));
             switch (nfcTag.playbackMode) {
               case 1:
@@ -769,6 +797,10 @@ void loop() {
               case 3:
                 Serial.println(F("party mode"));
                 mp3.playMp3FolderTrack(msgSetupNewTagPartyMode);
+                break;
+              case 4:
+                Serial.println(F("single mode"));
+                mp3.playMp3FolderTrack(msgSetupNewTagSingleMode);
                 break;
               default:
                 break;
@@ -791,6 +823,10 @@ void loop() {
                 Serial.println(F("party mode"));
                 mp3.playMp3FolderTrack(msgSetupNewTagPartyMode);
                 break;
+              case 4:
+                Serial.println(F("single mode"));
+                mp3.playMp3FolderTrack(msgSetupNewTagSingleMode);
+                break;
               default:
                 break;
             }
@@ -798,7 +834,9 @@ void loop() {
           // button 2 (right) & button 3 (left) multi hold for 2 sec or ir remote menu: cancel tag setup
           else if (inputEvent == B23H || inputEvent == IRM) {
             Serial.println(F("sys | tag setup canceled"));
+            nfcTag.assignedFolder = 0;
             nfcTag.playbackMode = 0;
+            nfcTag.assignedTrack = 0;
             mfrc522.PICC_HaltA();
             mfrc522.PCD_StopCrypto1();
             mp3.playMp3FolderTrack(msgCancel);
@@ -825,17 +863,76 @@ void loop() {
           case 3:
             Serial.print(F("party mode"));
             break;
+          case 4:
+            Serial.print(F("single mode"));
+            break;
           default:
             break;
         }
         Serial.println(F(" selected"));
+        // if single mode was selected, let user select the track to assign
+        if (nfcTag.playbackMode == 4) {
+          initNfcTagPlayback = false;
+          bool setAssignedTrack = false;
+          Serial.println(F("sys |   select track"));
+          mp3.playMp3FolderTrack(msgSetupNewTagSingleModeCont);
+          // loop until track is assigned
+          do {
+            uint8_t inputEvent = checkInput();
+            // button 1 (middle) single push or ir remote play+pause / center: confirm selected track
+            if (inputEvent == B1P || inputEvent == IRP) {
+              if (nfcTag.assignedTrack == 0) {
+                Serial.println(F("sys |     no track selected"));
+                continue;
+              }
+              else setAssignedTrack = true;
+            }
+            // button 2 (right) single push or ir remote up / right: next track
+            else if (inputEvent == B2P || inputEvent == IRU || inputEvent == IRR) {
+              nfcTag.assignedTrack = min(nfcTag.assignedTrack + 1, 255);
+              Serial.print(F("sys |     track "));
+              Serial.println(nfcTag.assignedTrack);
+              mp3.playFolderTrack(nfcTag.assignedFolder, nfcTag.assignedTrack);
+            }
+            // button 3 (left) single push or ir remote down / left: previous track
+            else if (inputEvent == B3P || inputEvent == IRD || inputEvent == IRL) {
+              nfcTag.assignedTrack = max(nfcTag.assignedTrack - 1, 1);
+              Serial.print(F("sys |     track "));
+              Serial.println(nfcTag.assignedTrack);
+              mp3.playFolderTrack(nfcTag.assignedFolder, nfcTag.assignedTrack);
+            }
+            // button 2 (right) & button 3 (left) multi hold for 2 sec or ir remote menu: cancel tag setup
+            else if (inputEvent == B23H || inputEvent == IRM) {
+              Serial.println(F("sys | tag setup canceled"));
+              nfcTag.assignedFolder = 0;
+              nfcTag.playbackMode = 0;
+              nfcTag.assignedTrack = 0;
+              mfrc522.PICC_HaltA();
+              mfrc522.PCD_StopCrypto1();
+              mp3.playMp3FolderTrack(msgCancel);
+              return;
+            }
+
+#if defined(STATUSLED)
+            // blink status led
+            blinkStatusLed();
+#endif
+
+            mp3.loop();
+          }
+          while (!setAssignedTrack);
+          delay(500);
+          Serial.print(F("sys |     track "));
+          Serial.print(nfcTag.assignedTrack);
+          Serial.println(F(" selected"));
+        }
         // save data to tag
         Serial.println(F("sys | attempting to save data to tag"));
         uint8_t bytesToWrite[] = {0x13, 0x37, 0xb3, 0x47,            // 0x1337 0xb347 magic cookie to identify our nfc tags
                                   0x01,                              // version 1
                                   nfcTag.assignedFolder,             // the folder selected by the user
                                   nfcTag.playbackMode,               // the playback mode selected by the user
-                                  0x00,                              // reserved for future use
+                                  nfcTag.assignedTrack,              // the track selected by the user
                                   0x00, 0x00, 0x00, 0x00,            // reserved for future use
                                   0x00, 0x00, 0x00, 0x00             // reserved for future use
                                  };
