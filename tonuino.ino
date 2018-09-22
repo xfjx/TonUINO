@@ -102,7 +102,7 @@ const uint8_t statusLedPin = 6;                     // pin used for status led
 const uint8_t nfcResetPin = 9;                      // used for spi communication to nfc module
 const uint8_t nfcSlaveSelectPin = 10;               // used for spi communication to nfc module
 const uint8_t rngSeedPin = A0;                      // used to seed the random number generator
-const uint8_t buPins[] = { A0, A1, A2 };            // pins used for the buttons
+const uint8_t buPins[] = {A0, A1, A2};              // pins used for the buttons
 const uint8_t buCount = sizeof(buPins);             // number of buttons
 const uint8_t mp3StartVolume = 10;                  // initial volume of DFPlayer Mini
 const uint8_t mp3MaxVolume = 25;                    // maximal volume of DFPlayer Mini
@@ -147,22 +147,22 @@ const uint16_t ir2ButtonMenu = 0xC0BF;
 const uint16_t ir2ButtonPlayPause = 0xFABF;
 
 // button states
-enum { UNCHANGED, PUSH, RELEASE };                  // button states: UNCHANGED = 0, PUSH = 1, RELEASE = 2
+enum {UNCHANGED, PUSH, RELEASE};                    // button states: UNCHANGED = 0, PUSH = 1, RELEASE = 2
 
 // button actions
-enum { NOACTION,                                    // NOACTION, 0
-       B1P, B2P, B3P,                               // single button pushes, 1 -> buCount
-       B1H, B2H, B3H,                               // single button holds, buCount + 1 -> 2 * buCount
-       B23H,                                        // multi button holds and
-       IRU, IRD, IRL, IRR, IRC, IRM, IRP            // ir remote events, 2 * buCount + 1 -> END
+enum {NOACTION,                                     // NOACTION, 0
+      B1P, B2P, B3P,                                // single button pushes, 1 -> buCount
+      B1H, B2H, B3H,                                // single button holds, buCount + 1 -> 2 * buCount
+      B23H,                                         // multi button holds and
+      IRU, IRD, IRL, IRR, IRC, IRM, IRP             // ir remote events, 2 * buCount + 1 -> END
      };
 
 // this object stores nfc tag data
 struct nfcTagObject {
   uint32_t cookie;
-  uint8_t  version;
-  uint8_t  assignedFolder;
-  uint8_t  playbackMode;
+  uint8_t version;
+  uint8_t assignedFolder;
+  uint8_t playbackMode;
 } nfcTag;
 
 // define global variables
@@ -411,7 +411,7 @@ uint8_t readNfcTagData() {
   }
   else {
     // check if we can authenticate with mifareKey
-    mifareStatus = (MFRC522::StatusCode) mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, mifareBlock, &mifareKey, &(mfrc522.uid));
+    mifareStatus = (MFRC522::StatusCode)mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, mifareBlock, &mifareKey, &(mfrc522.uid));
     if (mifareStatus != MFRC522::STATUS_OK) {
       mfrc522.PICC_HaltA();
       mfrc522.PCD_StopCrypto1();
@@ -419,7 +419,7 @@ uint8_t readNfcTagData() {
     }
     else {
       // read data from nfc tag
-      mifareStatus = (MFRC522::StatusCode) mfrc522.MIFARE_Read(mifareBlock, mifareData, &mifareDataSize);
+      mifareStatus = (MFRC522::StatusCode)mfrc522.MIFARE_Read(mifareBlock, mifareData, &mifareDataSize);
       if (mifareStatus != MFRC522::STATUS_OK) {
         mfrc522.PICC_HaltA();
         mfrc522.PCD_StopCrypto1();
@@ -436,10 +436,10 @@ uint8_t readNfcTagData() {
 
         // convert 4 byte cookie to 32bit decimal for easier handling
         uint32_t tempCookie;
-        tempCookie  = (uint32_t) mifareData[0] << 24;
-        tempCookie += (uint32_t) mifareData[1] << 16;
-        tempCookie += (uint32_t) mifareData[2] << 8;
-        tempCookie += (uint32_t) mifareData[3];
+        tempCookie  = (uint32_t)mifareData[0] << 24;
+        tempCookie += (uint32_t)mifareData[1] << 16;
+        tempCookie += (uint32_t)mifareData[2] << 8;
+        tempCookie += (uint32_t)mifareData[3];
 
         // if cookie is not blank, update ncfTag object with data read from nfc tag
         if (tempCookie != 0) {
@@ -480,11 +480,11 @@ uint8_t writeNfcTagData(uint8_t mifareData[], uint8_t mifareDataSize) {
   if (mifareType != MFRC522::PICC_TYPE_MIFARE_MINI && mifareType != MFRC522::PICC_TYPE_MIFARE_1K && mifareType != MFRC522::PICC_TYPE_MIFARE_4K) returnCode = 255;
   else {
     // check if we can authenticate with mifareKey
-    mifareStatus = (MFRC522::StatusCode) mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, mifareTrailerBlock, &mifareKey, &(mfrc522.uid));
+    mifareStatus = (MFRC522::StatusCode)mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, mifareTrailerBlock, &mifareKey, &(mfrc522.uid));
     if (mifareStatus != MFRC522::STATUS_OK) returnCode = 254;
     else {
       // write data to nfc tag
-      mifareStatus = (MFRC522::StatusCode) mfrc522.MIFARE_Write(mifareBlock, mifareData, mifareDataSize);
+      mifareStatus = (MFRC522::StatusCode)mfrc522.MIFARE_Write(mifareBlock, mifareData, mifareDataSize);
       if (mifareStatus != MFRC522::STATUS_OK) returnCode = 253;
       else returnCode = 1;
     }
@@ -831,13 +831,13 @@ void loop() {
         Serial.println(F(" selected"));
         // save data to tag
         Serial.println(F("sys | attempting to save data to tag"));
-        uint8_t bytesToWrite[] = { 0x13, 0x37, 0xb3, 0x47,            // 0x1337 0xb347 magic cookie to identify our nfc tags
-                                   0x01,                              // version 1
-                                   nfcTag.assignedFolder,             // the folder picked by the user
-                                   nfcTag.playbackMode,               // the playback mode picked by the user
-                                   0x00,                              // reserved for future use
-                                   0x00, 0x00, 0x00, 0x00,            // reserved for future use
-                                   0x00, 0x00, 0x00, 0x00             // reserved for future use
+        uint8_t bytesToWrite[] = {0x13, 0x37, 0xb3, 0x47,            // 0x1337 0xb347 magic cookie to identify our nfc tags
+                                  0x01,                              // version 1
+                                  nfcTag.assignedFolder,             // the folder picked by the user
+                                  nfcTag.playbackMode,               // the playback mode picked by the user
+                                  0x00,                              // reserved for future use
+                                  0x00, 0x00, 0x00, 0x00,            // reserved for future use
+                                  0x00, 0x00, 0x00, 0x00             // reserved for future use
                                  };
         // for debug purposes, print the 16 bytes we are going write to the nfc tag
         Serial.print(F("sys |"));
