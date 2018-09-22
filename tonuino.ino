@@ -992,7 +992,8 @@ void loop() {
       if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) {
         Serial.println(F("nfc | tag detected"));
         Serial.println(F("nfc | erasing tag"));
-        uint8_t bytesToWrite[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+        uint8_t bytesToWrite[16];
+        for (uint8_t i = 0; i < 16; i++) bytesToWrite[i] = 0x00;
         writeNfcTagStatus = writeNfcTagData(bytesToWrite, sizeof(bytesToWrite));
         // handle return codes from events that happened during erasing the nfc tag
         switch (writeNfcTagStatus) {
