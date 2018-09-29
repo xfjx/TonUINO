@@ -81,6 +81,9 @@
 // uncomment the below line to enable status led support
 // #define STATUSLED
 
+// uncomment the below line to enable nfc debug output
+// #define NFCDEBUG
+
 // include required libraries
 #include <SoftwareSerial.h>
 #include <SPI.h>
@@ -442,6 +445,7 @@ uint8_t readNfcTagData() {
         returnCode = 253;
       }
       else {
+#if defined(NFCDEBUG)
         // for debug purposes, print the first 16 bytes of sector 1 / block 4
         Serial.print(F("nfc |"));
         for (uint8_t i = 0; i < 16; i++) {
@@ -449,6 +453,7 @@ uint8_t readNfcTagData() {
           Serial.print(mifareData[i], HEX);
         }
         Serial.println();
+#endif
 
         // convert 4 byte cookie to 32bit decimal for easier handling
         uint32_t tempCookie;
@@ -945,6 +950,7 @@ void loop() {
                                   0x00, 0x00, 0x00, 0x00,            // reserved for future use
                                   0x00, 0x00, 0x00, 0x00             // reserved for future use
                                  };
+#if defined(TSOP38238)
         // for debug purposes, print the 16 bytes we are going write to the nfc tag
         Serial.print(F("sys |"));
         for (uint8_t i = 0; i < 16; i++) {
@@ -952,6 +958,7 @@ void loop() {
           Serial.print(bytesToWrite[i], HEX);
         }
         Serial.println();
+#endif
         uint8_t writeNfcTagStatus = writeNfcTagData(bytesToWrite, sizeof(bytesToWrite));
         // handle return codes from events that happened during writing to the nfc tag
         switch (writeNfcTagStatus) {
