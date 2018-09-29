@@ -31,8 +31,8 @@
 
   If a TSOP38238 is connected to pin 5, you can also use an ir remote to remote
   control TonUINO. There are code mappings for the silver apple remote below, but you can
-  change them to other codes to match different remotes. This feature can be disabled by
-  commenting a define below, to save some memory.
+  change them to other codes to match different remotes. This feature can be enabled by
+  uncommenting the define TSOP38238 below.
 
   There is one function currently only available with the ir remote - box lock.
   When TonUINO is locked, the buttons on TonUINO as well as the nfc reader are disabled
@@ -63,8 +63,8 @@
   If a led is connected to pin 6, limited status information is given using that led.
   The led is solid on when TonUINO is running (ie. has power and got initialized). The
   led is pulsing slowly to indicate playback. When TonUINO is in setup new nfc tag or erase
-  nfc tag mode, the led is blinking every 500ms. This feature can be disabled by commenting
-  a define below, to save some memory.
+  nfc tag mode, the led is blinking every 500ms. This feature can be enabled by uncommenting
+  the define STATUSLED below.
 
   non standard libraries used in this sketch:
   -------------------------------------------
@@ -75,11 +75,11 @@
   IRremote.h - https://github.com/z3t0/Arduino-IRremote
 */
 
-// comment below line to disable ir remote support, saves about 5.8 KiB of program memory
-#define TSOP38238
+// uncomment the below line to enable ir remote support
+// #define TSOP38238
 
-// comment below line to disable status led support, saves about 530 Byte of program memory
-#define STATUSLED
+// uncomment the below line to enable status led support
+// #define STATUSLED
 
 // include required libraries
 #include <SoftwareSerial.h>
