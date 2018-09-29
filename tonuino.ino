@@ -173,6 +173,7 @@ uint8_t playTrack = 1;
 uint16_t totalTrackCount = 0;
 uint16_t folderTrackCount = 0;
 bool initNfcTagPlayback = false;
+bool freshNfcTagPlayback = true;
 bool isLocked = false;
 
 // ############################################################### no configuration below this line ###############################################################
@@ -334,6 +335,11 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool isInteracti
   if (nfcTag.playbackMode == 2) {
 
     // **workaround for some DFPlayer mini modules that make two callbacks in a row when finishing a track**
+    // reset lastCallTrack to avoid lockup when playback was just started
+    if (freshNfcTagPlayback) {
+      freshNfcTagPlayback = false;
+      lastCallTrack = 0;
+    }
     // check if we get called with the same track number twice in a row, if yes return immediately
     if (lastCallTrack == globalTrack) return;
     else lastCallTrack = globalTrack;
@@ -700,7 +706,9 @@ void loop() {
           default:
             break;
         }
+        // playback was triggered by nfc tag
         initNfcTagPlayback = true;
+        freshNfcTagPlayback = true;
         mp3.playFolderTrack(nfcTag.assignedFolder, playTrack);
       }
       // # end - nfc tag has our magic cookie 0x1337 0xb347 on it (322417479)
