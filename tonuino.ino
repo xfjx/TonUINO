@@ -950,7 +950,7 @@ void loop() {
                                   0x00, 0x00, 0x00, 0x00,            // reserved for future use
                                   0x00, 0x00, 0x00, 0x00             // reserved for future use
                                  };
-#if defined(TSOP38238)
+#if defined(NFCDEBUG)
         // for debug purposes, print the 16 bytes we are going write to the nfc tag
         Serial.print(F("sys |"));
         for (uint8_t i = 0; i < 16; i++) {
