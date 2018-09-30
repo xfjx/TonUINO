@@ -113,25 +113,27 @@ const uint16_t buHoldTime = 2000;                   // button hold time, 2 secon
 const uint32_t debugConsoleSpeed = 115200;          // speed for the debug console
 
 // define message to mp3 file mappings for spoken feedback
-const uint8_t msgWelcome = 100;                     // 01
-const uint8_t msgSetupNewTag = 101;                 // 02
-const uint8_t msgSetupNewTagFolderAssigned = 102;   // 03
-const uint8_t msgSetupNewTagStoryMode = 103;        // 04
-const uint8_t msgSetupNewTagAlbumMode = 104;        // 05
-const uint8_t msgSetupNewTagPartyMode = 105;        // 06
-const uint8_t msgSetupNewTagSingleMode = 106;       // 07
-const uint8_t msgSetupNewTagSingleModeCont = 109;   // 08
-const uint8_t msgSetupNewTagConfirm = 110;          // 09
-const uint8_t msgSetupNewTagError = 114;            // 10
-const uint8_t msgEraseTag = 111;                    // 11
-const uint8_t msgEraseTagConfirm = 112;             // 12
-const uint8_t msgEraseTagError = 115;               // 13
-const uint8_t msgCancel = 113;                      // 14
-const uint8_t msgLocked = 116;                      // 15
-const uint8_t msgUnLocked = 117;                    // 16
-const uint8_t msgAdLocked = 1;                      // 17
-const uint8_t msgAdUnLocked = 2;                    // 18
-const uint8_t msgCount = 18;                        // used to calculate the total ammount of tracks on the sd card
+const uint16_t msgSetupNewTag = 305;                // 01
+const uint16_t msgSetupNewTagFolderAssigned = 306;  // 02
+const uint16_t msgSetupNewTagStoryMode = 310;       // 03
+const uint16_t msgSetupNewTagAlbumMode = 320;       // 04
+const uint16_t msgSetupNewTagPartyMode = 330;       // 05
+const uint16_t msgSetupNewTagSingleMode = 340;      // 06
+const uint16_t msgSetupNewTagSingleModeCont = 341;  // 07
+const uint16_t msgSetupNewTagConfirm = 390;         // 08
+const uint16_t msgSetupNewTagCancel = 391;          // 09
+const uint16_t msgSetupNewTagError = 392;           // 10
+const uint16_t msgEraseTag = 405;                   // 11
+const uint16_t msgEraseTagConfirm = 490;            // 12
+const uint16_t msgEraseTagCancel = 491;             // 13
+const uint16_t msgEraseTagError = 492;              // 14
+const uint16_t msgWelcome = 505;                    // 15
+const uint16_t msgLocked = 510;                     // 16
+const uint16_t msgUnLocked = 511;                   // 17
+
+// used to calculate the total ammount of tracks on the sd card
+// messages from above ("mp3" folder) + 2 from "advert" folder
+const uint8_t msgCount = 19;
 
 // define code mappings for silver apple tv 2 ir remote
 const uint16_t ir1ButtonUp = 0x5057;
@@ -763,7 +765,7 @@ void loop() {
             nfcTag.assignedTrack = 0;
             mfrc522.PICC_HaltA();
             mfrc522.PCD_StopCrypto1();
-            mp3.playMp3FolderTrack(msgCancel);
+            mp3.playMp3FolderTrack(msgSetupNewTagCancel);
             return;
           }
 
@@ -853,7 +855,7 @@ void loop() {
             nfcTag.assignedTrack = 0;
             mfrc522.PICC_HaltA();
             mfrc522.PCD_StopCrypto1();
-            mp3.playMp3FolderTrack(msgCancel);
+            mp3.playMp3FolderTrack(msgSetupNewTagCancel);
             return;
           }
 
@@ -923,7 +925,7 @@ void loop() {
               nfcTag.assignedTrack = 0;
               mfrc522.PICC_HaltA();
               mfrc522.PCD_StopCrypto1();
-              mp3.playMp3FolderTrack(msgCancel);
+              mp3.playMp3FolderTrack(msgSetupNewTagCancel);
               return;
             }
 
@@ -1010,12 +1012,12 @@ void loop() {
       if (!isLocked) {
         Serial.println(F("sys | box locked"));
         isLocked = true;
-        mp3.playAdvertisement(msgAdLocked);
+        mp3.playAdvertisement(msgLocked);
       }
       else {
         Serial.println(F("sys | box unlocked"));
         isLocked = false;
-        mp3.playAdvertisement(msgAdUnLocked);
+        mp3.playAdvertisement(msgUnLocked);
       }
     }
     // TonUINO is currently idle: toggle box lock and play lock message from mp3 folder
@@ -1098,7 +1100,7 @@ void loop() {
       // button 2 (right) & button 3 (left) multi hold for 2 sec or ir remote menu: cancel erase nfc tag
       if (inputEvent == B23H || inputEvent == IRM) {
         Serial.println(F("sys | erasing tag canceled"));
-        mp3.playMp3FolderTrack(msgCancel);
+        mp3.playMp3FolderTrack(msgEraseTagCancel);
         return;
       }
       // wait for nfc tag, erase once detected
