@@ -331,7 +331,7 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool isInteracti
   // story mode: play one random track in folder
   // there is no next track in story mode -> stop playback
   if (nfcTag.playbackMode == 1) {
-    Serial.println(F("mp3 | story mode -> stop"));
+    Serial.println(F("mp3 | story mode > stop"));
     mp3.stop();
   }
 
@@ -354,21 +354,21 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool isInteracti
       // there are more tracks after the current one, play next track
       if (playTrack < folderTrackCount) {
         playTrack++;
-        Serial.print(F("mp3 | album mode -> folder "));
+        Serial.print(F("mp3 | album mode > folder "));
         Serial.print(nfcTag.assignedFolder);
-        Serial.print(F(" -> track "));
+        Serial.print(F(" > track "));
         Serial.print(playTrack);
-        Serial.print(F(" of "));
+        Serial.print(F("/"));
         Serial.println(folderTrackCount);
         mp3.playFolderTrack(nfcTag.assignedFolder, playTrack);
       }
       // there are no more tracks after the current one
       else {
         // user wants to manually play the next track, ignore the next track command
-        if (isInteractive) Serial.println(F("mp3 | album mode -> end of folder -> ignore next track"));
+        if (isInteractive) Serial.println(F("mp3 | album mode > end of folder > ignore next track"));
         // stop playback
         else {
-          Serial.println(F("mp3 | album mode -> end of folder -> stop"));
+          Serial.println(F("mp3 | album mode > end of folder > stop"));
           mp3.stop();
         }
       }
@@ -378,16 +378,16 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool isInteracti
       // there are more tracks before the current one, play the previous track
       if (playTrack > 1) {
         playTrack--;
-        Serial.print(F("mp3 | album mode -> folder "));
+        Serial.print(F("mp3 | album mode > folder "));
         Serial.print(nfcTag.assignedFolder);
-        Serial.print(F(" -> track "));
+        Serial.print(F(" > track "));
         Serial.print(playTrack);
-        Serial.print(F(" of "));
+        Serial.print(F("/"));
         Serial.println(folderTrackCount);
         mp3.playFolderTrack(nfcTag.assignedFolder, playTrack);
       }
       // there are no more tracks before the current one, ignore the previous track command
-      else Serial.println(F("mp3 | album mode -> beginning of folder -> ignore previous track"));
+      else Serial.println(F("mp3 | album mode > beginning of folder > ignore previous track"));
     }
   }
 
@@ -395,11 +395,11 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool isInteracti
   // just play another random track
   if (nfcTag.playbackMode == 3) {
     playTrack = random(1, folderTrackCount + 1);
-    Serial.print(F("mp3 | party mode -> folder "));
+    Serial.print(F("mp3 | party mode > folder "));
     Serial.print(nfcTag.assignedFolder);
-    Serial.print(F(" -> track "));
+    Serial.print(F(" > track "));
     Serial.print(playTrack);
-    Serial.print(F(" of "));
+    Serial.print(F("/"));
     Serial.println(folderTrackCount);
     mp3.playFolderTrack(nfcTag.assignedFolder, playTrack);
   }
@@ -407,7 +407,7 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool isInteracti
   // single mode: play a single track in folder
   // there is no next track in single mode -> stop playback
   if (nfcTag.playbackMode == 4) {
-    Serial.println(F("mp3 | single mode -> stop"));
+    Serial.println(F("mp3 | single mode > stop"));
     mp3.stop();
   }
 }
@@ -663,52 +663,52 @@ void loop() {
           // story mode
           case 1:
             playTrack = random(1, folderTrackCount + 1);
-            Serial.print(F("mp3 | story mode -> randomly play one of "));
+            Serial.print(F("mp3 | story mode > randomly play one of "));
             Serial.print(folderTrackCount);
             Serial.print(F(" tracks in folder "));
             Serial.println(nfcTag.assignedFolder);
-            Serial.print(F("mp3 | story mode -> folder "));
+            Serial.print(F("mp3 | story mode > folder "));
             Serial.print(nfcTag.assignedFolder);
-            Serial.print(F(" -> track "));
+            Serial.print(F(" > track "));
             Serial.print(playTrack);
-            Serial.print(F(" of "));
+            Serial.print(F("/"));
             Serial.println(folderTrackCount);
             break;
           // album mode
           case 2:
             playTrack = 1;
-            Serial.print(F("mp3 | album mode -> sequentially play all "));
+            Serial.print(F("mp3 | album mode > sequentially play all "));
             Serial.print(folderTrackCount);
             Serial.print(F(" tracks in folder "));
             Serial.println(nfcTag.assignedFolder);
-            Serial.print(F("mp3 | album mode -> folder "));
+            Serial.print(F("mp3 | album mode > folder "));
             Serial.print(nfcTag.assignedFolder);
-            Serial.print(F(" -> track "));
+            Serial.print(F(" > track "));
             Serial.print(playTrack);
-            Serial.print(F(" of "));
+            Serial.print(F("/"));
             Serial.println(folderTrackCount);
             break;
           // party mode
           case 3:
             playTrack = random(1, folderTrackCount + 1);
-            Serial.print(F("mp3 | party mode -> shuffle all "));
+            Serial.print(F("mp3 | party mode > shuffle all "));
             Serial.print(folderTrackCount);
             Serial.print(F(" tracks in folder "));
             Serial.println(nfcTag.assignedFolder);
-            Serial.print(F("mp3 | party mode -> folder "));
+            Serial.print(F("mp3 | party mode > folder "));
             Serial.print(nfcTag.assignedFolder);
-            Serial.print(F(" -> track "));
+            Serial.print(F(" > track "));
             Serial.print(playTrack);
-            Serial.print(F(" of "));
+            Serial.print(F("/"));
             Serial.println(folderTrackCount);
             break;
           // single mode
           case 4:
             playTrack = nfcTag.assignedTrack;
-            Serial.println(F("mp3 | single mode -> play single track"));
-            Serial.print(F("mp3 | single mode -> folder "));
+            Serial.println(F("mp3 | single mode > play single track"));
+            Serial.print(F("mp3 | single mode > folder "));
             Serial.print(nfcTag.assignedFolder);
-            Serial.print(F(" -> track "));
+            Serial.print(F(" > track "));
             Serial.println(playTrack);
             break;
           default:
