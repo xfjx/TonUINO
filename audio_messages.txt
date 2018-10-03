@@ -7,6 +7,7 @@ mp3/0320.mp3|Albummodus. Den kompletten Ordner wiedergeben.
 mp3/0330.mp3|Partymodus. Den Ordner zufällig wiedergeben.
 mp3/0340.mp3|Lieblingsfolge. Einen bestimmten Titel aus dem Ordner wiedergeben.
 mp3/0341.mp3|Ok, Lieblingsfolge. Verwende nun die Lautstärketasten um die Lieblingsfolge auszuwählen, bestätige mit der Pausetaste.
+mp3/0350.mp3|Hörbuchmodus. Den kompletten Ordner wiedergeben und den Fortschritt speichern.
 mp3/0390.mp3|Ok, ich habe die Karte konfiguriert. Viel Spass damit.
 mp3/0391.mp3|Karte konfigurieren abgebrochen.
 mp3/0392.mp3|Beim konfigurieren der Karte ist leider ein Fehler aufgetreten. Bitte versuche es noch einmal.
