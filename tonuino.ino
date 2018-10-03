@@ -66,6 +66,20 @@
   nfc tag mode, the led is blinking every 500ms. This feature can be enabled by uncommenting
   the define STATUSLED below.
 
+  data stored on the nfc tags:
+  ----------------------------
+
+  Up to 16 bytes of data are stored in sector 1 / block 4, of which the first
+  7 bytes are currently in use.
+
+  13 37 B3 47 01 02 05 00 00 00 00 00 00 00 00 00
+  ----------- -- -- --
+       |      |  |  |
+       |      |  |  +assigned track (0x00-0xFF), only used in single mode
+       |      |  +assigned folder (0x01-0x63)
+       |      +version, currently always 0x01
+       +magic cookie to recognize that a card belongs to TonUINO
+
   non standard libraries used in this sketch:
   -------------------------------------------
 
