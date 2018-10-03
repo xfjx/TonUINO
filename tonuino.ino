@@ -172,10 +172,10 @@ enum {UNCHANGED, PUSH, RELEASE};                    // button states: UNCHANGED 
 
 // button actions
 enum {NOACTION,                                     // NOACTION, 0
-      B1P, B2P, B3P,                                // single button pushes, 1 -> buCount
-      B1H, B2H, B3H,                                // single button holds, buCount + 1 -> 2 * buCount
+      B1P, B2P, B3P,                                // single button pushes, 1 to buCount
+      B1H, B2H, B3H,                                // single button holds, buCount + 1 to 2 * buCount
       B23H,                                         // multi button holds and
-      IRU, IRD, IRL, IRR, IRC, IRM, IRP             // ir remote events, 2 * buCount + 1 -> END
+      IRU, IRD, IRL, IRR, IRC, IRM, IRP             // ir remote events, 2 * buCount + 1 to END
      };
 
 // this object stores nfc tag data
@@ -343,7 +343,7 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool isInteracti
   if (!initNfcTagPlayback) return;
 
   // story mode: play one random track in folder
-  // there is no next track in story mode -> stop playback
+  // there is no next track in story mode > stop playback
   if (nfcTag.playbackMode == 1) {
     Serial.println(F("mp3 | story mode > stop"));
     mp3.stop();
@@ -419,7 +419,7 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool isInteracti
   }
 
   // single mode: play a single track in folder
-  // there is no next track in single mode -> stop playback
+  // there is no next track in single mode > stop playback
   if (nfcTag.playbackMode == 4) {
     Serial.println(F("mp3 | single mode > stop"));
     mp3.stop();
