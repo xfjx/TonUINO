@@ -8,7 +8,7 @@ do
     lame -b 128 $j.wav $j.mp3
 done
 
-say -v Anna "Oh, eine neue Karte! Verwende die Lautstärke Tasten um einen Order für die Karte auszuwählen. Drücke die Pause Taste um die Auswahl zu speichern." -o 0300.aiff
+say -v Anna "Oh, eine neue Karte! Verwende die Lautstärke Tasten um einen Ordner für die Karte auszuwählen. Drücke die Pause Taste um die Auswahl zu speichern." -o 0300.aiff
 sox 0300.aiff 0300.wav pitch 800
 lame -b 128 0300.wav 0300_new_tag.mp3
 
