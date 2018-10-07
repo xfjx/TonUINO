@@ -210,8 +210,38 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool isInteracti
 class Mp3Notify {
   public:
     static void OnError(uint16_t returnValue) {
-      Serial.print(F("mp3 | error code "));
-      Serial.println(returnValue);
+      Serial.print(F("mp3 | "));
+      switch (returnValue)
+      {
+        case DfMp3_Error_Busy:
+          Serial.print(F("busy"));
+          break;
+        case DfMp3_Error_Sleeping:
+          Serial.print(F("sleep"));
+          break;
+        case DfMp3_Error_SerialWrongStack:
+          Serial.print(F("serial stack"));
+          break;
+        case DfMp3_Error_CheckSumNotMatch:
+          Serial.print(F("checksum"));
+          break;
+        case DfMp3_Error_FileIndexOut:
+          Serial.print(F("file index"));
+          break;
+        case DfMp3_Error_FileMismatch:
+          Serial.print(F("file mismatch"));
+          break;
+        case DfMp3_Error_Advertise:
+          Serial.print(F("advertise"));
+          break;
+        case DfMp3_Error_General:
+          Serial.print(F("general"));
+          break;
+        default:
+          Serial.print(F("unknown"));
+          break;
+      }
+      Serial.println(F(" error"));
     }
     static void OnPlayFinished(uint16_t returnValue) {
       playNextTrack(returnValue, true, false);
