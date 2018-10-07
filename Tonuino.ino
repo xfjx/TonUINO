@@ -158,6 +158,7 @@ MFRC522::StatusCode status;
 #define buttonUp A1
 #define buttonDown A2
 #define busyPin 4
+#define statusLED 5
 
 #define LONG_PRESS 1000
 
@@ -212,6 +213,9 @@ void setup() {
     }
   }
 
+  // Status LED
+  pinMode(statusLED, OUTPUT);
+
 }
 
 void loop() {
@@ -225,10 +229,13 @@ void loop() {
 
     if (pauseButton.wasReleased()) {
       if (ignorePauseButton == false)
-        if (isPlaying())
+        if (isPlaying()){
           mp3.pause();
-        else
+          digitalWrite(statusLED, LOW);
+        } else {
           mp3.start();
+          digitalWrite(statusLED, HIGH);
+        }
       ignorePauseButton = false;
     } else if (pauseButton.pressedFor(LONG_PRESS) &&
                ignorePauseButton == false) {
@@ -328,6 +335,12 @@ void loop() {
   }
   mfrc522.PICC_HaltA();
   mfrc522.PCD_StopCrypto1();
+
+// Status LED 
+  if (isPlaying())
+     digitalWrite(statusLED, LOW);
+  else
+    digitalWrite(statusLED, HIGH);
 }
 
 int voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
