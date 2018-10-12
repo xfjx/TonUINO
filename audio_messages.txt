@@ -1,5 +1,3 @@
-advert/0510.mp3|Box gesperrt.
-advert/0511.mp3|Box freigegeben.
 mp3/0305.mp3|Eine neue Karte wurde erkannt. Bitte lasse die Karte auf der Box liegen, bis die Karte konfiguriert ist. Du kannst jetzt mit den Lautstärketasten einen Ordner auswählen. Bestätige mit der Pausetaste.
 mp3/0306.mp3|Ok. Du kannst jetzt mit den Lautstärketasten den Wiedergabemodus auswählen. Bestätige mit der Pausetaste.
 mp3/0310.mp3|Hörspielmodus. Einen zufälligen Titel aus dem Ordner wiedergeben.
@@ -16,5 +14,3 @@ mp3/0490.mp3|OK, ich habe die Karte gelöscht.
 mp3/0491.mp3|Karte löschen abgebrochen.
 mp3/0492.mp3|Beim löschen der Karte ist ein Fehler aufgetreten. Bitte versuche es noch einmal.
 mp3/0505.mp3|Los gehts!
-mp3/0510.mp3|Box gesperrt.
-mp3/0511.mp3|Box freigegeben.

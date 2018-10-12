@@ -65,7 +65,8 @@
   If a led is connected to pin 6, limited status information is given using that led.
   The led is solid on when TonUINO is running (ie. has power and got initialized). The
   led is pulsing slowly to indicate playback. When TonUINO is in setup new nfc tag or erase
-  nfc tag mode, the led is blinking every 500ms. This feature can be enabled by uncommenting
+  nfc tag mode, the led is blinking every 500ms. And last not least, the led bursts 4 times
+  when TonUINO is locked or unlocked. This feature can be enabled by uncommenting
   the define STATUSLED below.
 
   data stored on the nfc tags:
@@ -146,12 +147,10 @@ const uint16_t msgEraseTagConfirm = 490;            // 13
 const uint16_t msgEraseTagCancel = 491;             // 14
 const uint16_t msgEraseTagError = 492;              // 15
 const uint16_t msgWelcome = 505;                    // 16
-const uint16_t msgLocked = 510;                     // 17
-const uint16_t msgUnLocked = 511;                   // 18
 
 // used to calculate the total ammount of tracks on the sd card
-// messages from above ("mp3" folder) + 2 from "advert" folder
-const uint8_t msgCount = 20;
+// mp3 files above (from "mp3" folder) + whatever is in the "advert" folder
+const uint8_t msgCount = 16;
 
 // define code mappings for silver apple tv 2 ir remote
 const uint16_t ir1ButtonUp = 0x5057;
@@ -674,6 +673,17 @@ void blinkStatusLed() {
     digitalWrite(statusLedPin, statusLedState);
   }
 }
+
+// burst status led 4 times when locking / unlocking TonUINO
+void burstStatusLed() {
+  bool statusLedState = true;
+
+  for (uint8_t i = 0; i < 8; i++) {
+    statusLedState = !statusLedState;
+    digitalWrite(statusLedPin, statusLedState);
+    delay(100);
+  }
+}
 #endif
 
 void setup() {
@@ -1163,33 +1173,19 @@ void loop() {
   // # handle button and ir remote events during playback or while waiting for nfc tags
   // ir remote center: toggle box lock
   if (inputEvent == IRC) {
-    // TonUINO is currently playing: toggle box lock, play lock message from advert folder, resume playback
-    if (isPlaying) {
-      if (!isLocked) {
-        Serial.println(F("sys | box locked"));
-        isLocked = true;
-        mp3.playAdvertisement(msgLocked);
-      }
-      else {
-        Serial.println(F("sys | box unlocked"));
-        isLocked = false;
-        mp3.playAdvertisement(msgUnLocked);
-      }
+    if (!isLocked) {
+      Serial.println(F("sys | box locked"));
+      isLocked = true;
+#if defined(STATUSLED)
+      burstStatusLed();
+#endif
     }
-    // TonUINO is currently idle: toggle box lock and play lock message from mp3 folder
     else {
-      if (!isLocked) {
-        Serial.println(F("sys | box locked"));
-        isLocked = true;
-        initNfcTagPlayback = false;
-        mp3.playMp3FolderTrack(msgLocked);
-      }
-      else {
-        Serial.println(F("sys | box unlocked"));
-        isLocked = false;
-        initNfcTagPlayback = false;
-        mp3.playMp3FolderTrack(msgUnLocked);
-      }
+      Serial.println(F("sys | box unlocked"));
+      isLocked = false;
+#if defined(STATUSLED)
+      burstStatusLed();
+#endif
     }
   }
   // button 1 (middle) single push or ir remote play+pause: toggle playback
