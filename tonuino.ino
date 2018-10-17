@@ -696,6 +696,9 @@ void setup() {
   Serial.println(F("sys | initializing nfc module"));
   SPI.begin();
   mfrc522.PCD_Init();
+#if defined(NFCDEBUG)
+  mfrc522.PCD_DumpVersionToSerial();
+#endif
 
   Serial.println(F("sys | initializing mp3 module"));
   mp3.begin();
