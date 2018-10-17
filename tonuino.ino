@@ -63,11 +63,11 @@
   -----------
 
   If a led is connected to pin 6, limited status information is given using that led.
-  The led is solid on when TonUINO is running (ie. has power and got initialized). The
-  led is pulsing slowly to indicate playback. When TonUINO is in setup new nfc tag or erase
-  nfc tag mode, the led is blinking every 500ms. And last not least, the led bursts 4 times
-  when TonUINO is locked or unlocked. This feature can be enabled by uncommenting
-  the define STATUSLED below.
+  The led is solid on when TonUINO is playing a track and it is pulsing slowly when
+  TonUINO is idle. When TonUINO is in setup new nfc tag or erase nfc tag mode, the
+  led is blinking every 500ms. And last but not not least, the led bursts 4 times when
+  TonUINO is locked or unlocked. This feature can be enabled by uncommenting the
+  define STATUSLED below.
 
   data stored on the nfc tags:
   ----------------------------
@@ -626,26 +626,31 @@ uint8_t writeNfcTagData(uint8_t mifareData[], uint8_t mifareDataSize) {
 }
 
 #if defined(STATUSLED)
-// fade in/out status led during playback, on idle set to full brightness
+// fade in/out status led while beeing idle, during playback set to full brightness
 void fadeStatusLed(bool isPlaying) {
-  static bool statusLedDirection;
+  static bool statusLedDirection = false;
   static int16_t statusLedValue = 255;
   static uint32_t statusLedOldMillis;
 
-  // TonUINO is playing, fade status led in or out
+  // TonUINO is playing, set status led to full brightness
   if (isPlaying) {
+    statusLedValue = 255;
+    digitalWrite(statusLedPin, true);
+  }
+  // TonUINO is not playing, fade status led in/out
+  else {
     uint32_t statusLedNewMillis = millis();
     if (statusLedNewMillis - statusLedOldMillis >= 100) {
       statusLedOldMillis = statusLedNewMillis;
       if (statusLedDirection) {
-        statusLedValue = statusLedValue + 10;
+        statusLedValue += 10;
         if (statusLedValue >= 255) {
           statusLedValue = 255;
           statusLedDirection = !statusLedDirection;
         }
       }
       else {
-        statusLedValue = statusLedValue - 10;
+        statusLedValue -= 10;
         if (statusLedValue <= 0) {
           statusLedValue = 0;
           statusLedDirection = !statusLedDirection;
@@ -654,14 +659,10 @@ void fadeStatusLed(bool isPlaying) {
       analogWrite(statusLedPin, statusLedValue);
     }
   }
-  // TonUINO is not playing, set to full brightness
-  else {
-    statusLedValue = 255;
-    analogWrite(statusLedPin, statusLedValue);
-  }
 }
 
-// blink status led every 500ms during setup new nfc tag and erase nfc tag
+// blink status led every 500ms
+// used during setup new nfc tag and erase nfc tag
 void blinkStatusLed() {
   static bool statusLedState;
   static uint32_t statusLedOldMillis;
@@ -674,7 +675,8 @@ void blinkStatusLed() {
   }
 }
 
-// burst status led 4 times when locking / unlocking TonUINO
+// burst status led 4 times
+// used when locking / unlocking TonUINO
 void burstStatusLed() {
   bool statusLedState = true;
 
@@ -928,7 +930,6 @@ void loop() {
           }
 
 #if defined(STATUSLED)
-          // blink status led
           blinkStatusLed();
 #endif
 
@@ -1026,7 +1027,6 @@ void loop() {
           }
 
 #if defined(STATUSLED)
-          // blink status led
           blinkStatusLed();
 #endif
 
@@ -1099,7 +1099,6 @@ void loop() {
             }
 
 #if defined(STATUSLED)
-            // blink status led
             blinkStatusLed();
 #endif
 
@@ -1314,7 +1313,6 @@ void loop() {
       }
 
 #if defined(STATUSLED)
-      // blink status led
       blinkStatusLed();
 #endif
 
@@ -1326,7 +1324,6 @@ void loop() {
   // #######################################################################################
 
 #if defined(STATUSLED)
-  // fade status led
   fadeStatusLed(isPlaying);
 #endif
 
