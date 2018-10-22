@@ -98,7 +98,7 @@
 // uncomment the below line to enable status led support
 // #define STATUSLED
 
-// uncomment the below line to enable nfc debug output
+// uncomment the below line to enable additional debug output
 // #define DEBUG
 
 // include required libraries
@@ -109,10 +109,10 @@
 #include <DFMiniMp3.h>
 #include <Bounce2.h>
 
+// include additional library if ir remote support is enabled
 #if defined(TSOP38238)
 #include <IRremote.h>
 #endif
-
 
 // define global constants
 const uint8_t softwareSerialTxPin = 3;              // software serial tx, wired with 1k ohm to rx pin of DFPlayer Mini
