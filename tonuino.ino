@@ -99,7 +99,7 @@
 // #define STATUSLED
 
 // uncomment the below line to enable nfc debug output
-// #define NFCDEBUG
+// #define DEBUG
 
 // include required libraries
 #include <SoftwareSerial.h>
@@ -552,9 +552,9 @@ uint8_t readNfcTagData() {
         returnCode = 253;
       }
       else {
-#if defined(NFCDEBUG)
+#if defined(DEBUG)
         // for debug purposes, print the first 16 bytes of sector 1 / block 4
-        Serial.print(F("nfc |"));
+        Serial.print(F("debug |"));
         for (uint8_t i = 0; i < 16; i++) {
           Serial.print(mifareData[i] < 0x10 ? " 0" : " ");
           Serial.print(mifareData[i], HEX);
@@ -698,7 +698,7 @@ void setup() {
   Serial.println(F("sys | initializing nfc module"));
   SPI.begin();
   mfrc522.PCD_Init();
-#if defined(NFCDEBUG)
+#if defined(DEBUG)
   mfrc522.PCD_DumpVersionToSerial();
 #endif
 
@@ -1120,9 +1120,9 @@ void loop() {
                                   0x00, 0x00, 0x00, 0x00,            // reserved for future use
                                   0x00, 0x00, 0x00, 0x00             // reserved for future use
                                  };
-#if defined(NFCDEBUG)
+#if defined(DEBUG)
         // for debug purposes, print the 16 bytes we are going write to the nfc tag
-        Serial.print(F("sys |"));
+        Serial.print(F("debug |"));
         for (uint8_t i = 0; i < 16; i++) {
           Serial.print(bytesToWrite[i] < 0x10 ? " 0" : " ");
           Serial.print(bytesToWrite[i], HEX);
