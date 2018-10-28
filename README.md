@@ -15,7 +15,7 @@ Hier ist eine alternative Version der TonUINO Firmware. Da ich das Glück hatte,
 - **Erweiterung:** Wenn man eine LED nachrüstet, werden mit dieser LED ein paar nützliche Informationen angezeigt. Man sieht dann z.B. ob TonUINO gerade einen Titel spielt (LED leuchtet dauerhaft), sich im NFC Tag löschen oder anlernen Modus befindet (LED blinkt alle 500ms), oder einfach nur idle ist (LED pulsiert langsam).
 - **Erweiterung:** Man kann mit der IR Fernbedienung die Buttons und den NFC Leser von TonUINO sperren.
 - **Erweiterung:** Lieblingsfolge. Es kann nun auch ein einzelner Titel aus einem Ordner mit einem NFC Tag verknüpft werden. Kinder lieben bekanntlich Wiederholungen. ;-) _Diesen Modus habe ich aus der 2.0 der originalen TonUINO Firmware übernommen._
-- **Erweiterung:** Hörbuchmodus. Spielt wie der Albummodus den gesammten Ordner, merkt sich aber den letzten Titel. Wenn man während der Wiedergabe die play/pause Taste für 2sec gedrückt hällt, startet die Wiedergabe wieder von vorne. _Diesen Modus habe ich aus der 2.0 der originalen TonUINO Firmware übernommen._
+- **Erweiterung:** Hörbuchmodus. Spielt wie der Albummodus den gesammten Ordner, merkt sich aber den letzten Titel. Wenn man während der Wiedergabe die play/pause Taste für 5sec gedrückt hällt, startet die Wiedergabe wieder von vorne. _Diesen Modus habe ich aus der 2.0 der originalen TonUINO Firmware übernommen._
 - **Bugfix:** Man kann während man ein NFC Tag anlernt nicht mehr bestätigen ohne vorher wirklich sowohl Ordner als auch Wiedergabemodus ausgewählt zu haben.
 - **Bugfix:** Umgang mit bestimmten Versionen des DFPlayer Mini Moduls verbessert.
 - **Bugfix:** Play/Pause funktioniert jetzt richtig wenn gerade keine Queue abgespielt wird.
