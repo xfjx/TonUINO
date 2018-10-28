@@ -12,20 +12,20 @@
   button assignments:
   -------------------
 
-  Button B1 (pin A0): play+pause (middle button)
-  Button B2 (pin A1): volume up (right button)
-  Button B3 (pin A2): volume down (left button)
+  Button B0 (by default pin A0, middle button on the original TonUINO): play+pause
+  Button B1 (by default pin A1, right button on the original TonUINO): volume up
+  Button B2 (by default pin A2, left button on the original TonUINO): volume down
 
   additional button actions:
   --------------------------
 
-  Hold B2 or B3 for 2 seconds during playback in album mode: Skip to the next or previous track
-  Hold B2 for 2 seconds during playback in party mode: Skip to the next track
+  Hold B0 for 5 seconds during idle: Enter erase nfc tag mode
+  Hold B0 for 5 seconds during playback in story book mode: Reset progress to track 1
+  Hold B0 for 2 seconds during erase nfc tag mode: Cancel erase nfc tag mode
+  Hold B0 for 2 seconds during nfc tag setup mode: Cancel nfc tag setup mode
 
-  Hold both B2 and B3 for 2 seconds during idle: Enter erase nfc tag mode
-  Hold both B2 and B3 for 2 seconds during playback in story book mode: Reset progress to track 1
-  Hold both B2 and B3 for 2 seconds during erase nfc tag mode: Cancel erase nfc tag mode
-  Hold both B2 and B3 for 2 seconds during nfc tag setup mode: Cancel nfc tag setup mode
+  Hold B1 for 2 seconds during playback in album, party and story book mode: Skip to the next track
+  Hold B2 for 2 seconds during playback in album and story book mode: Skip to the previous track
 
   ir remote:
   ----------
@@ -35,7 +35,7 @@
   change them to other codes to match different remotes. This feature can be enabled by
   uncommenting the define TSOP38238 below.
 
-  There is one function currently only available with the ir remote - box lock.
+  There is one function, currently only available with the ir remote - box lock.
   When TonUINO is locked, the buttons on TonUINO as well as the nfc reader are disabled
   until TonUINO is unlocked again. Playback continues while TonUINO is locked.
 
@@ -43,7 +43,7 @@
   center - toggle box lock
   play+pause - toggle playback
   up / down - volume up / down
-  left / right - previous / next track during album mode, next track during party mode
+  left / right - previous / next track during album and story book mode, next track during party mode
   menu - reset progress to track 1 in story book mode
 
   During idle:
@@ -88,7 +88,7 @@
 
   MFRC522.h - https://github.com/miguelbalboa/rfid
   DFMiniMp3.h - https://github.com/Makuna/DFMiniMp3
-  Bounce2.h - https://github.com/thomasfredericks/Bounce2
+  AceButton.h - https://github.com/bxparks/AceButton
   IRremote.h - https://github.com/z3t0/Arduino-IRremote
 */
 
@@ -99,7 +99,7 @@
 // #define STATUSLED
 
 // uncomment the below line to enable additional debug output
-// #define DEBUG
+// #define DBG
 
 // include required libraries
 #include <SoftwareSerial.h>
@@ -107,7 +107,8 @@
 #include <EEPROM.h>
 #include <MFRC522.h>
 #include <DFMiniMp3.h>
-#include <Bounce2.h>
+#include <AceButton.h>
+using namespace ace_button;
 
 // include additional library if ir remote support is enabled
 #if defined(TSOP38238)
@@ -117,17 +118,20 @@
 // define global constants
 const uint8_t softwareSerialTxPin = 3;              // software serial tx, wired with 1k ohm to rx pin of DFPlayer Mini
 const uint8_t softwareSerialRxPin = 2;              // software serial rx, wired straight to tx pin of DFPlayer Mini
-const uint8_t mp3BusyPin = 4;                       // reports play state of DFPlayer Mini, low = playing
+const uint8_t mp3BusyPin = 4;                       // reports play state of DFPlayer Mini (LOW = playing)
 const uint8_t irReceiverPin = 5;                    // pin used for the ir receiver
 const uint8_t statusLedPin = 6;                     // pin used for status led
 const uint8_t nfcResetPin = 9;                      // used for spi communication to nfc module
 const uint8_t nfcSlaveSelectPin = 10;               // used for spi communication to nfc module
 const uint8_t rngSeedPin = A0;                      // used to seed the random number generator
-const uint8_t buPins[] = {A0, A1, A2};              // pins used for the buttons
-const uint8_t buCount = sizeof(buPins);             // number of buttons
 const uint8_t mp3StartVolume = 10;                  // initial volume of DFPlayer Mini
 const uint8_t mp3MaxVolume = 25;                    // maximal volume of DFPlayer Mini
-const uint16_t buHoldTime = 2000;                   // button hold time, 2 seconds
+const uint8_t button0Pin = A0;                      // middle button
+const uint8_t button1Pin = A1;                      // right button
+const uint8_t button2Pin = A2;                      // left button
+const uint16_t buttonClickDelay = 1000;             // time during which a button click is still a click (in milliseconds)
+const uint16_t buttonLongPressDelay = 2000;         // time after which a button press is considered a long press (in milliseconds)
+const uint16_t button0LongPressDelay = 5000;        // special long press delay for middle button to trigger erase nfc mode (in milliseconds)
 const uint32_t debugConsoleSpeed = 115200;          // speed for the debug console
 
 // define message to mp3 file mappings for spoken feedback
@@ -170,15 +174,11 @@ const uint16_t ir2ButtonCenter = 0x3ABF;
 const uint16_t ir2ButtonMenu = 0xC0BF;
 const uint16_t ir2ButtonPlayPause = 0xFABF;
 
-// button states
-enum {UNCHANGED, PUSH, RELEASE};                    // button states: UNCHANGED = 0, PUSH = 1, RELEASE = 2
-
 // button actions
-enum {NOACTION,                                     // NOACTION, 0
-      B1P, B2P, B3P,                                // single button pushes, 1 to buCount
-      B1H, B2H, B3H,                                // single button holds, buCount + 1 to 2 * buCount
-      B23H,                                         // multi button holds and
-      IRU, IRD, IRL, IRR, IRC, IRM, IRP             // ir remote events, 2 * buCount + 1 to END
+enum {NOACTION,                                     // 0
+      B0P, B1P, B2P,                                // 1, 2, 3
+      B0H, B1H, B2H,                                // 4, 5, 6
+      IRU, IRD, IRL, IRR, IRC, IRM, IRP             // 7, 8, 9, 10, 11, 12, 13
      };
 
 // this object stores nfc tag data
@@ -199,6 +199,9 @@ struct playbackObject {
   uint16_t folderTrackCount = 0;
 } playback;
 
+// global variables
+uint8_t inputEvent = NOACTION;
+
 // ############################################################### no configuration below this line ###############################################################
 
 // this function needs to be declared here for the first time because it's called in class Mp3Notify
@@ -210,8 +213,7 @@ class Mp3Notify {
   public:
     static void OnError(uint16_t returnValue) {
       Serial.print(F("mp3 | "));
-      switch (returnValue)
-      {
+      switch (returnValue) {
         case DfMp3_Error_Busy:
           Serial.print(F("busy"));
           break;
@@ -256,105 +258,69 @@ class Mp3Notify {
     }
 };
 
-Bounce bounce[buCount];                                                       // create Bounce instances
-MFRC522 mfrc522(nfcSlaveSelectPin, nfcResetPin);                              // create MFRC522 instance
 SoftwareSerial secondarySerial(softwareSerialRxPin, softwareSerialTxPin);     // create SoftwareSerial instance
+MFRC522 mfrc522(nfcSlaveSelectPin, nfcResetPin);                              // create MFRC522 instance
 DFMiniMp3<SoftwareSerial, Mp3Notify> mp3(secondarySerial);                    // create DFMiniMp3 instance
+ButtonConfig button0Config;                                                   // create ButtonConfig instance
+ButtonConfig button1Config;                                                   // create ButtonConfig instance
+ButtonConfig button2Config;                                                   // create ButtonConfig instance
+AceButton button0(&button0Config);                                            // create AceButton instance
+AceButton button1(&button1Config);                                            // create AceButton instance
+AceButton button2(&button2Config);                                            // create AceButton instance
 
 #if defined(TSOP38238)
 IRrecv irReceiver(irReceiverPin);                                             // create IRrecv instance
 decode_results irReadings;                                                    // create decode_results instance to store received ir readings
 #endif
 
-// checks for input from buttons and ir remote, debounces buttons and then returns an event
-// button code is based on ideas from http://forum.arduino.cc/index.php?topic=296409.0
-uint8_t checkInput() {
-  static bool buDoEvent = false;                                              // was there an event for a single button? yes/no
-  static bool buBlockEvent = false;                                           // block subsequent events? yes/no
-  static uint8_t buEventCount = 0;                                            // track how many buttons are being pushed simultaniously
-  static uint8_t buEvent = NOACTION;                                          // event to be executed
-  static uint32_t buEventTime = 0;                                            // time when a button was pushed
+// checks all input sources and populates the global inputEvent variable
+void checkForInput() {
+  // clear inputEvent
+  inputEvent = 0;
 
-  // if no button is pushed, reset
-  if (!buEventCount) {
-    buDoEvent = false;
-    buBlockEvent = false;
-    buEventCount = 0;
-  }
-  buEvent = NOACTION;
-
-  // cycle through all buttons
-  for (uint8_t i = 0; i < buCount; i++) {
-    bounce[i].update();
-    // button was pushed
-    if (bounce[i].fell()) {
-      if (buEventCount < buCount) buEventCount++;
-      buEventTime = millis();
-      if (!buDoEvent) {
-        buDoEvent = true;
-        buEvent = i + 1;
-      }
-    }
-    // button was released
-    else if (bounce[i].rose()) {
-      if (buEventCount) buEventCount--;
-      buBlockEvent = true;
-    }
-    // button hold events
-    if (!buBlockEvent) {
-      if (millis() - buEventTime >= buHoldTime) {
-        // single button hold events
-        if (!bounce[i].read() && buEventCount == 1) {
-          buEvent = i + buCount + 1;
-          buBlockEvent = true;
-        }
-        // multi button hold events
-        if (!bounce[1].read() && !bounce[2].read() && buEventCount == 2) {
-          buEvent = B23H;
-          buBlockEvent = true;
-        }
-      }
-    }
-  }
+  // check all buttons
+  button0.check();
+  button1.check();
+  button2.check();
 
 #if defined(TSOP38238)
-  // poll ir receiver, has precedence over physical buttons
+  // poll ir receiver, has precedence over (overwrites) physical buttons
   if (irReceiver.decode(&irReadings)) {
     switch (irReadings.value & 0xFFFF) {
       // button up
       case ir1ButtonUp:
       case ir2ButtonUp:
-        buEvent = IRU;
+        inputEvent = IRU;
         break;
       // button down
       case ir1ButtonDown:
       case ir2ButtonDown:
-        buEvent = IRD;
+        inputEvent = IRD;
         break;
       // button left
       case ir1ButtonLeft:
       case ir2ButtonLeft:
-        buEvent = IRL;
+        inputEvent = IRL;
         break;
       // button right
       case ir1ButtonRight:
       case ir2ButtonRight:
-        buEvent = IRR;
+        inputEvent = IRR;
         break;
       // button center
       case ir1ButtonCenter:
       case ir2ButtonCenter:
-        buEvent = IRC;
+        inputEvent = IRC;
         break;
       // button menu
       case ir1ButtonMenu:
       case ir2ButtonMenu:
-        buEvent = IRM;
+        inputEvent = IRM;
         break;
       // button play+pause
       case ir1ButtonPlayPause:
       case ir2ButtonPlayPause:
-        buEvent = IRP;
+        inputEvent = IRP;
         break;
       default:
         break;
@@ -362,11 +328,56 @@ uint8_t checkInput() {
     irReceiver.resume();
   }
 #endif
-
-  return buEvent;
 }
 
-// plays next track depending on current playback mode
+// translates the various button events into enums
+void translateButtonInput(AceButton* button, uint8_t eventType, uint8_t /* buttonState */) {
+  switch (button->getId()) {
+    // botton 0 (middle)
+    case 0:
+      switch (eventType) {
+        case AceButton::kEventClicked:
+          inputEvent = B0P;
+          break;
+        case AceButton::kEventLongPressed:
+          inputEvent = B0H;
+          break;
+        default:
+          break;
+      }
+      break;
+    // botton 1 (right)
+    case 1:
+      switch (eventType) {
+        case AceButton::kEventClicked:
+          inputEvent = B1P;
+          break;
+        case AceButton::kEventLongPressed:
+          inputEvent = B1H;
+          break;
+        default:
+          break;
+      }
+      break;
+    // botton 2 (left)
+    case 2:
+      switch (eventType) {
+        case AceButton::kEventClicked:
+          inputEvent = B2P;
+          break;
+        case AceButton::kEventLongPressed:
+          inputEvent = B2H;
+          break;
+        default:
+          break;
+      }
+      break;
+    default:
+      break;
+  }
+}
+
+// plays next track depending on the current playback mode
 void playNextTrack(uint16_t globalTrack, bool directionForward, bool triggeredManually) {
   static uint16_t lastCallTrack = 0;
 
@@ -414,7 +425,7 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool triggeredMa
       // there are no more tracks after the current one
       else {
         // user wants to manually play the next track, ignore the next track command
-        if (triggeredManually) Serial.println(F("mp3 | album mode > end of folder > ignore next track"));
+        if (triggeredManually) Serial.println(F("mp3 | album mode > end of folder"));
         // stop playback
         else {
           Serial.println(F("mp3 | album mode > end of folder > stop"));
@@ -437,7 +448,7 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool triggeredMa
         mp3.playFolderTrack(nfcTag.assignedFolder, playback.playTrack);
       }
       // there are no more tracks before the current one, ignore the previous track command
-      else Serial.println(F("mp3 | album mode > beginning of folder > ignore previous track"));
+      else Serial.println(F("mp3 | album mode > beginning of folder"));
     }
   }
 
@@ -492,8 +503,8 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool triggeredMa
       // there are no more tracks after the current one
       else {
         // user wants to manually play the next track, ignore the next track command
-        if (triggeredManually) Serial.println(F("mp3 | story book mode > end of folder > ignore next track"));
-        // stop playback
+        if (triggeredManually) Serial.println(F("mp3 | story book mode > end of folder"));
+        // stop playback and reset progress
         else {
           Serial.println(F("mp3 | story book mode > end of folder > stop > progress reset"));
           EEPROM.update(nfcTag.assignedFolder, 0);
@@ -516,7 +527,7 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool triggeredMa
         mp3.playFolderTrack(nfcTag.assignedFolder, playback.playTrack);
       }
       // there are no more tracks before the current one, ignore the previous track command
-      else Serial.println(F("mp3 | story book mode > beginning of folder > ignore previous track"));
+      else Serial.println(F("mp3 | story book mode > beginning of folder"));
     }
   }
 }
@@ -556,7 +567,7 @@ uint8_t readNfcTagData() {
         returnCode = 253;
       }
       else {
-#if defined(DEBUG)
+#if defined(DBG)
         // for debug purposes, print the first 16 bytes of sector 1 / block 4
         Serial.print(F("dbg |"));
         for (uint8_t i = 0; i < 16; i++) {
@@ -666,7 +677,6 @@ void fadeStatusLed(bool isPlaying) {
 }
 
 // blink status led every 500ms
-// used during setup new nfc tag and erase nfc tag
 void blinkStatusLed() {
   static bool statusLedState;
   static uint32_t statusLedOldMillis;
@@ -680,7 +690,6 @@ void blinkStatusLed() {
 }
 
 // burst status led 4 times
-// used when locking / unlocking TonUINO
 void burstStatusLed() {
   bool statusLedState = true;
 
@@ -702,7 +711,7 @@ void setup() {
   Serial.println(F("sys | initializing nfc module"));
   SPI.begin();
   mfrc522.PCD_Init();
-#if defined(DEBUG)
+#if defined(DBG)
   mfrc522.PCD_DumpVersionToSerial();
 #endif
 
@@ -720,11 +729,27 @@ void setup() {
   randomSeed(analogRead(rngSeedPin));
 
   Serial.println(F("sys | initializing buttons"));
-  for (uint8_t i = 0; i < buCount; i++) {
-    pinMode(buPins[i], INPUT_PULLUP);
-    bounce[i].attach(buPins[i]);
-    bounce[i].interval(10);
-  }
+  pinMode(button0Pin, INPUT_PULLUP);
+  pinMode(button1Pin, INPUT_PULLUP);
+  pinMode(button2Pin, INPUT_PULLUP);
+  button0.init(button0Pin, HIGH, 0);
+  button1.init(button1Pin, HIGH, 1);
+  button2.init(button2Pin, HIGH, 2);
+  button0Config.setEventHandler(translateButtonInput);
+  button0Config.setFeature(ButtonConfig::kFeatureClick);
+  button0Config.setFeature(ButtonConfig::kFeatureLongPress);
+  button0Config.setClickDelay(buttonClickDelay);
+  button0Config.setLongPressDelay(button0LongPressDelay);
+  button1Config.setEventHandler(translateButtonInput);
+  button1Config.setFeature(ButtonConfig::kFeatureClick);
+  button1Config.setFeature(ButtonConfig::kFeatureLongPress);
+  button1Config.setClickDelay(buttonClickDelay);
+  button1Config.setLongPressDelay(buttonLongPressDelay);
+  button2Config.setEventHandler(translateButtonInput);
+  button2Config.setFeature(ButtonConfig::kFeatureClick);
+  button2Config.setFeature(ButtonConfig::kFeatureLongPress);
+  button2Config.setClickDelay(buttonClickDelay);
+  button2Config.setLongPressDelay(buttonLongPressDelay);
 
 #if defined(TSOP38238)
   Serial.println(F("sys | initializing ir receiver"));
@@ -744,7 +769,7 @@ void setup() {
 void loop() {
   static bool isLocked = false;
   bool isPlaying = !digitalRead(mp3BusyPin);
-  uint8_t inputEvent = checkInput();
+  checkForInput();
 
   // ################################################################################
   // # main code block, if nfc tag is detected and TonUINO is not locked do something
@@ -785,9 +810,9 @@ void loop() {
             Serial.println(F("party mode"));
             break;
           case 4:
+            Serial.println(F("single mode"));
             Serial.print(F("nfc |    track: "));
             Serial.println(nfcTag.assignedTrack);
-            Serial.println(F("single mode"));
             break;
           case 5:
             Serial.println(F("story book mode"));
@@ -858,7 +883,6 @@ void loop() {
             Serial.print(F(" tracks in folder "));
             Serial.print(nfcTag.assignedFolder);
             Serial.println(F(" and track progress"));
-            // read playback.storedTrack from eeprom
             playback.storedTrack = EEPROM.read(nfcTag.assignedFolder);
             // don't resume from eeprom, play from the beginning
             if (playback.storedTrack == 0 || playback.storedTrack > playback.folderTrackCount) playback.playTrack = 1;
@@ -888,6 +912,8 @@ void loop() {
       // #######################################################################################################
       // # nfc tag does not have our magic cookie 0x1337 0xb347 on it (0), start setup to configure this nfc tag
       else if (nfcTag.cookie == 0) {
+        // set long press delay for middle button to a shorter period (default 2000ms)
+        button0Config.setLongPressDelay(buttonLongPressDelay);
         Serial.println(F("nfc | tag is blank"));
         Serial.println(F("sys | starting tag setup"));
         // let user select the folder to assign
@@ -897,31 +923,33 @@ void loop() {
         mp3.playMp3FolderTrack(msgSetupNewTag);
         // loop until folder is assigned
         do {
-          uint8_t inputEvent = checkInput();
-          // button 1 (middle) single push or ir remote play+pause / center: confirm selected folder
-          if (inputEvent == B1P || inputEvent == IRP) {
+          checkForInput();
+          // button 0 (middle) press or ir remote play+pause: confirm selected folder
+          if (inputEvent == B0P || inputEvent == IRP) {
             if (nfcTag.assignedFolder == 0) {
               Serial.println(F("sys |     no folder selected"));
               continue;
             }
             else setAssignedFolder = true;
           }
-          // button 2 (right) single push or ir remote up / right: next folder
-          else if (inputEvent == B2P || inputEvent == IRU || inputEvent == IRR) {
+          // button 1 (right) press or ir remote up / right: next folder
+          else if (inputEvent == B1P || inputEvent == IRU || inputEvent == IRR) {
             nfcTag.assignedFolder = min(nfcTag.assignedFolder + 1, 99);
             Serial.print(F("sys |     folder "));
             Serial.println(nfcTag.assignedFolder);
             mp3.playFolderTrack(nfcTag.assignedFolder, 1);
           }
-          // button 3 (left) single push or ir remote down / left: previous folder
-          else if (inputEvent == B3P || inputEvent == IRD || inputEvent == IRL) {
+          // button 2 (left) press or ir remote down / left: previous folder
+          else if (inputEvent == B2P || inputEvent == IRD || inputEvent == IRL) {
             nfcTag.assignedFolder = max(nfcTag.assignedFolder - 1, 1);
             Serial.print(F("sys |     folder "));
             Serial.println(nfcTag.assignedFolder);
             mp3.playFolderTrack(nfcTag.assignedFolder, 1);
           }
-          // button 2 (right) & button 3 (left) multi hold for 2 sec or ir remote menu: cancel tag setup
-          else if (inputEvent == B23H || inputEvent == IRM) {
+          // button 0 (middle) hold for 2 sec or ir remote menu: cancel tag setup
+          else if (inputEvent == B0H || inputEvent == IRM) {
+            // set long press delay for middle button back to a longer period (default 5000ms)
+            button0Config.setLongPressDelay(button0LongPressDelay);
             Serial.println(F("sys | tag setup canceled"));
             nfcTag.assignedFolder = 0;
             nfcTag.playbackMode = 0;
@@ -949,17 +977,17 @@ void loop() {
         mp3.playMp3FolderTrack(msgSetupNewTagFolderAssigned);
         // loop until playback mode is set
         do {
-          uint8_t inputEvent = checkInput();
-          // button 1 (middle) single push or ir remote play+pause / center: confirm selected playback mode
-          if (inputEvent == B1P || inputEvent == IRP) {
+          checkForInput();
+          // button 0 (middle) press or ir remote play+pause: confirm selected playback mode
+          if (inputEvent == B0P || inputEvent == IRP) {
             if (nfcTag.playbackMode == 0) {
               Serial.println(F("sys |     no playback mode selected"));
               continue;
             }
             else setPlaybackMode = true;
           }
-          // button 2 (right) single push or ir remote up / right: next playback mode
-          else if (inputEvent == B2P || inputEvent == IRU || inputEvent == IRR) {
+          // button 1 (right) press or ir remote up / right: next playback mode
+          else if (inputEvent == B1P || inputEvent == IRU || inputEvent == IRR) {
             nfcTag.playbackMode = min(nfcTag.playbackMode + 1, 5);
             Serial.print(F("sys |     "));
             switch (nfcTag.playbackMode) {
@@ -987,8 +1015,8 @@ void loop() {
                 break;
             }
           }
-          // button 3 (left) single push or ir remote down / left: previous playback mode
-          else if (inputEvent == B3P || inputEvent == IRD || inputEvent == IRL) {
+          // button 2 (left) press or ir remote down / left: previous playback mode
+          else if (inputEvent == B2P || inputEvent == IRD || inputEvent == IRL) {
             nfcTag.playbackMode = max(nfcTag.playbackMode - 1, 1);
             Serial.print(F("sys |     "));
             switch (nfcTag.playbackMode) {
@@ -1016,8 +1044,10 @@ void loop() {
                 break;
             }
           }
-          // button 2 (right) & button 3 (left) multi hold for 2 sec or ir remote menu: cancel tag setup
-          else if (inputEvent == B23H || inputEvent == IRM) {
+          // button 0 (middle) hold for 2 sec or ir remote menu: cancel tag setup
+          else if (inputEvent == B0H || inputEvent == IRM) {
+            // set long press delay for middle button back to a longer period (default 5000ms)
+            button0Config.setLongPressDelay(button0LongPressDelay);
             Serial.println(F("sys | tag setup canceled"));
             nfcTag.assignedFolder = 0;
             nfcTag.playbackMode = 0;
@@ -1064,31 +1094,33 @@ void loop() {
           mp3.playMp3FolderTrack(msgSetupNewTagSingleModeCont);
           // loop until track is assigned
           do {
-            uint8_t inputEvent = checkInput();
-            // button 1 (middle) single push or ir remote play+pause / center: confirm selected track
-            if (inputEvent == B1P || inputEvent == IRP) {
+            checkForInput();
+            // button 0 (middle) press or ir remote play+pause: confirm selected track
+            if (inputEvent == B0P || inputEvent == IRP) {
               if (nfcTag.assignedTrack == 0) {
                 Serial.println(F("sys |     no track selected"));
                 continue;
               }
               else setAssignedTrack = true;
             }
-            // button 2 (right) single push or ir remote up / right: next track
-            else if (inputEvent == B2P || inputEvent == IRU || inputEvent == IRR) {
+            // button 1 (right) press or ir remote up / right: next track
+            else if (inputEvent == B1P || inputEvent == IRU || inputEvent == IRR) {
               nfcTag.assignedTrack = min(nfcTag.assignedTrack + 1, 255);
               Serial.print(F("sys |     track "));
               Serial.println(nfcTag.assignedTrack);
               mp3.playFolderTrack(nfcTag.assignedFolder, nfcTag.assignedTrack);
             }
-            // button 3 (left) single push or ir remote down / left: previous track
-            else if (inputEvent == B3P || inputEvent == IRD || inputEvent == IRL) {
+            // button 2 (left) press or ir remote down / left: previous track
+            else if (inputEvent == B2P || inputEvent == IRD || inputEvent == IRL) {
               nfcTag.assignedTrack = max(nfcTag.assignedTrack - 1, 1);
               Serial.print(F("sys |     track "));
               Serial.println(nfcTag.assignedTrack);
               mp3.playFolderTrack(nfcTag.assignedFolder, nfcTag.assignedTrack);
             }
-            // button 2 (right) & button 3 (left) multi hold for 2 sec or ir remote menu: cancel tag setup
-            else if (inputEvent == B23H || inputEvent == IRM) {
+            // button 0 (middle) hold for 2 sec or ir remote menu: cancel tag setup
+            else if (inputEvent == B0H || inputEvent == IRM) {
+              // set long press delay for middle button back to a longer period (default 5000ms)
+              button0Config.setLongPressDelay(button0LongPressDelay);
               Serial.println(F("sys | tag setup canceled"));
               nfcTag.assignedFolder = 0;
               nfcTag.playbackMode = 0;
@@ -1121,7 +1153,7 @@ void loop() {
                                   0x00, 0x00, 0x00, 0x00,            // reserved for future use
                                   0x00, 0x00, 0x00, 0x00             // reserved for future use
                                  };
-#if defined(DEBUG)
+#if defined(DBG)
         // for debug purposes, print the 16 bytes we are going write to the nfc tag
         Serial.print(F("dbg |"));
         for (uint8_t i = 0; i < 16; i++) {
@@ -1191,8 +1223,8 @@ void loop() {
 #endif
     }
   }
-  // button 1 (middle) single push or ir remote play+pause: toggle playback
-  else if ((inputEvent == B1P && !isLocked) || inputEvent == IRP) {
+  // button 0 (middle) press or ir remote play+pause: toggle playback
+  else if ((inputEvent == B0P && !isLocked) || inputEvent == IRP) {
     if (isPlaying) {
       Serial.println(F("sys | pause"));
       mp3.pause();
@@ -1215,10 +1247,9 @@ void loop() {
       }
     }
   }
-  // button 2 (right) single push or ir remote up: increase volume
-  else if (((inputEvent == B2P && !isLocked) || inputEvent == IRU) && isPlaying) {
+  // button 1 (right) press or ir remote up while playing: increase volume
+  else if (((inputEvent == B1P && !isLocked) || inputEvent == IRU) && isPlaying) {
     uint8_t mp3CurrentVolume = mp3.getVolume();
-
     if (mp3CurrentVolume < mp3MaxVolume) {
       Serial.print(F("sys | increase volume to "));
       Serial.println(mp3CurrentVolume + 1);
@@ -1229,10 +1260,9 @@ void loop() {
       Serial.println(mp3MaxVolume);
     }
   }
-  // button 3 (left) single push or ir remote down: decrease volume
-  else if (((inputEvent == B3P && !isLocked) || inputEvent == IRD) && isPlaying) {
+  // button 2 (left) press or ir remote down while playing: decrease volume
+  else if (((inputEvent == B2P && !isLocked) || inputEvent == IRD) && isPlaying) {
     uint8_t mp3CurrentVolume = mp3.getVolume();
-
     if (mp3CurrentVolume > 0) {
       if (mp3CurrentVolume == 1) Serial.println(F("sys | mute"));
       else {
@@ -1243,22 +1273,18 @@ void loop() {
     }
     else Serial.println(F("sys | mute"));
   }
-  // button 2 (right) single hold or ir remote right, only during album and party mode while playing: next track
-  else if (((inputEvent == B2H && !isLocked) || inputEvent == IRR) && (nfcTag.playbackMode == 2 || nfcTag.playbackMode == 3) && isPlaying) {
+  // button 1 (right) hold for 2 sec or ir remote right, only during album, party and story book mode while playing: next track
+  else if (((inputEvent == B1H && !isLocked) || inputEvent == IRR) && (nfcTag.playbackMode == 2 || nfcTag.playbackMode == 3 || nfcTag.playbackMode == 5) && isPlaying) {
     Serial.println(F("sys | next track"));
-    // bloody hack: decrease volume 1 step because it got increased before due to single button push action
-    if (inputEvent == B2H) mp3.decreaseVolume();
     playNextTrack(random(65536), true, true);
   }
-  // button 3 (left) single hold or ir remote left, only during album mode while playing: previous track
-  else if (((inputEvent == B3H && !isLocked) || inputEvent == IRL) && nfcTag.playbackMode == 2 && isPlaying) {
+  // button 2 (left) hold for 2 sec or ir remote left, only during album and story book mode while playing: previous track
+  else if (((inputEvent == B2H && !isLocked) || inputEvent == IRL) && (nfcTag.playbackMode == 2 || nfcTag.playbackMode == 5) && isPlaying) {
     Serial.println(F("sys | previous track"));
-    // bloody hack: increase volume 1 step because it got decreased before due to single button push action
-    if (inputEvent == B3H) mp3.increaseVolume();
     playNextTrack(random(65536), false, true);
   }
-  // button 2 (right) & button 3 (left) multi hold for 2 sec or ir remote menu, only during story book mode, only while playing: reset progress
-  else if (((inputEvent == B23H && !isLocked) || inputEvent == IRM) && nfcTag.playbackMode == 5 && isPlaying) {
+  // button 0 (middle) hold for 2 sec or ir remote menu, only during story book mode while playing: reset progress
+  else if (((inputEvent == B0H && !isLocked) || inputEvent == IRM) && nfcTag.playbackMode == 5 && isPlaying) {
     Serial.print(F("mp3 | story book mode > folder "));
     Serial.print(nfcTag.assignedFolder);
     Serial.println(F(" > progress reset"));
@@ -1269,16 +1295,20 @@ void loop() {
     Serial.println(playback.folderTrackCount);
     mp3.playFolderTrack(nfcTag.assignedFolder, playback.playTrack = 1);
   }
-  // button 2 (right) & button 3 (left) multi hold for 2 sec or ir remote menu, only while not playing: erase nfc tag
-  else if (((inputEvent == B23H && !isLocked) || inputEvent == IRM) && !isPlaying) {
+  // button 0 (middle) hold for 2 sec or ir remote menu while not playing: erase nfc tag
+  else if (((inputEvent == B0H && !isLocked) || inputEvent == IRM) && !isPlaying) {
+    // set long press delay for middle button to a shorter period (default 2000ms)
+    button0Config.setLongPressDelay(buttonLongPressDelay);
     playback.queueMode = false;
     uint8_t writeNfcTagStatus = 0;
     Serial.println(F("sys | waiting for tag to erase"));
     mp3.playMp3FolderTrack(msgEraseTag);
     do {
-      uint8_t inputEvent = checkInput();
-      // button 2 (right) & button 3 (left) multi hold for 2 sec or ir remote menu: cancel erase nfc tag
-      if (inputEvent == B23H || inputEvent == IRM) {
+      checkForInput();
+      // button 0 (middle) hold for 2 sec or ir remote menu: cancel erase nfc tag
+      if (inputEvent == B0H || inputEvent == IRM) {
+        // set long press delay for middle button back to a longer period (default 5000ms)
+        button0Config.setLongPressDelay(button0LongPressDelay);
         Serial.println(F("sys | erasing tag canceled"));
         mp3.playMp3FolderTrack(msgEraseTagCancel);
         return;

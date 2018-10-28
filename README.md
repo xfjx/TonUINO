@@ -7,15 +7,15 @@ Hier ist eine alternative Version der TonUINO Firmware. Da ich das Glück hatte,
 
 - **Erweiterung:** Die Verknüpfung der einzelnen Ordner zu den NFC Tags wird auf den Tags selbst und nicht mehr im EEPROM des Arduinos gespeichert. Damit gibt es im Prinzip kein Limit mehr für die Anzahl der unterstützten Tags.
 - **Erweiterung:** Die serielle Konsole gibt zu Debug Zwecken allerlei nützlicher Daten aus, so dass man beim basteln zu jeder Zeit weiss was gerade passiert.
-- **Erweiterung:** Man kann das anlernen von NFC Tags abbrechen (beide Laustärketasten 2sec gerückt halten).
-- **Erweiterung:** Wenn TonUINO gerade keinen Titel spielt, kommt man mit "beide Laustärketasten 2sec gerückt halten“ in den NFC Tag löschen Modus, zum abbrechen des selbigen wiederum "beide Laustärketasten 2sec gerückt halten“. Somit kann man zu jeder Zeit auch einzelne NFC Tags wieder löschen um sie danach neu verwenden zu können.
-- **Erweiterung:** Wenn TonUINO gerade einen Titel spielt und sich im Album Modus befindet, kann man mit den beiden Laustärketasten (jeweils 2sec gerückt halten) zum nächsten oder vorherigen Titel springen. Im Party Modus ebenfalls, allerdings dann nur zum nächsten Titel.
+- **Erweiterung:** Man kann das anlernen von NFC Tags abbrechen (die play/pause Taste 2sec gerückt halten).
+- **Erweiterung:** Wenn TonUINO gerade keinen Titel spielt, kommt man mit "play/pause Taste 5sec gerückt halten“ in den NFC Tag löschen Modus, zum abbrechen des selbigen wiederum die "play/pause Taste 2sec gerückt halten“. Somit kann man zu jeder Zeit auch einzelne NFC Tags wieder löschen um sie danach neu verwenden zu können.
+- **Erweiterung:** Wenn TonUINO gerade einen Titel spielt und sich im Album oder Hörbuch Modus befindet, kann man mit den beiden Laustärketasten (jeweils 2sec gerückt halten) zum nächsten oder vorherigen Titel springen. Im Party Modus ebenfalls, allerdings dann nur zum nächsten Titel.
 - **Erweiterung:** Man kann im Sketch die Maximallautstärke zum Schutz der Kinderohren (und der Nerven der Eltern ;-)) zwischnen 0 und 30 festlegen.
 - **Erweiterung:** Wenn man einen passenden IR Empfänger nachrüstet, kann man TonUINO auch fernsteuern. Momentan sind die codes für zwei verschiedene Apple Fernbedienungen hinterlegt, das lässt sich aber für andere Fernbedienungen anpassen.
 - **Erweiterung:** Wenn man eine LED nachrüstet, werden mit dieser LED ein paar nützliche Informationen angezeigt. Man sieht dann z.B. ob TonUINO gerade einen Titel spielt (LED leuchtet dauerhaft), sich im NFC Tag löschen oder anlernen Modus befindet (LED blinkt alle 500ms), oder einfach nur idle ist (LED pulsiert langsam).
 - **Erweiterung:** Man kann mit der IR Fernbedienung die Buttons und den NFC Leser von TonUINO sperren.
 - **Erweiterung:** Lieblingsfolge. Es kann nun auch ein einzelner Titel aus einem Ordner mit einem NFC Tag verknüpft werden. Kinder lieben bekanntlich Wiederholungen. ;-) _Diesen Modus habe ich aus der 2.0 der originalen TonUINO Firmware übernommen._
-- **Erweiterung:** Hörbuchmodus. Spielt wie der Albummodus den gesammten Ordner, merkt sich aber den letzten Titel. Wenn man während der Wiedergabe die beiden Laustärketasten für 2sec gedrückt hällt, startet die Wiedergabe wieder von vorne. _Diesen Modus habe ich aus der 2.0 der originalen TonUINO Firmware übernommen._
+- **Erweiterung:** Hörbuchmodus. Spielt wie der Albummodus den gesammten Ordner, merkt sich aber den letzten Titel. Wenn man während der Wiedergabe die play/pause Taste für 2sec gedrückt hällt, startet die Wiedergabe wieder von vorne. _Diesen Modus habe ich aus der 2.0 der originalen TonUINO Firmware übernommen._
 - **Bugfix:** Man kann während man ein NFC Tag anlernt nicht mehr bestätigen ohne vorher wirklich sowohl Ordner als auch Wiedergabemodus ausgewählt zu haben.
 - **Bugfix:** Umgang mit bestimmten Versionen des DFPlayer Mini Moduls verbessert.
 - **Bugfix:** Play/Pause funktioniert jetzt richtig wenn gerade keine Queue abgespielt wird.
