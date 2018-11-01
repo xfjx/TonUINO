@@ -1154,11 +1154,9 @@ void loop() {
               mp3.playMp3FolderTrack(msgSetupNewTagCancel);
               return;
             }
-
 #if defined(STATUSLED)
             blinkStatusLed();
 #endif
-
             mp3.loop();
           }
           while (!setAssignedTrack);
