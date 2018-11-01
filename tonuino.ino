@@ -182,7 +182,7 @@ enum {NOACTION,
      };
 
 // button modes
-enum {STOP, PLAYBACK, CONFIG};
+enum {PAUSE, PLAY, CONFIG};
 
 // this object stores nfc tag data
 struct nfcTagObject {
@@ -397,10 +397,10 @@ void switchButtonConfiguration(uint8_t buttonMode) {
 
   // non default configuration
   switch (buttonMode) {
-    case STOP:
+    case PAUSE:
       button0Config.setLongPressDelay(buttonLongLongPressDelay);
       break;
-    case PLAYBACK:
+    case PLAY:
       button0Config.setLongPressDelay(buttonLongLongPressDelay);
       break;
     case CONFIG:
@@ -425,7 +425,7 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool triggeredMa
   // there is no next track in story mode > stop playback
   if (nfcTag.playbackMode == 1) {
     playback.queueMode = false;
-    switchButtonConfiguration(STOP);
+    switchButtonConfiguration(PAUSE);
     Serial.println(F("mp3 | story mode > stop"));
     mp3.stop();
   }
@@ -464,7 +464,7 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool triggeredMa
         // stop playback
         else {
           playback.queueMode = false;
-          switchButtonConfiguration(STOP);
+          switchButtonConfiguration(PAUSE);
           Serial.println(F("mp3 | album mode > end of folder > stop"));
           mp3.stop();
         }
@@ -505,7 +505,7 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool triggeredMa
   // there is no next track in single mode > stop playback
   if (nfcTag.playbackMode == 4) {
     playback.queueMode = false;
-    switchButtonConfiguration(STOP);
+    switchButtonConfiguration(PAUSE);
     Serial.println(F("mp3 | single mode > stop"));
     mp3.stop();
   }
@@ -545,7 +545,7 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool triggeredMa
         else {
           playback.queueMode = false;
           EEPROM.update(nfcTag.assignedFolder, 0);
-          switchButtonConfiguration(STOP);
+          switchButtonConfiguration(PAUSE);
           Serial.println(F("mp3 | story book mode > end of folder > stop > progress reset"));
           mp3.stop();
         }
@@ -776,7 +776,7 @@ void setup() {
   button0Config.setEventHandler(translateButtonInput);
   button1Config.setEventHandler(translateButtonInput);
   button2Config.setEventHandler(translateButtonInput);
-  switchButtonConfiguration(STOP);
+  switchButtonConfiguration(PAUSE);
 
 #if defined(TSOP38238)
   Serial.println(F("sys | initializing ir receiver"));
@@ -825,7 +825,7 @@ void loop() {
       // #######################################################################################################
       // # nfc tag has our magic cookie 0x1337 0xb347 on it (322417479), use data from nfc tag to start playback
       if (nfcTag.cookie == 322417479) {
-        switchButtonConfiguration(PLAYBACK);
+        switchButtonConfiguration(PLAY);
         // print read data to console
         Serial.println(F("nfc | tag is one of ours"));
         Serial.print(F("nfc |   folder: "));
@@ -979,7 +979,7 @@ void loop() {
           }
           // button 0 (middle) hold for 2 sec or ir remote menu: cancel tag setup
           else if (inputEvent == B0H || inputEvent == IRM) {
-            switchButtonConfiguration(STOP);
+            switchButtonConfiguration(PAUSE);
             Serial.println(F("sys | tag setup canceled"));
             nfcTag.assignedFolder = 0;
             nfcTag.playbackMode = 0;
@@ -1074,7 +1074,7 @@ void loop() {
           }
           // button 0 (middle) hold for 2 sec or ir remote menu: cancel tag setup
           else if (inputEvent == B0H || inputEvent == IRM) {
-            switchButtonConfiguration(STOP);
+            switchButtonConfiguration(PAUSE);
             Serial.println(F("sys | tag setup canceled"));
             nfcTag.assignedFolder = 0;
             nfcTag.playbackMode = 0;
@@ -1144,7 +1144,7 @@ void loop() {
             }
             // button 0 (middle) hold for 2 sec or ir remote menu: cancel tag setup
             else if (inputEvent == B0H || inputEvent == IRM) {
-              switchButtonConfiguration(STOP);
+              switchButtonConfiguration(PAUSE);
               Serial.println(F("sys | tag setup canceled"));
               nfcTag.assignedFolder = 0;
               nfcTag.playbackMode = 0;
@@ -1167,7 +1167,7 @@ void loop() {
           Serial.print(nfcTag.assignedTrack);
           Serial.println(F(" selected"));
         }
-        switchButtonConfiguration(STOP);
+        switchButtonConfiguration(PAUSE);
         // save data to tag
         Serial.println(F("sys | attempting to save data to tag"));
         uint8_t bytesToWrite[] = {0x13, 0x37, 0xb3, 0x47,            // 0x1337 0xb347 magic cookie to identify our nfc tags
@@ -1251,7 +1251,7 @@ void loop() {
   // button 0 (middle) press or ir remote play+pause: toggle playback
   else if ((inputEvent == B0P && !isLocked) || inputEvent == IRP) {
     if (isPlaying) {
-      switchButtonConfiguration(STOP);
+      switchButtonConfiguration(PAUSE);
       Serial.println(F("sys | pause"));
       mp3.pause();
       // if the current playback mode is story book mode: store the current progress
@@ -1268,7 +1268,7 @@ void loop() {
     }
     else {
       if (playback.queueMode) {
-        switchButtonConfiguration(PLAYBACK);
+        switchButtonConfiguration(PLAY);
         Serial.println(F("sys | play"));
         mp3.start();
       }
@@ -1333,14 +1333,14 @@ void loop() {
       checkForInput();
       // button 0 (middle) hold for 2 sec or ir remote menu: cancel erase nfc tag
       if (inputEvent == B0H || inputEvent == IRM) {
-        switchButtonConfiguration(STOP);
+        switchButtonConfiguration(PAUSE);
         Serial.println(F("sys | erasing tag canceled"));
         mp3.playMp3FolderTrack(msgEraseTagCancel);
         return;
       }
       // wait for nfc tag, erase once detected
       if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) {
-        switchButtonConfiguration(STOP);
+        switchButtonConfiguration(PAUSE);
         Serial.println(F("nfc | tag detected"));
         Serial.println(F("nfc | erasing tag"));
         uint8_t bytesToWrite[16];
