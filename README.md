@@ -4,6 +4,9 @@ Die DIY Musikbox (nicht nur) für Kinder
 
 # Change Log
 
+## Version 2.01 (01.11.2018)
+- kleiner Fix um die Probleme beim Anlernen von Karten zu reduzieren
+
 ## Version 2.0 (26.08.2018)
 
 - Lautstärke wird nun über einen langen Tastendruck geändert
