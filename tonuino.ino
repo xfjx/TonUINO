@@ -69,6 +69,18 @@
   TonUINO is locked or unlocked. This feature can be enabled by uncommenting the
   define STATUSLED below.
 
+  cubiekid:
+  ---------
+
+  If you happen to have a CubieKid case and the additional circuit board, this sketch
+  supports both shutdown methods - due to low battery voltage as well as due to
+  inactivity after a configurable ammount of time. The shutdown voltage, inactivity time
+  as well as other parameters can be setup in the configuration section of this sketch.
+  This feature can be enabled by uncommenting the define CUBIEKID below.
+
+  The CubieKid case as well as the additional circuit board, have been designed and
+  developed by Jens Hackel and can be found here: https://github.com/jenshackel/CubieKid
+
   data stored on the nfc tags:
   ----------------------------
 
@@ -90,6 +102,8 @@
   DFMiniMp3.h - https://github.com/Makuna/DFMiniMp3
   AceButton.h - https://github.com/bxparks/AceButton
   IRremote.h - https://github.com/z3t0/Arduino-IRremote
+  Countimer.h - https://github.com/inflop/Countimer
+  Vcc.h - https://github.com/Yveaux/Arduino_Vcc
 */
 
 // uncomment the below line to enable ir remote support
@@ -97,6 +111,9 @@
 
 // uncomment the below line to enable status led support
 // #define STATUSLED
+
+// uncomment the below line to enable cubiekid support
+// #define CUBIEKID
 
 // uncomment the below line to enable additional debug output
 // #define DBG
@@ -113,6 +130,12 @@ using namespace ace_button;
 // include additional library if ir remote support is enabled
 #if defined(TSOP38238)
 #include <IRremote.h>
+#endif
+
+// include additional libraries if cubiekid support is enabled
+#if defined(CUBIEKID)
+#include <Countimer.h>
+#include <Vcc.h>
 #endif
 
 // define global constants
@@ -151,10 +174,11 @@ const uint16_t msgEraseTagConfirm = 490;            // 13
 const uint16_t msgEraseTagCancel = 491;             // 14
 const uint16_t msgEraseTagError = 492;              // 15
 const uint16_t msgWelcome = 505;                    // 16
+const uint16_t msgBatteryLow = 510;                 // 17
 
 // used to calculate the total ammount of tracks on the sd card
 // mp3 files above (from "mp3" folder) + whatever is in the "advert" folder
-const uint8_t msgCount = 16;
+const uint8_t msgCount = 17;
 
 // define code mappings for silver apple tv 2 ir remote
 const uint16_t ir1ButtonUp = 0x5057;
@@ -201,6 +225,20 @@ struct playbackObject {
   uint8_t storedTrack = 1;
   uint16_t folderTrackCount = 0;
 } playback;
+
+#if defined(CUBIEKID)
+// this object stores the cubiekid configuration
+struct cubiekidObject {
+  const uint8_t shutdownPin = 7;                    // pin used to shutdown the system
+  const uint8_t powerOffHours = 0;                  // hours until shutdown
+  const uint8_t powerOffMinutes = 10;               // minutes until shutdown
+  const uint8_t powerOffSeconds = 0;                // seconds until shutdown
+  const uint32_t timerInterval = 1000;              // timer interval (in milliseconds)
+  const float minVoltage = 4.4;                     // minimum expected voltage level (in volts)
+  const float maxVoltage = 5.0;                     // maximum expected voltage level (in volts)
+  const float voltageCorrection = 1.0 / 1.0;        // voltage measured by multimeter divided by reported voltage
+} cubiekid;
+#endif
 
 // global variables
 uint8_t inputEvent = NOACTION;
@@ -274,6 +312,11 @@ AceButton button2(&button2Config);                                            //
 #if defined(TSOP38238)
 IRrecv irReceiver(irReceiverPin);                                             // create IRrecv instance
 decode_results irReadings;                                                    // create decode_results instance to store received ir readings
+#endif
+
+#if defined(CUBIEKID)
+Countimer cubiekidShutdownTimer;                                              // create Countimer instance
+Vcc cubiekidVoltage(cubiekid.voltageCorrection);                              // create Vcc instalce
 #endif
 
 // checks all input sources and populates the global inputEvent variable
@@ -426,6 +469,9 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool triggeredMa
   if (nfcTag.playbackMode == 1) {
     playback.queueMode = false;
     switchButtonConfiguration(PAUSE);
+#if defined(CUBIEKID)
+    cubiekidShutdownTimer.restart();
+#endif
     Serial.println(F("mp3 | story mode > stop"));
     mp3.stop();
   }
@@ -465,6 +511,9 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool triggeredMa
         else {
           playback.queueMode = false;
           switchButtonConfiguration(PAUSE);
+#if defined(CUBIEKID)
+          cubiekidShutdownTimer.restart();
+#endif
           Serial.println(F("mp3 | album mode > end of folder > stop"));
           mp3.stop();
         }
@@ -506,6 +555,9 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool triggeredMa
   if (nfcTag.playbackMode == 4) {
     playback.queueMode = false;
     switchButtonConfiguration(PAUSE);
+#if defined(CUBIEKID)
+    cubiekidShutdownTimer.restart();
+#endif
     Serial.println(F("mp3 | single mode > stop"));
     mp3.stop();
   }
@@ -546,6 +598,9 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool triggeredMa
           playback.queueMode = false;
           EEPROM.update(nfcTag.assignedFolder, 0);
           switchButtonConfiguration(PAUSE);
+#if defined(CUBIEKID)
+          cubiekidShutdownTimer.restart();
+#endif
           Serial.println(F("mp3 | story book mode > end of folder > stop > progress reset"));
           mp3.stop();
         }
@@ -739,7 +794,28 @@ void burstStatusLed() {
 }
 #endif
 
+#if defined(CUBIEKID)
+// show time remaining until shutdown
+// available when DEBUG is enabled
+void cubiekidTimerRemaining() {
+#if defined(DBG)
+  Serial.print(F("dbg | shutdown in "));
+  Serial.println(cubiekidShutdownTimer.getCurrentTime());
+#endif
+}
+
+// shutdown the system
+void cubiekidShutdown() {
+  Serial.println(F("sys | inactivity, shutdown..."));
+  digitalWrite(cubiekid.shutdownPin, LOW);
+}
+#endif
+
 void setup() {
+#if defined(CUBIEKID)
+  pinMode(cubiekid.shutdownPin, OUTPUT);
+  digitalWrite(cubiekid.shutdownPin, HIGH);
+#endif
   Serial.begin(debugConsoleSpeed);
   while (!Serial);
   Serial.println(F("sys | TonUINO JUKEBOX"));
@@ -789,6 +865,31 @@ void setup() {
   digitalWrite(statusLedPin, HIGH);
 #endif
 
+#if defined(CUBIEKID)
+  Serial.println(F("sys | initializing cubiekid"));
+  Serial.print(F("sys |  expected: "));
+  Serial.print(cubiekid.maxVoltage);
+  Serial.println(F("V"));
+  Serial.print(F("sys |  shutdown: "));
+  Serial.print(cubiekid.minVoltage);
+  Serial.println(F("V"));
+  Serial.print(F("sys |   current: "));
+  Serial.print(cubiekidVoltage.Read_Volts());
+  Serial.print(F("V ("));
+  Serial.print(cubiekidVoltage.Read_Perc(cubiekid.minVoltage, cubiekid.maxVoltage));
+  Serial.println(F("%)"));
+  Serial.print(F("sys |     timer: "));
+  Serial.print(cubiekid.powerOffHours);
+  Serial.print(F("h:"));
+  Serial.print(cubiekid.powerOffMinutes);
+  Serial.print(F("m:"));
+  Serial.print(cubiekid.powerOffSeconds);
+  Serial.println(F("s"));
+  cubiekidShutdownTimer.setCounter(cubiekid.powerOffHours, cubiekid.powerOffMinutes, cubiekid.powerOffSeconds, cubiekidShutdownTimer.COUNT_DOWN, cubiekidShutdown);
+  cubiekidShutdownTimer.setInterval(cubiekidTimerRemaining, cubiekid.timerInterval);
+  cubiekidShutdownTimer.start();
+#endif
+
   Serial.println(F("sys | system is ready"));
   mp3.playMp3FolderTrack(msgWelcome);
 }
@@ -800,6 +901,20 @@ void loop() {
 
 #if defined(STATUSLED)
   fadeStatusLed(isPlaying);
+#endif
+
+#if defined(CUBIEKID)
+  // update timer
+  cubiekidShutdownTimer.run();
+  // if low voltage level is reached, store progress and shutdown
+  if (cubiekidVoltage.Read_Volts() <= cubiekid.minVoltage) {
+    // if the current playback mode is story book mode: store the current progress
+    if (nfcTag.playbackMode == 5) EEPROM.update(nfcTag.assignedFolder, playback.playTrack);
+    mp3.playMp3FolderTrack(msgBatteryLow);
+    delay(10000);
+    Serial.println(F("sys | low voltage, shutdown..."));
+    digitalWrite(cubiekid.shutdownPin, LOW);
+  }
 #endif
 
   // ################################################################################
@@ -826,6 +941,9 @@ void loop() {
       // # nfc tag has our magic cookie 0x1337 0xb347 on it (322417479), use data from nfc tag to start playback
       if (nfcTag.cookie == 322417479) {
         switchButtonConfiguration(PLAY);
+#if defined(CUBIEKID)
+        cubiekidShutdownTimer.stop();
+#endif
         // print read data to console
         Serial.println(F("nfc | tag is one of ours"));
         Serial.print(F("nfc |   folder: "));
@@ -945,6 +1063,9 @@ void loop() {
       // # nfc tag does not have our magic cookie 0x1337 0xb347 on it (0), start setup to configure this nfc tag
       else if (nfcTag.cookie == 0) {
         switchButtonConfiguration(CONFIG);
+#if defined(CUBIEKID)
+        cubiekidShutdownTimer.stop();
+#endif
         Serial.println(F("nfc | tag is blank"));
         Serial.println(F("sys | starting tag setup"));
         // let user select the folder to assign
@@ -980,6 +1101,9 @@ void loop() {
           // button 0 (middle) hold for 2 sec or ir remote menu: cancel tag setup
           else if (inputEvent == B0H || inputEvent == IRM) {
             switchButtonConfiguration(PAUSE);
+#if defined(CUBIEKID)
+            cubiekidShutdownTimer.start();
+#endif
             Serial.println(F("sys | tag setup canceled"));
             nfcTag.assignedFolder = 0;
             nfcTag.playbackMode = 0;
@@ -1075,6 +1199,9 @@ void loop() {
           // button 0 (middle) hold for 2 sec or ir remote menu: cancel tag setup
           else if (inputEvent == B0H || inputEvent == IRM) {
             switchButtonConfiguration(PAUSE);
+#if defined(CUBIEKID)
+            cubiekidShutdownTimer.start();
+#endif
             Serial.println(F("sys | tag setup canceled"));
             nfcTag.assignedFolder = 0;
             nfcTag.playbackMode = 0;
@@ -1145,6 +1272,9 @@ void loop() {
             // button 0 (middle) hold for 2 sec or ir remote menu: cancel tag setup
             else if (inputEvent == B0H || inputEvent == IRM) {
               switchButtonConfiguration(PAUSE);
+#if defined(CUBIEKID)
+              cubiekidShutdownTimer.start();
+#endif
               Serial.println(F("sys | tag setup canceled"));
               nfcTag.assignedFolder = 0;
               nfcTag.playbackMode = 0;
@@ -1166,6 +1296,9 @@ void loop() {
           Serial.println(F(" selected"));
         }
         switchButtonConfiguration(PAUSE);
+#if defined(CUBIEKID)
+        cubiekidShutdownTimer.start();
+#endif
         // save data to tag
         Serial.println(F("sys | attempting to save data to tag"));
         uint8_t bytesToWrite[] = {0x13, 0x37, 0xb3, 0x47,            // 0x1337 0xb347 magic cookie to identify our nfc tags
@@ -1210,6 +1343,7 @@ void loop() {
             break;
         }
       }
+
       // nfc tag is not blank but unknown, ignore
       else Serial.println(F("nfc | tag is not one of ours"));
       // # end - nfc tag does not have our magic cookie 0x1337 0xb347 on it (0)
@@ -1250,6 +1384,9 @@ void loop() {
   else if ((inputEvent == B0P && !isLocked) || inputEvent == IRP) {
     if (isPlaying) {
       switchButtonConfiguration(PAUSE);
+#if defined(CUBIEKID)
+      cubiekidShutdownTimer.start();
+#endif
       Serial.println(F("sys | pause"));
       mp3.pause();
       // if the current playback mode is story book mode: store the current progress
@@ -1267,6 +1404,9 @@ void loop() {
     else {
       if (playback.queueMode) {
         switchButtonConfiguration(PLAY);
+#if defined(CUBIEKID)
+        cubiekidShutdownTimer.stop();
+#endif
         Serial.println(F("sys | play"));
         mp3.start();
       }
@@ -1323,6 +1463,9 @@ void loop() {
   // button 0 (middle) hold for 5 sec or ir remote menu while not playing: erase nfc tag
   else if (((inputEvent == B0H && !isLocked) || inputEvent == IRM) && !isPlaying) {
     switchButtonConfiguration(CONFIG);
+#if defined(CUBIEKID)
+    cubiekidShutdownTimer.stop();
+#endif
     playback.queueMode = false;
     uint8_t writeNfcTagStatus = 0;
     Serial.println(F("sys | waiting for tag to erase"));
@@ -1332,6 +1475,9 @@ void loop() {
       // button 0 (middle) hold for 2 sec or ir remote menu: cancel erase nfc tag
       if (inputEvent == B0H || inputEvent == IRM) {
         switchButtonConfiguration(PAUSE);
+#if defined(CUBIEKID)
+        cubiekidShutdownTimer.start();
+#endif
         Serial.println(F("sys | erasing tag canceled"));
         mp3.playMp3FolderTrack(msgEraseTagCancel);
         return;
@@ -1339,6 +1485,9 @@ void loop() {
       // wait for nfc tag, erase once detected
       if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) {
         switchButtonConfiguration(PAUSE);
+#if defined(CUBIEKID)
+        cubiekidShutdownTimer.start();
+#endif
         Serial.println(F("nfc | tag detected"));
         Serial.println(F("nfc | erasing tag"));
         uint8_t bytesToWrite[16];

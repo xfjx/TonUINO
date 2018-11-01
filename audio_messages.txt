@@ -14,3 +14,4 @@ mp3/0490.mp3|OK, ich habe die Karte gelöscht.
 mp3/0491.mp3|Karte löschen abgebrochen.
 mp3/0492.mp3|Beim löschen der Karte ist ein Fehler aufgetreten. Bitte versuche es noch einmal.
 mp3/0505.mp3|Los gehts!
+mp3/0510.mp3|Oh je, meine Batterie ist alle! Bitte Mama oder Papa, daß sie die Batterie tauschen. Ich schalte mich jetzt ab, bis bald.
