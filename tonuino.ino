@@ -130,8 +130,8 @@ const uint8_t button0Pin = A0;                      // middle button
 const uint8_t button1Pin = A1;                      // right button
 const uint8_t button2Pin = A2;                      // left button
 const uint16_t buttonClickDelay = 1000;             // time during which a button click is still a click (in milliseconds)
-const uint16_t buttonLongPressDelay = 2000;         // time after which a button press is considered a long press (in milliseconds)
-const uint16_t button0LongPressDelay = 5000;        // special long press delay for middle button to trigger erase nfc mode (in milliseconds)
+const uint16_t buttonShortLongPressDelay = 2000;    // time after which a button press is considered a long press (in milliseconds)
+const uint16_t buttonLongLongPressDelay = 5000;     // longer long press delay for special cases, i.e. to trigger erase nfc tag mode (in milliseconds)
 const uint32_t debugConsoleSpeed = 115200;          // speed for the debug console
 
 // define message to mp3 file mappings for spoken feedback
@@ -175,11 +175,14 @@ const uint16_t ir2ButtonMenu = 0xC0BF;
 const uint16_t ir2ButtonPlayPause = 0xFABF;
 
 // button actions
-enum {NOACTION,                                     // 0
-      B0P, B1P, B2P,                                // 1, 2, 3
-      B0H, B1H, B2H,                                // 4, 5, 6
-      IRU, IRD, IRL, IRR, IRC, IRM, IRP             // 7, 8, 9, 10, 11, 12, 13
+enum {NOACTION,
+      B0P, B1P, B2P,
+      B0H, B1H, B2H,
+      IRU, IRD, IRL, IRR, IRC, IRM, IRP
      };
+
+// button modes
+enum {STOP, PLAYBACK, CONFIG};
 
 // this object stores nfc tag data
 struct nfcTagObject {
@@ -377,6 +380,37 @@ void translateButtonInput(AceButton* button, uint8_t eventType, uint8_t /* butto
   }
 }
 
+// switches button configuration dependig on the state that TonUINO is in
+void switchButtonConfiguration(uint8_t buttonMode) {
+  // default configuration for all modes
+  button0Config.setFeature(ButtonConfig::kFeatureClick);
+  button0Config.setFeature(ButtonConfig::kFeatureLongPress);
+  button0Config.setClickDelay(buttonClickDelay);
+  button1Config.setFeature(ButtonConfig::kFeatureClick);
+  button1Config.setFeature(ButtonConfig::kFeatureLongPress);
+  button1Config.setClickDelay(buttonClickDelay);
+  button1Config.setLongPressDelay(buttonShortLongPressDelay);
+  button2Config.setFeature(ButtonConfig::kFeatureClick);
+  button2Config.setFeature(ButtonConfig::kFeatureLongPress);
+  button2Config.setClickDelay(buttonClickDelay);
+  button2Config.setLongPressDelay(buttonShortLongPressDelay);
+
+  // non default configuration
+  switch (buttonMode) {
+    case STOP:
+      button0Config.setLongPressDelay(buttonLongLongPressDelay);
+      break;
+    case PLAYBACK:
+      button0Config.setLongPressDelay(buttonLongLongPressDelay);
+      break;
+    case CONFIG:
+      button0Config.setLongPressDelay(buttonShortLongPressDelay);
+      break;
+    default:
+      break;
+  }
+}
+
 // plays next track depending on the current playback mode
 void playNextTrack(uint16_t globalTrack, bool directionForward, bool triggeredManually) {
   static uint16_t lastCallTrack = 0;
@@ -390,8 +424,9 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool triggeredMa
   // story mode: play one random track in folder
   // there is no next track in story mode > stop playback
   if (nfcTag.playbackMode == 1) {
-    Serial.println(F("mp3 | story mode > stop"));
     playback.queueMode = false;
+    switchButtonConfiguration(STOP);
+    Serial.println(F("mp3 | story mode > stop"));
     mp3.stop();
   }
 
@@ -428,8 +463,9 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool triggeredMa
         if (triggeredManually) Serial.println(F("mp3 | album mode > end of folder"));
         // stop playback
         else {
-          Serial.println(F("mp3 | album mode > end of folder > stop"));
           playback.queueMode = false;
+          switchButtonConfiguration(STOP);
+          Serial.println(F("mp3 | album mode > end of folder > stop"));
           mp3.stop();
         }
       }
@@ -468,8 +504,9 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool triggeredMa
   // single mode: play a single track in folder
   // there is no next track in single mode > stop playback
   if (nfcTag.playbackMode == 4) {
-    Serial.println(F("mp3 | single mode > stop"));
     playback.queueMode = false;
+    switchButtonConfiguration(STOP);
+    Serial.println(F("mp3 | single mode > stop"));
     mp3.stop();
   }
 
@@ -506,9 +543,10 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool triggeredMa
         if (triggeredManually) Serial.println(F("mp3 | story book mode > end of folder"));
         // stop playback and reset progress
         else {
-          Serial.println(F("mp3 | story book mode > end of folder > stop > progress reset"));
-          EEPROM.update(nfcTag.assignedFolder, 0);
           playback.queueMode = false;
+          switchButtonConfiguration(STOP);
+          EEPROM.update(nfcTag.assignedFolder, 0);
+          Serial.println(F("mp3 | story book mode > end of folder > stop > progress reset"));
           mp3.stop();
         }
       }
@@ -736,20 +774,9 @@ void setup() {
   button1.init(button1Pin, HIGH, 1);
   button2.init(button2Pin, HIGH, 2);
   button0Config.setEventHandler(translateButtonInput);
-  button0Config.setFeature(ButtonConfig::kFeatureClick);
-  button0Config.setFeature(ButtonConfig::kFeatureLongPress);
-  button0Config.setClickDelay(buttonClickDelay);
-  button0Config.setLongPressDelay(button0LongPressDelay);
   button1Config.setEventHandler(translateButtonInput);
-  button1Config.setFeature(ButtonConfig::kFeatureClick);
-  button1Config.setFeature(ButtonConfig::kFeatureLongPress);
-  button1Config.setClickDelay(buttonClickDelay);
-  button1Config.setLongPressDelay(buttonLongPressDelay);
   button2Config.setEventHandler(translateButtonInput);
-  button2Config.setFeature(ButtonConfig::kFeatureClick);
-  button2Config.setFeature(ButtonConfig::kFeatureLongPress);
-  button2Config.setClickDelay(buttonClickDelay);
-  button2Config.setLongPressDelay(buttonLongPressDelay);
+  switchButtonConfiguration(STOP);
 
 #if defined(TSOP38238)
   Serial.println(F("sys | initializing ir receiver"));
@@ -794,6 +821,7 @@ void loop() {
       // #######################################################################################################
       // # nfc tag has our magic cookie 0x1337 0xb347 on it (322417479), use data from nfc tag to start playback
       if (nfcTag.cookie == 322417479) {
+        switchButtonConfiguration(PLAYBACK);
         // print read data to console
         Serial.println(F("nfc | tag is one of ours"));
         Serial.print(F("nfc |   folder: "));
@@ -912,8 +940,7 @@ void loop() {
       // #######################################################################################################
       // # nfc tag does not have our magic cookie 0x1337 0xb347 on it (0), start setup to configure this nfc tag
       else if (nfcTag.cookie == 0) {
-        // set long press delay for middle button to a shorter period (default 2000ms)
-        button0Config.setLongPressDelay(buttonLongPressDelay);
+        switchButtonConfiguration(CONFIG);
         Serial.println(F("nfc | tag is blank"));
         Serial.println(F("sys | starting tag setup"));
         // let user select the folder to assign
@@ -948,8 +975,7 @@ void loop() {
           }
           // button 0 (middle) hold for 2 sec or ir remote menu: cancel tag setup
           else if (inputEvent == B0H || inputEvent == IRM) {
-            // set long press delay for middle button back to a longer period (default 5000ms)
-            button0Config.setLongPressDelay(button0LongPressDelay);
+            switchButtonConfiguration(STOP);
             Serial.println(F("sys | tag setup canceled"));
             nfcTag.assignedFolder = 0;
             nfcTag.playbackMode = 0;
@@ -1046,8 +1072,7 @@ void loop() {
           }
           // button 0 (middle) hold for 2 sec or ir remote menu: cancel tag setup
           else if (inputEvent == B0H || inputEvent == IRM) {
-            // set long press delay for middle button back to a longer period (default 5000ms)
-            button0Config.setLongPressDelay(button0LongPressDelay);
+            switchButtonConfiguration(STOP);
             Serial.println(F("sys | tag setup canceled"));
             nfcTag.assignedFolder = 0;
             nfcTag.playbackMode = 0;
@@ -1119,8 +1144,7 @@ void loop() {
             }
             // button 0 (middle) hold for 2 sec or ir remote menu: cancel tag setup
             else if (inputEvent == B0H || inputEvent == IRM) {
-              // set long press delay for middle button back to a longer period (default 5000ms)
-              button0Config.setLongPressDelay(button0LongPressDelay);
+              switchButtonConfiguration(STOP);
               Serial.println(F("sys | tag setup canceled"));
               nfcTag.assignedFolder = 0;
               nfcTag.playbackMode = 0;
@@ -1143,6 +1167,7 @@ void loop() {
           Serial.print(nfcTag.assignedTrack);
           Serial.println(F(" selected"));
         }
+        switchButtonConfiguration(STOP);
         // save data to tag
         Serial.println(F("sys | attempting to save data to tag"));
         uint8_t bytesToWrite[] = {0x13, 0x37, 0xb3, 0x47,            // 0x1337 0xb347 magic cookie to identify our nfc tags
@@ -1283,7 +1308,7 @@ void loop() {
     Serial.println(F("sys | previous track"));
     playNextTrack(random(65536), false, true);
   }
-  // button 0 (middle) hold for 2 sec or ir remote menu, only during story book mode while playing: reset progress
+  // button 0 (middle) hold for 5 sec or ir remote menu, only during story book mode while playing: reset progress
   else if (((inputEvent == B0H && !isLocked) || inputEvent == IRM) && nfcTag.playbackMode == 5 && isPlaying) {
     Serial.print(F("mp3 | story book mode > folder "));
     Serial.print(nfcTag.assignedFolder);
@@ -1295,10 +1320,9 @@ void loop() {
     Serial.println(playback.folderTrackCount);
     mp3.playFolderTrack(nfcTag.assignedFolder, playback.playTrack = 1);
   }
-  // button 0 (middle) hold for 2 sec or ir remote menu while not playing: erase nfc tag
+  // button 0 (middle) hold for 5 sec or ir remote menu while not playing: erase nfc tag
   else if (((inputEvent == B0H && !isLocked) || inputEvent == IRM) && !isPlaying) {
-    // set long press delay for middle button to a shorter period (default 2000ms)
-    button0Config.setLongPressDelay(buttonLongPressDelay);
+    switchButtonConfiguration(CONFIG);
     playback.queueMode = false;
     uint8_t writeNfcTagStatus = 0;
     Serial.println(F("sys | waiting for tag to erase"));
@@ -1307,14 +1331,14 @@ void loop() {
       checkForInput();
       // button 0 (middle) hold for 2 sec or ir remote menu: cancel erase nfc tag
       if (inputEvent == B0H || inputEvent == IRM) {
-        // set long press delay for middle button back to a longer period (default 5000ms)
-        button0Config.setLongPressDelay(button0LongPressDelay);
+        switchButtonConfiguration(STOP);
         Serial.println(F("sys | erasing tag canceled"));
         mp3.playMp3FolderTrack(msgEraseTagCancel);
         return;
       }
       // wait for nfc tag, erase once detected
       if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) {
+        switchButtonConfiguration(STOP);
         Serial.println(F("nfc | tag detected"));
         Serial.println(F("nfc | erasing tag"));
         uint8_t bytesToWrite[16];
