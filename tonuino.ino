@@ -544,8 +544,8 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool triggeredMa
         // stop playback and reset progress
         else {
           playback.queueMode = false;
-          switchButtonConfiguration(STOP);
           EEPROM.update(nfcTag.assignedFolder, 0);
+          switchButtonConfiguration(STOP);
           Serial.println(F("mp3 | story book mode > end of folder > stop > progress reset"));
           mp3.stop();
         }
@@ -798,6 +798,10 @@ void loop() {
   bool isPlaying = !digitalRead(mp3BusyPin);
   checkForInput();
 
+#if defined(STATUSLED)
+  fadeStatusLed(isPlaying);
+#endif
+
   // ################################################################################
   // # main code block, if nfc tag is detected and TonUINO is not locked do something
   if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial() && !isLocked) {
@@ -985,11 +989,9 @@ void loop() {
             mp3.playMp3FolderTrack(msgSetupNewTagCancel);
             return;
           }
-
 #if defined(STATUSLED)
           blinkStatusLed();
 #endif
-
           mp3.loop();
         }
         while (!setAssignedFolder);
@@ -1082,11 +1084,9 @@ void loop() {
             mp3.playMp3FolderTrack(msgSetupNewTagCancel);
             return;
           }
-
 #if defined(STATUSLED)
           blinkStatusLed();
 #endif
-
           mp3.loop();
         }
         while (!setPlaybackMode);
@@ -1251,6 +1251,7 @@ void loop() {
   // button 0 (middle) press or ir remote play+pause: toggle playback
   else if ((inputEvent == B0P && !isLocked) || inputEvent == IRP) {
     if (isPlaying) {
+      switchButtonConfiguration(STOP);
       Serial.println(F("sys | pause"));
       mp3.pause();
       // if the current playback mode is story book mode: store the current progress
@@ -1267,6 +1268,7 @@ void loop() {
     }
     else {
       if (playback.queueMode) {
+        switchButtonConfiguration(PLAYBACK);
         Serial.println(F("sys | play"));
         mp3.start();
       }
@@ -1368,21 +1370,15 @@ void loop() {
             break;
         }
       }
-
 #if defined(STATUSLED)
       blinkStatusLed();
 #endif
-
       mp3.loop();
     }
     while (!writeNfcTagStatus);
   }
   // # end - handle button or ir remote events during playback or while waiting for nfc tags
   // #######################################################################################
-
-#if defined(STATUSLED)
-  fadeStatusLed(isPlaying);
-#endif
 
   mp3.loop();
 }
