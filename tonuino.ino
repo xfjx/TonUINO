@@ -1233,7 +1233,7 @@ void loop() {
             Serial.print(F("single mode"));
             break;
           case 5:
-            Serial.println(F("story book mode"));
+            Serial.print(F("story book mode"));
             break;
           default:
             break;
@@ -1342,6 +1342,7 @@ void loop() {
             mp3.playMp3FolderTrack(msgSetupNewTagError);
             break;
         }
+        inputEvent = NOACTION;
       }
 
       // nfc tag is not blank but unknown, ignore
