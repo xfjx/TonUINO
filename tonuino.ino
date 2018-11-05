@@ -155,6 +155,7 @@ const uint8_t button2Pin = A2;                      // left button
 const uint16_t buttonClickDelay = 1000;             // time during which a button click is still a click (in milliseconds)
 const uint16_t buttonShortLongPressDelay = 2000;    // time after which a button press is considered a long press (in milliseconds)
 const uint16_t buttonLongLongPressDelay = 5000;     // longer long press delay for special cases, i.e. to trigger erase nfc tag mode (in milliseconds)
+const uint16_t ledBlinkInterval = 500;              // led blink interval (in milliseconds)
 const uint32_t debugConsoleSpeed = 115200;          // speed for the debug console
 
 // define message to mp3 file mappings for spoken feedback
@@ -769,13 +770,13 @@ void fadeStatusLed(bool isPlaying) {
   }
 }
 
-// blink status led every 500ms
-void blinkStatusLed() {
+// blink status led every blinkInterval milliseconds
+void blinkStatusLed(uint16_t blinkInterval) {
   static bool statusLedState;
   static uint32_t statusLedOldMillis;
 
   uint32_t statusLedNewMillis = millis();
-  if (statusLedNewMillis - statusLedOldMillis >= 500) {
+  if (statusLedNewMillis - statusLedOldMillis >= blinkInterval) {
     statusLedOldMillis = statusLedNewMillis;
     statusLedState = !statusLedState;
     digitalWrite(statusLedPin, statusLedState);
@@ -1114,7 +1115,7 @@ void loop() {
             return;
           }
 #if defined(STATUSLED)
-          blinkStatusLed();
+          blinkStatusLed(ledBlinkInterval);
 #endif
           mp3.loop();
         }
@@ -1212,7 +1213,7 @@ void loop() {
             return;
           }
 #if defined(STATUSLED)
-          blinkStatusLed();
+          blinkStatusLed(ledBlinkInterval);
 #endif
           mp3.loop();
         }
@@ -1285,7 +1286,7 @@ void loop() {
               return;
             }
 #if defined(STATUSLED)
-            blinkStatusLed();
+            blinkStatusLed(ledBlinkInterval);
 #endif
             mp3.loop();
           }
@@ -1519,7 +1520,7 @@ void loop() {
         }
       }
 #if defined(STATUSLED)
-      blinkStatusLed();
+      blinkStatusLed(ledBlinkInterval);
 #endif
       mp3.loop();
     }
