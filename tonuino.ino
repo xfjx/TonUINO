@@ -27,6 +27,8 @@
   Hold B1 for 2 seconds during playback in album, party and story book mode: Skip to the next track
   Hold B2 for 2 seconds during playback in album and story book mode: Skip to the previous track
 
+  Hold B0 + B1 + B2 while powering up: Erase the eeprom contents. (Use with care, eeprom write/erase cycles are limited.)
+
   ir remote:
   ----------
 
@@ -890,6 +892,17 @@ void setup() {
   cubiekidShutdownTimer.setInterval(cubiekidTimerRemaining, cubiekid.timerInterval);
   cubiekidShutdownTimer.start();
 #endif
+
+  // hold down all three buttons while powering up: erase the eeprom contents
+  if (digitalRead(button0Pin) == LOW && digitalRead(button1Pin) == LOW && digitalRead(button2Pin) == LOW) {
+    Serial.println(F("sys | initializing eeprom"));
+    for (int i = 0; i < EEPROM.length(); i++) {
+      EEPROM.update(i, 0);
+#if defined(STATUSLED)
+      blinkStatusLed(50);
+#endif
+    }
+  }
 
   Serial.println(F("sys | system is ready"));
   mp3.playMp3FolderTrack(msgWelcome);
