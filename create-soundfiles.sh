@@ -30,35 +30,19 @@ lame -b 128 0313.wav 0313_mode_party.mp3
 
 say -v Anna "Einzel Modus: Eine bestimmte Datei im Ordner wiedergeben." -o 0314.aiff
 sox 0314.aiff 0314.wav pitch 800
-lame -b 128 0314.wav 0314_mode_sigle_track.mp3
+lame -b 128 0314.wav 0314_mode_single_track.mp3
 
 say -v Anna "Hörbuch Modus: Einen Ordner wiedergeben und den Fortschritt speichern." -o 0315.aiff
 sox 0315.aiff 0315.wav pitch 800
-lame -b 128 0315.wav 0315_node_audio_book.mp3
-
-say -v Anna "OK, wähle nun bitte die Datei mit den Lautstärke Tasten aus. " -o 0320.aiff
-sox 0320.aiff 0320.wav pitch 800
-lame -b 128 0320.wav 0320_select_file.mp3
+lame -b 128 0315.wav 0315_mode_audio_book.mp3
 
 say -v Anna "Admin Funktionen." -o 0316.aiff
 sox 0316.aiff 0316.wav pitch 800
 lame -b 128 0316.wav 0316_admin.mp3
 
-say -v Anna "Bitte lege die zu löschende Karte auf! Zum Abbrechen einfach eine der Lautstärke Tasten drücken!" -o 0800.aiff
-sox 0800.aiff 0800.wav pitch 800
-lame -b 128 0800.wav 0800_reset_tag.mp3
-
-say -v Anna "OK, du kannst den Tag nun wieder neu konfigurieren." -o 0801.aiff
-sox 0801.aiff 0801.wav pitch 800
-lame -b 128 0801.wav 0801_reset_tag_ok.mp3
-
-say -v Anna "OK, ich habe den Vorgang abgebrochen." -o 0802.aiff
-sox 0802.aiff 0802.wav pitch 800
-lame -b 128 0802.wav 0802_reset_aborted.mp3
-
-say -v Anna "Reset wurde durchgeführt!" -o 0999.aiff
-sox 0999.aiff 0999.wav pitch 800
-lame -b 128 0999.wav 0999_reset_ok.mp3
+say -v Anna "OK, wähle nun bitte die Datei mit den Lautstärke Tasten aus. " -o 0320.aiff
+sox 0320.aiff 0320.wav pitch 800
+lame -b 128 0320.wav 0320_select_file.mp3
 
 say -v Anna "Soll ich vor einer Datei jeweils die Nummer ansagen? Du kannst jederzeit durch einen langen Druck auf die Pause Taste die aktuelle Nummer abfragen." -o 0330.aiff
 sox 0330.aiff 0330.wav pitch 800
@@ -80,6 +64,21 @@ say -v Anna "Oh weh! Das hat leider nicht geklappt!." -o 0401.aiff
 sox 0401.aiff 0401.wav pitch 800
 lame -b 128 0401.wav 0401_error.mp3
 
+say -v Anna "Bitte lege die zu löschende Karte auf! Zum Abbrechen einfach eine der Lautstärke Tasten drücken!" -o 0800.aiff
+sox 0800.aiff 0800.wav pitch 800
+lame -b 128 0800.wav 0800_reset_tag.mp3
+
+say -v Anna "OK, du kannst den Tag nun wieder neu konfigurieren." -o 0801.aiff
+sox 0801.aiff 0801.wav pitch 800
+lame -b 128 0801.wav 0801_reset_tag_ok.mp3
+
+say -v Anna "OK, ich habe den Vorgang abgebrochen." -o 0802.aiff
+sox 0802.aiff 0802.wav pitch 800
+lame -b 128 0802.wav 0802_reset_aborted.mp3
+
+say -v Anna "Reset wurde durchgeführt!" -o 0999.aiff
+sox 0999.aiff 0999.wav pitch 800
+lame -b 128 0999.wav 0999_reset_ok.mp3
 
 rm *.aiff
 rm *.wav
