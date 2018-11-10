@@ -227,6 +227,7 @@ struct playbackObject {
   uint8_t playTrack = 1;
   uint8_t storedTrack = 1;
   uint16_t folderTrackCount = 0;
+  uint16_t lastRandomTrack = 0;
 } playback;
 
 #if defined(CUBIEKID)
@@ -544,6 +545,8 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool triggeredMa
   // just play another random track
   if (nfcTag.playbackMode == 3) {
     playback.playTrack = random(1, playback.folderTrackCount + 1);
+    if (playback.playTrack == playback.lastRandomTrack) playback.playTrack = playback.playTrack == playback.folderTrackCount ? 1 : playback.playTrack + 1;
+    playback.lastRandomTrack = playback.playTrack;
     Serial.print(F("mp3 | party mode > folder "));
     Serial.print(nfcTag.assignedFolder);
     Serial.print(F(" > track "));
@@ -1019,6 +1022,7 @@ void loop() {
           // party mode
           case 3:
             playback.playTrack = random(1, playback.folderTrackCount + 1);
+            playback.lastRandomTrack = playback.playTrack;
             Serial.print(F("mp3 | party mode > shuffle all "));
             Serial.print(playback.folderTrackCount);
             Serial.print(F(" tracks in folder "));
