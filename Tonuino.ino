@@ -85,8 +85,9 @@ static void nextTrack(uint16_t track) {
     { }
   }
   if (myCard.mode == 3) {
+    uint16_t oldTrack = currentTrack;
     currentTrack = random(1, numTracksInFolder + 1);
-    if (currentTrack == _lastTrackFinished)
+    if (currentTrack == oldTrack)
       currentTrack = currentTrack == numTracksInFolder ? 1 : currentTrack+1;
     Serial.print(F("Party Modus ist aktiv -> zufälligen Track spielen: "));
     Serial.println(currentTrack);
