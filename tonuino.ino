@@ -23,9 +23,14 @@
   Hold B0 for 5 seconds during playback in story book mode: Reset progress to track 1
   Hold B0 for 2 seconds during erase nfc tag mode: Cancel erase nfc tag mode
   Hold B0 for 2 seconds during nfc tag setup mode: Cancel nfc tag setup mode
+  Click B0 during nfc tag setup mode: Confirm selection
+  Double click B0 during nfc tag setup mode: Announce folder number or track number
 
   Hold B1 for 2 seconds during playback in album, party and story book mode: Skip to the next track
+  Hold B1 for 2 seconds during nfc tag setup mode: Jump 10 folders or 10 tracks forward
+
   Hold B2 for 2 seconds during playback in album and story book mode: Skip to the previous track
+  Hold B2 for 2 seconds during nfc tag setup mode: Jump 10 folders or 10 tracks backwards
 
   Hold B0 + B1 + B2 while powering up: Erase the eeprom contents. (Use with care, eeprom write/erase cycles are limited.)
 
@@ -57,8 +62,11 @@
 
   During nfc tag setup mode:
   play+pause - confirm
-  up / right - next option
-  down / left - previous option
+  right - next option
+  left - previous option
+  up - jump 10 folders or 10 tracks forward
+  down - jump 10 folders or 10 tracks backwards
+  center - announce folder number or track number
   menu - cancel
 
   status led:
@@ -179,9 +187,8 @@ const uint16_t msgEraseTagError = 492;              // 15
 const uint16_t msgWelcome = 505;                    // 16
 const uint16_t msgBatteryLow = 510;                 // 17
 
-// used to calculate the total ammount of tracks on the sd card
-// mp3 files above (from "mp3" folder) + whatever is in the "advert" folder
-const uint8_t msgCount = 17;
+// used to calculate the total ammount of tracks on the sd card (510 + count from above)
+const uint16_t msgCount = 527;
 
 // define code mappings for silver apple tv 2 ir remote
 const uint16_t ir1ButtonUp = 0x5057;
@@ -205,6 +212,7 @@ const uint16_t ir2ButtonPlayPause = 0xFABF;
 enum {NOACTION,
       B0P, B1P, B2P,
       B0H, B1H, B2H,
+      B0D, B1D, B2D,
       IRU, IRD, IRL, IRR, IRC, IRM, IRP
      };
 
@@ -392,6 +400,9 @@ void translateButtonInput(AceButton* button, uint8_t eventType, uint8_t /* butto
         case AceButton::kEventLongPressed:
           inputEvent = B0H;
           break;
+        case AceButton::kEventDoubleClicked:
+          inputEvent = B0D;
+          break;
         default:
           break;
       }
@@ -430,13 +441,16 @@ void translateButtonInput(AceButton* button, uint8_t eventType, uint8_t /* butto
 // switches button configuration dependig on the state that TonUINO is in
 void switchButtonConfiguration(uint8_t buttonMode) {
   // default configuration for all modes
+  // button 0
   button0Config.setFeature(ButtonConfig::kFeatureClick);
   button0Config.setFeature(ButtonConfig::kFeatureLongPress);
   button0Config.setClickDelay(buttonClickDelay);
+  // button 1
   button1Config.setFeature(ButtonConfig::kFeatureClick);
   button1Config.setFeature(ButtonConfig::kFeatureLongPress);
   button1Config.setClickDelay(buttonClickDelay);
   button1Config.setLongPressDelay(buttonShortLongPressDelay);
+  // button 2
   button2Config.setFeature(ButtonConfig::kFeatureClick);
   button2Config.setFeature(ButtonConfig::kFeatureLongPress);
   button2Config.setClickDelay(buttonClickDelay);
@@ -445,17 +459,34 @@ void switchButtonConfiguration(uint8_t buttonMode) {
   // non default configuration
   switch (buttonMode) {
     case PAUSE:
+      // button 0
       button0Config.setLongPressDelay(buttonLongLongPressDelay);
+      button0Config.clearFeature(ButtonConfig::kFeatureDoubleClick);
+      button0Config.clearFeature(ButtonConfig::kFeatureSuppressClickBeforeDoubleClick);
       break;
     case PLAY:
+      // button 0
       button0Config.setLongPressDelay(buttonLongLongPressDelay);
+      button0Config.clearFeature(ButtonConfig::kFeatureDoubleClick);
+      button0Config.clearFeature(ButtonConfig::kFeatureSuppressClickBeforeDoubleClick);
       break;
     case CONFIG:
+      // button 0
       button0Config.setLongPressDelay(buttonShortLongPressDelay);
+      button0Config.setFeature(ButtonConfig::kFeatureDoubleClick);
+      button0Config.setFeature(ButtonConfig::kFeatureSuppressClickBeforeDoubleClick);
       break;
     default:
       break;
   }
+}
+
+// waits for current playing track to finish
+void waitPlaybackToFinish() {
+  delay(500);
+  do {
+    delay(10);
+  } while (!digitalRead(mp3BusyPin));
 }
 
 // plays next track depending on the current playback mode
@@ -1102,15 +1133,19 @@ void loop() {
             }
             else setAssignedFolder = true;
           }
-          // button 1 (right) press or ir remote up / right: next folder
-          else if (inputEvent == B1P || inputEvent == IRU || inputEvent == IRR) {
+          // button 0 (middle) double click or ir remote center: announce folder number
+          else if (inputEvent == B0D || inputEvent == IRC) {
+            mp3.playAdvertisement(nfcTag.assignedFolder);
+          }
+          // button 1 (right) press or ir remote right: next folder
+          else if (inputEvent == B1P || inputEvent == IRR) {
             nfcTag.assignedFolder = min(nfcTag.assignedFolder + 1, 99);
             Serial.print(F("sys |     folder "));
             Serial.println(nfcTag.assignedFolder);
             mp3.playFolderTrack(nfcTag.assignedFolder, 1);
           }
-          // button 2 (left) press or ir remote down / left: previous folder
-          else if (inputEvent == B2P || inputEvent == IRD || inputEvent == IRL) {
+          // button 2 (left) press or ir remote left: previous folder
+          else if (inputEvent == B2P || inputEvent == IRL) {
             nfcTag.assignedFolder = max(nfcTag.assignedFolder - 1, 1);
             Serial.print(F("sys |     folder "));
             Serial.println(nfcTag.assignedFolder);
@@ -1130,6 +1165,24 @@ void loop() {
             mfrc522.PCD_StopCrypto1();
             mp3.playMp3FolderTrack(msgSetupNewTagCancel);
             return;
+          }
+          // button 1 (right) hold or ir remote up: jump 10 folders forward
+          else if (inputEvent == B1H || inputEvent == IRU) {
+            nfcTag.assignedFolder = min(nfcTag.assignedFolder + 10, 99);
+            Serial.print(F("sys |     folder "));
+            Serial.println(nfcTag.assignedFolder);
+            mp3.playMp3FolderTrack(nfcTag.assignedFolder);
+            waitPlaybackToFinish();
+            mp3.playFolderTrack(nfcTag.assignedFolder, 1);
+          }
+          // button 2 (left) hold or ir remote down: jump 10 folders backwards
+          else if (inputEvent == B2H || inputEvent == IRD) {
+            nfcTag.assignedFolder = max(nfcTag.assignedFolder - 10, 1);
+            Serial.print(F("sys |     folder "));
+            Serial.println(nfcTag.assignedFolder);
+            mp3.playMp3FolderTrack(nfcTag.assignedFolder);
+            waitPlaybackToFinish();
+            mp3.playFolderTrack(nfcTag.assignedFolder, 1);
           }
 #if defined(STATUSLED)
           blinkStatusLed(ledBlinkInterval);
@@ -1273,15 +1326,19 @@ void loop() {
               }
               else setAssignedTrack = true;
             }
-            // button 1 (right) press or ir remote up / right: next track
-            else if (inputEvent == B1P || inputEvent == IRU || inputEvent == IRR) {
+            // button 0 (middle) double click or ir remote center: announce track number
+            else if (inputEvent == B0D || inputEvent == IRC) {
+              mp3.playAdvertisement(nfcTag.assignedTrack);
+            }
+            // button 1 (right) press or ir remote right: next track
+            else if (inputEvent == B1P || inputEvent == IRR) {
               nfcTag.assignedTrack = min(nfcTag.assignedTrack + 1, 255);
               Serial.print(F("sys |     track "));
               Serial.println(nfcTag.assignedTrack);
               mp3.playFolderTrack(nfcTag.assignedFolder, nfcTag.assignedTrack);
             }
-            // button 2 (left) press or ir remote down / left: previous track
-            else if (inputEvent == B2P || inputEvent == IRD || inputEvent == IRL) {
+            // button 2 (left) press or ir remote left: previous track
+            else if (inputEvent == B2P || inputEvent == IRL) {
               nfcTag.assignedTrack = max(nfcTag.assignedTrack - 1, 1);
               Serial.print(F("sys |     track "));
               Serial.println(nfcTag.assignedTrack);
@@ -1301,6 +1358,24 @@ void loop() {
               mfrc522.PCD_StopCrypto1();
               mp3.playMp3FolderTrack(msgSetupNewTagCancel);
               return;
+            }
+            // button 1 (right) hold for 2 sec or ir remote up: jump 10 tracks forward
+            else if (inputEvent == B1H || inputEvent == IRU) {
+              nfcTag.assignedTrack = min(nfcTag.assignedTrack + 10, 255);
+              Serial.print(F("sys |     track "));
+              Serial.println(nfcTag.assignedTrack);
+              mp3.playMp3FolderTrack(nfcTag.assignedTrack);
+              waitPlaybackToFinish();
+              mp3.playFolderTrack(nfcTag.assignedFolder, nfcTag.assignedTrack);
+            }
+            // button 2 (left) hold for 2 sec or ir remote down: jump 10 tracks backwards
+            else if (inputEvent == B2H || inputEvent == IRD) {
+              nfcTag.assignedTrack = max(nfcTag.assignedTrack - 10, 1);
+              Serial.print(F("sys |     track "));
+              Serial.println(nfcTag.assignedTrack);
+              mp3.playMp3FolderTrack(nfcTag.assignedTrack);
+              waitPlaybackToFinish();
+              mp3.playFolderTrack(nfcTag.assignedFolder, nfcTag.assignedTrack);
             }
 #if defined(STATUSLED)
             blinkStatusLed(ledBlinkInterval);
