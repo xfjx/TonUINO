@@ -442,15 +442,19 @@ void translateButtonInput(AceButton* button, uint8_t eventType, uint8_t /* butto
 void switchButtonConfiguration(uint8_t buttonMode) {
   // default configuration for all modes
   // button 0
+  button0Config.setEventHandler(translateButtonInput);
   button0Config.setFeature(ButtonConfig::kFeatureClick);
   button0Config.setFeature(ButtonConfig::kFeatureLongPress);
   button0Config.setClickDelay(buttonClickDelay);
+  button0Config.setLongPressDelay(buttonShortLongPressDelay);
   // button 1
+  button1Config.setEventHandler(translateButtonInput);
   button1Config.setFeature(ButtonConfig::kFeatureClick);
   button1Config.setFeature(ButtonConfig::kFeatureLongPress);
   button1Config.setClickDelay(buttonClickDelay);
   button1Config.setLongPressDelay(buttonShortLongPressDelay);
   // button 2
+  button2Config.setEventHandler(translateButtonInput);
   button2Config.setFeature(ButtonConfig::kFeatureClick);
   button2Config.setFeature(ButtonConfig::kFeatureLongPress);
   button2Config.setClickDelay(buttonClickDelay);
@@ -460,21 +464,21 @@ void switchButtonConfiguration(uint8_t buttonMode) {
   switch (buttonMode) {
     case PAUSE:
       // button 0
-      button0Config.setLongPressDelay(buttonLongLongPressDelay);
       button0Config.clearFeature(ButtonConfig::kFeatureDoubleClick);
       button0Config.clearFeature(ButtonConfig::kFeatureSuppressClickBeforeDoubleClick);
+      button0Config.setLongPressDelay(buttonLongLongPressDelay);
       break;
     case PLAY:
       // button 0
-      button0Config.setLongPressDelay(buttonLongLongPressDelay);
       button0Config.clearFeature(ButtonConfig::kFeatureDoubleClick);
       button0Config.clearFeature(ButtonConfig::kFeatureSuppressClickBeforeDoubleClick);
+      button0Config.setLongPressDelay(buttonLongLongPressDelay);
       break;
     case CONFIG:
       // button 0
-      button0Config.setLongPressDelay(buttonShortLongPressDelay);
       button0Config.setFeature(ButtonConfig::kFeatureDoubleClick);
       button0Config.setFeature(ButtonConfig::kFeatureSuppressClickBeforeDoubleClick);
+      button0Config.setLongPressDelay(buttonShortLongPressDelay);
       break;
     default:
       break;
@@ -886,9 +890,6 @@ void setup() {
   button0.init(button0Pin, HIGH, 0);
   button1.init(button1Pin, HIGH, 1);
   button2.init(button2Pin, HIGH, 2);
-  button0Config.setEventHandler(translateButtonInput);
-  button1Config.setEventHandler(translateButtonInput);
-  button2Config.setEventHandler(translateButtonInput);
   switchButtonConfiguration(PAUSE);
 
 #if defined(TSOP38238)
