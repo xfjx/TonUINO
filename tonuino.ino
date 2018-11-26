@@ -88,8 +88,8 @@
   as well as other parameters can be setup in the configuration section of this sketch.
   This feature can be enabled by uncommenting the define CUBIEKID below.
 
-  The CubieKid case as well as the additional circuit board, have been designed and
-  developed by Jens Hackel and can be found here: https://github.com/jenshackel/CubieKid
+  The CubieKid case as well as the additional circuit board, have been designed and developed
+  by Jens Hackel aka DB3JHF and can be found here: https://www.thingiverse.com/thing:3148200
 
   data stored on the nfc tags:
   ----------------------------
@@ -963,7 +963,7 @@ void loop() {
     // if the current playback mode is story book mode: store the current progress
     if (nfcTag.playbackMode == 5) EEPROM.update(nfcTag.assignedFolder, playback.playTrack);
     mp3.playMp3FolderTrack(msgBatteryLow);
-    delay(10000);
+    waitPlaybackToFinish();
     Serial.println(F("low voltage shutdown..."));
     digitalWrite(cubiekid.shutdownPin, LOW);
   }
