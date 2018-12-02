@@ -486,10 +486,10 @@ void switchButtonConfiguration(uint8_t buttonMode) {
 
 // waits for current playing track to finish
 void waitPlaybackToFinish() {
-  delay(500);
-  do {
-    delay(10);
-  } while (!digitalRead(mp3BusyPin));
+  uint32_t waitPlaybackToStartMillis = millis();
+  delay(100);
+  while (digitalRead(mp3BusyPin)) if (millis() - waitPlaybackToStartMillis >= 10000) break;
+  while (!digitalRead(mp3BusyPin));
 }
 
 // plays next track depending on the current playback mode
