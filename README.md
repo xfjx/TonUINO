@@ -4,6 +4,13 @@ Die DIY Musikbox (nicht nur) für Kinder
 
 # Change Log
 
+## Version 2.1 (xx.xx.xxxx) noch WIP
+- Partymodus hat nun eine Queue -> jedes Lied kommt nur genau 1x vorkommt
+- Neue Wiedergabe-Modi "Spezialmodus Von-Bis" - Hörspiel, Album und Party -> erlaubt z.B. verschiedene Album in einem Ordner zu haben und je mit einer Karte zu verknüpfen
+- Admin-Menü
+- Maximale, Minimale und Initiale Lautstärke
+- Karten werden nun über das Admin-Menü neu konfiguriert
+
 ## Version 2.01 (01.11.2018)
 - kleiner Fix um die Probleme beim Anlernen von Karten zu reduzieren
 
