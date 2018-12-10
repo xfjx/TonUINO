@@ -239,11 +239,11 @@ static void nextTrack(uint16_t track) {
       Serial.println(currentTrack);
       mp3.playFolderTrack(myCard.folder, currentTrack);
       // Fortschritt im EEPROM abspeichern
-      EEPROM.write(myCard.folder, currentTrack);
+      EEPROM.update(myCard.folder, currentTrack);
     } else {
       //      mp3.sleep();  // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
       // Fortschritt zurück setzen
-      EEPROM.write(myCard.folder, 1);
+      EEPROM.update(myCard.folder, 1);
       setSleepTimer();
     }
   }
@@ -286,7 +286,7 @@ static void previousTrack() {
     }
     mp3.playFolderTrack(myCard.folder, currentTrack);
     // Fortschritt im EEPROM abspeichern
-    EEPROM.write(myCard.folder, currentTrack);
+    EEPROM.update(myCard.folder, currentTrack);
   }
 }
 
@@ -368,7 +368,7 @@ void setup() {
       digitalRead(buttonDown) == LOW) {
     Serial.println(F("Reset -> EEPROM wird gelöscht"));
     for (int i = 0; i < EEPROM.length(); i++) {
-      EEPROM.write(i, 0);
+      EEPROM.update(i, 0);
     }
   }
 }
@@ -669,7 +669,7 @@ void setupCard() {
   myCard.mode = voiceMenu(9, 310, 310);
 
   // Hörbuchmodus -> Fortschritt im EEPROM auf 1 setzen
-  EEPROM.write(myCard.folder, 1);
+  EEPROM.update(myCard.folder, 1);
 
   // Einzelmodus -> Datei abfragen
   if (myCard.mode == 4)
