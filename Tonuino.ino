@@ -107,7 +107,7 @@ void shuffleQueue() {
 
 void writeSettingsToFlash() {
   Serial.println(F("=== writeSettingsToFlash()"));
-  int address = sizeof(myCard.folder) * 255;
+  int address = sizeof(myCard.folder) * 100;
   EEPROM.put(address, mySettings);
 }
 
@@ -134,7 +134,7 @@ void migradeSettings(int oldVersion) {
 
 void loadSettingsFromFlash() {
   Serial.println(F("=== loadSettingsFromFlash()"));
-  int address = sizeof(myCard.folder) * 255;
+  int address = sizeof(myCard.folder) * 100;
   EEPROM.get(address, mySettings);
   if (mySettings.cookie != 322417479)
     resetSettings();
