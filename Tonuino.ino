@@ -39,7 +39,7 @@ struct adminSettings {
   uint8_t initVolume;
   uint8_t eq;
   bool locked;
-  long sleepTimer;
+  long standbyTimer;
   bool invertVolumeButtons;
   folderSettings shortCuts[3];
 };
@@ -120,7 +120,7 @@ void resetSettings() {
   mySettings.initVolume = 10;
   mySettings.eq = 1;
   mySettings.locked = false;
-  mySettings.sleepTimer = 5;
+  mySettings.standbyTimer = 5;
   mySettings.invertVolumeButtons = false;
   mySettings.shortCuts[0].folder = 0;
   mySettings.shortCuts[1].folder = 0;
@@ -159,23 +159,23 @@ void loadSettingsFromFlash() {
   Serial.println(mySettings.locked);
 
   Serial.print(F("Sleep Timer: "));
-  Serial.println(mySettings.sleepTimer);
+  Serial.println(mySettings.standbyTimer);
 
   Serial.print(F("Inverted Volume Buttons: "));
   Serial.println(mySettings.invertVolumeButtons);
 }
 
 
-void setSleepTimer() {
-  if (mySettings.sleepTimer != 0)
-    sleepAtMillis = millis() + (mySettings.sleepTimer * 1000);
+void setstandbyTimer() {
+  if (mySettings.standbyTimer != 0)
+    sleepAtMillis = millis() + (mySettings.standbyTimer * 1000);
 }
 
-void disableSleepTimer() {
+void disablestandbyTimer() {
   sleepAtMillis = 0;
 }
 
-void checkSleepAtMillis() {
+void checkStandbyAtMillis() {
   if (sleepAtMillis != 0 && millis() > sleepAtMillis) {
     // enter sleep state
   }
@@ -197,7 +197,7 @@ static void nextTrack(uint16_t track) {
 
   if (myCard.mode == 1 || myCard.mode == 7) {
     Serial.println(F("Hörspielmodus ist aktiv -> keinen neuen Track spielen"));
-    setSleepTimer();
+    setstandbyTimer();
     //    mp3.sleep(); // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
   }
   if (myCard.mode == 2 || myCard.mode == 8) {
@@ -208,7 +208,7 @@ static void nextTrack(uint16_t track) {
       Serial.print(currentTrack);
     } else
       //      mp3.sleep();   // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
-      setSleepTimer();
+      setstandbyTimer();
     { }
   }
   if (myCard.mode == 3 || myCard.mode == 9) {
@@ -229,7 +229,7 @@ static void nextTrack(uint16_t track) {
   if (myCard.mode == 4) {
     Serial.println(F("Einzel Modus aktiv -> Strom sparen"));
     //    mp3.sleep();      // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
-    setSleepTimer();
+    setstandbyTimer();
   }
   if (myCard.mode == 5) {
     if (currentTrack != numTracksInFolder) {
@@ -244,7 +244,7 @@ static void nextTrack(uint16_t track) {
       //      mp3.sleep();  // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
       // Fortschritt zurück setzen
       EEPROM.update(myCard.folder, 1);
-      setSleepTimer();
+      setstandbyTimer();
     }
   }
 }
@@ -402,10 +402,10 @@ void loop() {
       if (ignorePauseButton == false)
         if (isPlaying()) {
           mp3.pause();
-          setSleepTimer();
+          setstandbyTimer();
         }
         else if (knownCard) {
-          disableSleepTimer();
+          disablestandbyTimer();
           mp3.start();
         }
       ignorePauseButton = false;
