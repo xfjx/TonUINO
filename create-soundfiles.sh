@@ -3,7 +3,7 @@
 for i in {1..255};
 do
     j=$(printf "%04d" $i)
-    say -v anna "Datei $i" -o $j.aiff
+    say -v anna "$i" -o $j.aiff
     sox $j.aiff $j.wav pitch 800
     lame -b 128 $j.wav $j.mp3
 done
@@ -84,7 +84,7 @@ say -v Anna "Oh weh! Das hat leider nicht geklappt!." -o 0401.aiff
 sox 0401.aiff 0401.wav pitch 800
 lame -b 128 0401.wav 0401_error.mp3
 
-say -v Anna "Bitte lege die zu löschende Karte auf! Zum Abbrechen einfach eine der Lautstärke Tasten drücken!" -o 0800.aiff
+say -v Anna "Bitte lege nun die Karte auf! Zum Abbrechen einfach eine der Lautstärke Tasten drücken!" -o 0800.aiff
 sox 0800.aiff 0800.wav pitch 800
 lame -b 128 0800.wav 0800_reset_tag.mp3
 
@@ -128,9 +128,13 @@ say -v Anna "Tasten mit einem Shortcut konfigurieren." -o 0907.aiff
 sox 0907.aiff 0907.wav pitch 800
 lame -b 128 0907.wav 0907_shortcut.mp3
 
-say -v Anna "Den Sleeptimer konfigurieren. " -o 0908.aiff
+say -v Anna "Den Standbytimer konfigurieren." -o 0908.aiff
 sox 0908.aiff 0908.wav pitch 800
 lame -b 128 0908.wav 0908_sleeptimer.mp3
+
+say -v Anna "Einzelkarten für einen Ordner erstellen." -o 0909.aiff
+sox 0909.aiff 0909.wav pitch 800
+lame -b 128 0909.wav 0909_batch_cards.mp3
 
 say -v Anna "Bitte wähle eine Einstellung für den EQ mit den Lautstärke Tasten aus und bestätige sie mit der Pause Taste." -o 0920.aiff
 sox 0920.aiff 0920.wav pitch 800

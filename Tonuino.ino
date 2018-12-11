@@ -167,8 +167,10 @@ void loadSettingsFromFlash() {
 
 
 void setstandbyTimer() {
-  if (mySettings.standbyTimer != 0)
+  if (mySettings.standbyTimer != 0 && !isPlaying())
     sleepAtMillis = millis() + (mySettings.standbyTimer * 1000);
+  else
+    sleepAtMillis = 0;
 }
 
 void disablestandbyTimer() {
@@ -343,6 +345,9 @@ void setup() {
   // load Settings from EEPROM
   loadSettingsFromFlash();
 
+  // activate standby timer
+  setstandbyTimer();
+
   // DFPlayer Mini initialisieren
   mp3.begin();
   volume = mySettings.initVolume;
@@ -396,6 +401,7 @@ void loop() {
       } while (pauseButton.isPressed() || upButton.isPressed() || downButton.isPressed());
       readButtons();
       adminMenu();
+      break;
     }
 
     if (pauseButton.wasReleased()) {
@@ -411,8 +417,12 @@ void loop() {
       ignorePauseButton = false;
     } else if (pauseButton.pressedFor(LONG_PRESS) &&
                ignorePauseButton == false) {
-      if (isPlaying())
-        mp3.playAdvertisement(currentTrack);
+      if (isPlaying()) {
+        if (myCard.mode == 3)
+          mp3.playAdvertisement(queue[currentTrack - 1]);
+        else
+          mp3.playAdvertisement(currentTrack);
+      }
       ignorePauseButton = true;
     }
 
@@ -547,8 +557,9 @@ void loop() {
 void adminMenu() {
   mp3.pause();
   Serial.print(F("Admin Menu"));
+  knownCard = false;
 
-  int subMenu = voiceMenu(8, 900, 900);
+  int subMenu = voiceMenu(9, 900, 900);
   if (subMenu == 1)
     resetCard();
   else if (subMenu == 2)
@@ -561,6 +572,37 @@ void adminMenu() {
     mySettings.eq = voiceMenu(6, 920, 920, false, false, mySettings.eq);
   else if (subMenu == 6) {
     // create master card
+  }
+  else if (subMenu == 9) {
+    // Ordner abfragen
+    nfcTagObject tempCard;
+    tempCard.cookie = 322417479;
+    tempCard.version = 1;
+    tempCard.mode = 4;
+    tempCard.folder = voiceMenu(99, 300, 0, true);
+    uint8_t special = voiceMenu(mp3.getFolderTrackCount(tempCard.folder), 321, 0,
+                                true, tempCard.folder);
+    uint8_t special2 = voiceMenu(mp3.getFolderTrackCount(tempCard.folder), 322, 0,
+                                 true, tempCard.folder, special);
+
+    for (uint8_t x = special; x <= special2; x++) {
+      mp3.playMp3FolderTrack(x);
+      tempCard.special = x;
+      Serial.print(x);
+      Serial.println(F(" Karte auflegen"));
+      do {
+      } while (!mfrc522.PICC_IsNewCardPresent());
+
+      // RFID Karte wurde aufgelegt
+      if (!mfrc522.PICC_ReadCardSerial())
+        return;
+      Serial.println(F("schreibe Karte..."));
+      writeCard(tempCard);
+      delay(100);
+      mfrc522.PICC_HaltA();
+      mfrc522.PCD_StopCrypto1();
+      waitForTrackToFinish();
+    }
   }
   writeSettingsToFlash();
 }
@@ -639,6 +681,7 @@ int voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
 }
 
 void resetCard() {
+  mp3.playMp3FolderTrack(800);
   do {
     pauseButton.read();
     upButton.read();
@@ -683,8 +726,8 @@ void setupCard() {
   if (myCard.mode == 7 || myCard.mode == 8 || myCard.mode == 9) {
     myCard.special = voiceMenu(mp3.getFolderTrackCount(myCard.folder), 321, 0,
                                true, myCard.folder);
-    myCard.special2 = voiceMenu(mp3.getFolderTrackCount(myCard.folder) - myCard.special, 322, myCard.special,
-                                true, myCard.folder) + myCard.special;
+    myCard.special2 = voiceMenu(mp3.getFolderTrackCount(myCard.folder), 322, 0,
+                                true, myCard.folder, myCard.special);
   }
 
   // Karte ist konfiguriert -> speichern
@@ -810,3 +853,4 @@ void dump_byte_array(byte * buffer, byte bufferSize) {
     Serial.print(buffer[i], HEX);
   }
 }
+
