@@ -66,9 +66,9 @@ class Mp3Notify {
       Serial.println(errorCode);
     }
     static void OnPlayFinished(uint16_t track) {
-      Serial.print("Track beendet");
-      Serial.println(track);
-      delay(100);
+      //      Serial.print("Track beendet");
+      //      Serial.println(track);
+      //      delay(100);
       nextTrack(track);
     }
     static void OnCardOnline(uint16_t code) {
@@ -556,7 +556,7 @@ void loop() {
 
 void adminMenu() {
   mp3.pause();
-  Serial.print(F("Admin Menu"));
+  Serial.println(F("=== adminMenu()"));
   knownCard = false;
 
   int subMenu = voiceMenu(9, 900, 900);
@@ -612,17 +612,25 @@ int voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
   int returnValue = defaultValue;
   if (startMessage != 0)
     mp3.playMp3FolderTrack(startMessage);
+  Serial.print(F("=== voiceMenu() ("));
+  Serial.print(numberOfOptions);
+  Serial.println(F(" Options)"));
   do {
     readButtons();
     mp3.loop();
     if (pauseButton.wasPressed()) {
-      if (returnValue != 0)
+      if (returnValue != 0) {
+        Serial.print(F("=== "));
+        Serial.print(returnValue);
+        Serial.println(F(" ==="));
         return returnValue;
+      }
       delay(1000);
     }
 
     if (upButton.pressedFor(LONG_PRESS)) {
       returnValue = min(returnValue + 10, numberOfOptions);
+      Serial.println(returnValue);
       mp3.pause();
       mp3.playMp3FolderTrack(messageOffset + returnValue);
       waitForTrackToFinish();
@@ -637,6 +645,7 @@ int voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
     } else if (upButton.wasReleased()) {
       if (!ignoreUpButton) {
         returnValue = min(returnValue + 1, numberOfOptions);
+        Serial.println(returnValue);
         mp3.pause();
         mp3.playMp3FolderTrack(messageOffset + returnValue);
         if (preview) {
@@ -652,6 +661,7 @@ int voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
 
     if (downButton.pressedFor(LONG_PRESS)) {
       returnValue = max(returnValue - 10, 1);
+      Serial.println(returnValue);
       mp3.pause();
       mp3.playMp3FolderTrack(messageOffset + returnValue);
       waitForTrackToFinish();
@@ -665,6 +675,7 @@ int voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
     } else if (downButton.wasReleased()) {
       if (!ignoreDownButton) {
         returnValue = max(returnValue - 1, 1);
+        Serial.println(returnValue);
         mp3.pause();
         mp3.playMp3FolderTrack(messageOffset + returnValue);
         waitForTrackToFinish();
