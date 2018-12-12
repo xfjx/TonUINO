@@ -51,7 +51,7 @@ unsigned long sleepAtMillis = 0;
 static void nextTrack(uint16_t track);
 int voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
               bool preview = false, int previewFromFolder = 0, int defaultValue = 0);
-
+bool isPlaying();
 bool knownCard = false;
 
 // implement a notification class,
@@ -465,7 +465,7 @@ void loop() {
     // make random a little bit more "random"
     randomSeed(millis());
     if (myCard.cookie == 322417479 && myCard.folder != 0 && myCard.mode != 0) {
-
+      disablestandbyTimer();
       knownCard = true;
       _lastTrackFinished = 0;
       numTracksInFolder = mp3.getFolderTrackCount(myCard.folder);
