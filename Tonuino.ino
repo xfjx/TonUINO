@@ -560,8 +560,11 @@ void adminMenu() {
   knownCard = false;
 
   int subMenu = voiceMenu(9, 900, 900);
-  if (subMenu == 1)
+  if (subMenu == 1) {
     resetCard();
+    mfrc522.PICC_HaltA();
+    mfrc522.PCD_StopCrypto1();
+  }
   else if (subMenu == 2)
     mySettings.maxVolume = voiceMenu(20, 930, 0, false, false, mySettings.maxVolume);
   else if (subMenu == 3)
