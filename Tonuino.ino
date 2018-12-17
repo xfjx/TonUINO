@@ -71,8 +71,13 @@ static void nextTrack(uint16_t track) {
     return;
 
   if (myCard.mode == 1) {
-    Serial.println(F("Hörspielmodus ist aktiv -> keinen neuen Track spielen"));
-//    mp3.sleep(); // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
+    uint16_t oldTrack = currentTrack;
+    currentTrack = random(1, numTracksInFolder + 1);
+    if (currentTrack == oldTrack)
+      currentTrack = currentTrack == numTracksInFolder ? 1 : currentTrack+1;
+    Serial.print(F("Hörspielmodus ist aktiv -> zufälligen Track spielen: "));
+    Serial.println(currentTrack);
+    mp3.playFolderTrack(myCard.folder, currentTrack);
   }
   if (myCard.mode == 2) {
     if (currentTrack != numTracksInFolder) {
