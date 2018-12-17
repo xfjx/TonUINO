@@ -10,7 +10,7 @@ SoftwareSerial mySoftwareSerial(2, 3); // RX, TX
 uint16_t numTracksInFolder;
 uint16_t currentTrack;
 uint16_t firstTrack;
-uint16_t queue[255];
+uint8_t queue[255];
 uint8_t volume;
 
 // this object stores nfc tag data
@@ -86,21 +86,21 @@ static DFMiniMp3<SoftwareSerial, Mp3Notify> mp3(mySoftwareSerial);
 
 void shuffleQueue() {
   // Queue für die Zufallswiedergabe erstellen
-  for (uint16_t x = 0; x < numTracksInFolder - firstTrack + 1; x++)
+  for (uint8_t x = 0; x < numTracksInFolder - firstTrack + 1; x++)
     queue[x] = x + firstTrack;
   // Rest mit 0 auffüllen
-  for (uint16_t x = numTracksInFolder - firstTrack + 1; x < 255; x++)
+  for (uint8_t x = numTracksInFolder - firstTrack + 1; x < 255; x++)
     queue[x] = 0;
   // Queue mischen
-  for (uint16_t i = 0; i < numTracksInFolder - firstTrack + 1; i++)
+  for (uint8_t i = 0; i < numTracksInFolder - firstTrack + 1; i++)
   {
-    uint16_t j = random (0, numTracksInFolder - firstTrack + 1);
-    uint16_t t = queue[i];
+    uint8_t j = random (0, numTracksInFolder - firstTrack + 1);
+    uint8_t t = queue[i];
     queue[i] = queue[j];
     queue[j] = t;
   }
   Serial.println(F("Queue :"));
-  for (uint16_t x = 0; x < numTracksInFolder - firstTrack + 1 ; x++)
+  for (uint8_t x = 0; x < numTracksInFolder - firstTrack + 1 ; x++)
     Serial.println(queue[x]);
 
 }
@@ -190,6 +190,7 @@ static void nextTrack(uint16_t track) {
   if (track == _lastTrackFinished) {
     return;
   }
+  Serial.println(F("=== nextTrack()"));
   _lastTrackFinished = track;
 
   if (knownCard == false)
@@ -215,7 +216,7 @@ static void nextTrack(uint16_t track) {
   }
   if (myCard.mode == 3 || myCard.mode == 9) {
     if (currentTrack != numTracksInFolder - firstTrack + 1) {
-      Serial.print(F("Spezialmodus Von-Bis: Party -> weiter in der Queue "));
+      Serial.print(F("Party -> weiter in der Queue "));
       currentTrack++;
     } else {
       Serial.println(F("Ende der Queue -> beginne von vorne"));
@@ -252,12 +253,13 @@ static void nextTrack(uint16_t track) {
 }
 
 static void previousTrack() {
+  Serial.println(F("=== previousTrack()"));
   if (myCard.mode == 1 || myCard.mode == 7) {
     Serial.println(F("Hörspielmodus ist aktiv -> Track von vorne spielen"));
     mp3.playFolderTrack(myCard.folder, currentTrack);
   }
   if (myCard.mode == 2 || myCard.mode == 8) {
-    Serial.println(F("Spezialmodus Von-Bis: Album ist aktiv -> vorheriger Track"));
+    Serial.println(F("Albummodus ist aktiv -> vorheriger Track"));
     if (currentTrack != firstTrack) {
       currentTrack = currentTrack - 1;
     }
@@ -336,7 +338,7 @@ void setup() {
   // Schnittstelle
   randomSeed(analogRead(A7)); // Zufallsgenerator initialisieren
 
-  Serial.println(F("TonUINO Version 2.0"));
+  Serial.println(F("TonUINO Version 2.1"));
   Serial.println(F("(c) Thorsten Voß"));
 
   // Busy Pin
@@ -418,10 +420,16 @@ void loop() {
     } else if (pauseButton.pressedFor(LONG_PRESS) &&
                ignorePauseButton == false) {
       if (isPlaying()) {
-        if (myCard.mode == 3)
-          mp3.playAdvertisement(queue[currentTrack - 1]);
+        uint8_t advertTrack;
+        if (myCard.mode == 3 || myCard.mode == 9)
+          advertTrack = (queue[currentTrack - 1]);
         else
-          mp3.playAdvertisement(currentTrack);
+          advertTrack = currentTrack;
+        // Spezialmodus Von-Bis für Album und Party gibt die Dateinummer relativ zur Startposition wieder
+        if (myCard.mode == 8 || myCard.mode == 9)
+          advertTrack = advertTrack - myCard.special + 1;
+
+        mp3.playAdvertisement(advertTrack);
       }
       ignorePauseButton = true;
     }
@@ -566,11 +574,11 @@ void adminMenu() {
     mfrc522.PCD_StopCrypto1();
   }
   else if (subMenu == 2)
-    mySettings.maxVolume = voiceMenu(20, 930, 0, false, false, mySettings.maxVolume);
+    mySettings.maxVolume = voiceMenu(30, 930, 0, false, false, mySettings.maxVolume);
   else if (subMenu == 3)
-    mySettings.minVolume = voiceMenu(20, 931, 0, false, false, mySettings.minVolume);
+    mySettings.minVolume = voiceMenu(30, 931, 0, false, false, mySettings.minVolume);
   else if (subMenu == 4)
-    mySettings.initVolume = voiceMenu(20, 932, 0, false, false, mySettings.initVolume);
+    mySettings.initVolume = voiceMenu(30, 932, 0, false, false, mySettings.initVolume);
   else if (subMenu == 5)
     mySettings.eq = voiceMenu(6, 920, 920, false, false, mySettings.eq);
   else if (subMenu == 6) {
@@ -619,6 +627,11 @@ int voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
   Serial.print(numberOfOptions);
   Serial.println(F(" Options)"));
   do {
+    if (Serial.available() > 0) {
+      int optionSerial = Serial.parseInt();
+      if (optionSerial != 0 && optionSerial <= numberOfOptions)
+        return optionSerial;
+    }
     readButtons();
     mp3.loop();
     if (pauseButton.wasPressed()) {
@@ -858,6 +871,7 @@ void writeCard(nfcTagObject nfcTag) {
   delay(100);
 }
 
+
 /**
    Helper routine to dump a byte array as hex values to Serial.
 */
@@ -867,4 +881,5 @@ void dump_byte_array(byte * buffer, byte bufferSize) {
     Serial.print(buffer[i], HEX);
   }
 }
+
 
