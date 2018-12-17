@@ -651,7 +651,6 @@ int voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
       mp3.playMp3FolderTrack(messageOffset + returnValue);
       waitForTrackToFinish();
       if (preview) {
-        waitForTrackToFinish();
         if (previewFromFolder == 0)
           mp3.playFolderTrack(returnValue, 1);
         else
