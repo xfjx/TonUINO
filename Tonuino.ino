@@ -328,7 +328,9 @@ void waitForTrackToFinish() {
 #define TIMEOUT 1000
   do {
   } while (!isPlaying() && millis() < currentTime + TIMEOUT);
+  delay(1000);
   do {
+    delay(50);
   } while (isPlaying());
 }
 
@@ -647,21 +649,21 @@ int voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
     if (upButton.pressedFor(LONG_PRESS)) {
       returnValue = min(returnValue + 10, numberOfOptions);
       Serial.println(returnValue);
-      mp3.pause();
+      //mp3.pause();
       mp3.playMp3FolderTrack(messageOffset + returnValue);
       waitForTrackToFinish();
-      if (preview) {
+      /*if (preview) {
         if (previewFromFolder == 0)
           mp3.playFolderTrack(returnValue, 1);
         else
           mp3.playFolderTrack(previewFromFolder, returnValue);
-      }
+        }*/
       ignoreUpButton = true;
     } else if (upButton.wasReleased()) {
       if (!ignoreUpButton) {
         returnValue = min(returnValue + 1, numberOfOptions);
         Serial.println(returnValue);
-        mp3.pause();
+        //mp3.pause();
         mp3.playMp3FolderTrack(messageOffset + returnValue);
         if (preview) {
           waitForTrackToFinish();
@@ -677,24 +679,24 @@ int voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
     if (downButton.pressedFor(LONG_PRESS)) {
       returnValue = max(returnValue - 10, 1);
       Serial.println(returnValue);
-      mp3.pause();
+      //mp3.pause();
       mp3.playMp3FolderTrack(messageOffset + returnValue);
       waitForTrackToFinish();
-      if (preview) {
+      /*if (preview) {
         if (previewFromFolder == 0)
           mp3.playFolderTrack(returnValue, 1);
         else
           mp3.playFolderTrack(previewFromFolder, returnValue);
-      }
+        }*/
       ignoreDownButton = true;
     } else if (downButton.wasReleased()) {
       if (!ignoreDownButton) {
         returnValue = max(returnValue - 1, 1);
         Serial.println(returnValue);
-        mp3.pause();
+        //mp3.pause();
         mp3.playMp3FolderTrack(messageOffset + returnValue);
-        waitForTrackToFinish();
         if (preview) {
+          waitForTrackToFinish();
           if (previewFromFolder == 0)
             mp3.playFolderTrack(returnValue, 1);
           else
@@ -880,5 +882,3 @@ void dump_byte_array(byte * buffer, byte bufferSize) {
     Serial.print(buffer[i], HEX);
   }
 }
-
-
