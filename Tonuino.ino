@@ -42,7 +42,10 @@ public:
     Serial.print("Track beendet");
     Serial.println(track);
     delay(100);
-    nextTrack(track);
+    // Nur zum nächsten Track, wenn nicht im Hörspielmodus 
+    if (myCard.mode != 1) {
+      nextTrack(track);
+    }
   }
   static void OnCardOnline(uint16_t code) {
     Serial.println(F("SD Karte online "));
