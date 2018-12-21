@@ -77,9 +77,11 @@ static void nextTrack(uint16_t track) {
   
   if (myCard.mode == 1) {
     uint16_t oldTrack = currentTrack;
-    Serial.println(F("Hörspielmodus ist aktiv -> zufälligen Track spielen"));
+    Serial.println(F("Hörspielmodus ist aktiv -> nächster Track"));
     //playRandomTrackFromFolder(myCard.folder);
     playNextTrack(false);
+    delay(200);
+    mp3.playAdvertisement(currentTrack);
   }
   if (myCard.mode == 2) {
     Serial.println(F("Albummodus ist aktiv -> nächster Track"));
@@ -103,6 +105,8 @@ static void previousTrack() {
   if (myCard.mode == 1) {
     Serial.println(F("Hörspielmodus ist aktiv -> vorheriger Track"));
     playPreviousTrack(false);
+    delay(200);
+    mp3.playAdvertisement(currentTrack);
   }
   if (myCard.mode == 2) {
     Serial.println(F("Albummodus ist aktiv -> vorheriger Track"));
@@ -302,6 +306,9 @@ void loop() {
   mfrc522.PCD_StopCrypto1();
 }
 
+/**
+ * Plays random track of given folder
+ */
 void playRandomTrackFromFolder(uint8_t folder) {
   uint16_t numTracks = mp3.getFolderTrackCount(folder);
   uint16_t randomTrack = random(1, numTracks + 1);
@@ -319,19 +326,18 @@ void playRandomTrackFromFolder(uint8_t folder) {
   mp3.playFolderTrack(folder, currentTrack);
 }
 
-void playNextTrack(boolean saveProgress) {
+/**
+ * Plays next track of current folder.
+ * If saveProgress is true, the track number is saved to the card.
+ */
+void playNextTrack(bool saveProgress) {
   uint16_t numTracks = mp3.getFolderTrackCount(myCard.folder);
   Serial.print(numTracks);
   Serial.print(F(" Files in folder "));
   Serial.println(myCard.folder);
   if (currentTrack < numTracks) {
       currentTrack = currentTrack + 1;
-
-      Serial.print(F("Playing next track: "));
-      Serial.println(currentTrack);
       
-      mp3.playFolderTrack(myCard.folder, currentTrack);
-
       if (saveProgress) {
         EEPROM.write(myCard.folder, currentTrack);
       }
@@ -343,9 +349,17 @@ void playNextTrack(boolean saveProgress) {
         EEPROM.write(myCard.folder, 1);
       }
    }
+
+   Serial.print(F("Playing next track: "));
+   Serial.println(currentTrack);
+   mp3.playFolderTrack(myCard.folder, currentTrack);
 }
 
-void playPreviousTrack(boolean saveProgress) {
+/**
+ * Plays previous track of current folder.
+ * If saveProgress is true, the track number is saved to the card.
+ */
+void playPreviousTrack(bool saveProgress) {
   uint16_t numTracks = mp3.getFolderTrackCount(myCard.folder);
   Serial.print(numTracks);
   Serial.print(F(" Files in folder "));
@@ -361,6 +375,7 @@ void playPreviousTrack(boolean saveProgress) {
       // last Track was played
       if (saveProgress) {
         // reset progress count
+        Serial.println(F("Reset folder count"));
         EEPROM.write(myCard.folder, 1);
       }
    }
