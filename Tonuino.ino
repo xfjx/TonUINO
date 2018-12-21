@@ -227,6 +227,7 @@ void loop() {
     if (upButton.pressedFor(LONG_PRESS)) {
       Serial.println(F("Volume Up"));
       mp3.increaseVolume();
+      delay(200);
       ignoreUpButton = true;
     } else if (upButton.wasReleased()) {
       if (!ignoreUpButton)
@@ -238,6 +239,7 @@ void loop() {
     if (downButton.pressedFor(LONG_PRESS)) {
       Serial.println(F("Volume Down"));
       mp3.decreaseVolume();
+      delay(200);
       ignoreDownButton = true;
     } else if (downButton.wasReleased()) {
       if (!ignoreDownButton)
