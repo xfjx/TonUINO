@@ -41,7 +41,7 @@ struct adminSettings {
   bool locked;
   long standbyTimer;
   bool invertVolumeButtons;
-  folderSettings shortCuts[3];
+  folderSettings shortCuts[4];
 };
 
 adminSettings mySettings;
@@ -125,6 +125,7 @@ void resetSettings() {
   mySettings.shortCuts[0].folder = 0;
   mySettings.shortCuts[1].folder = 0;
   mySettings.shortCuts[2].folder = 0;
+  mySettings.shortCuts[3].folder = 0;
   writeSettingsToFlash();
 }
 
@@ -165,15 +166,19 @@ void loadSettingsFromFlash() {
   Serial.println(mySettings.invertVolumeButtons);
 }
 
+/// Funktionen für den Standby Timer (z.B. über Pololu-Switch oder Mosfet)
 
 void setstandbyTimer() {
+  Serial.println(F("=== setstandbyTimer()"));
   if (mySettings.standbyTimer != 0 && !isPlaying())
     sleepAtMillis = millis() + (mySettings.standbyTimer * 1000);
   else
     sleepAtMillis = 0;
+  Serial.println(sleepAtMillis);
 }
 
 void disablestandbyTimer() {
+  Serial.println(F("=== disablestandby()"));
   sleepAtMillis = 0;
 }
 
@@ -254,10 +259,10 @@ static void nextTrack(uint16_t track) {
 
 static void previousTrack() {
   Serial.println(F("=== previousTrack()"));
-  if (myCard.mode == 1 || myCard.mode == 7) {
-    Serial.println(F("Hörspielmodus ist aktiv -> Track von vorne spielen"));
-    mp3.playFolderTrack(myCard.folder, currentTrack);
-  }
+  /*  if (myCard.mode == 1 || myCard.mode == 7) {
+      Serial.println(F("Hörspielmodus ist aktiv -> Track von vorne spielen"));
+      mp3.playFolderTrack(myCard.folder, currentTrack);
+    }*/
   if (myCard.mode == 2 || myCard.mode == 8) {
     Serial.println(F("Albummodus ist aktiv -> vorheriger Track"));
     if (currentTrack != firstTrack) {
@@ -388,6 +393,34 @@ void readButtons() {
   downButton.read();
 }
 
+void volumeUpButton() {
+  Serial.println(F("=== volumeUp()"));
+  if (volume < mySettings.maxVolume) {
+    mp3.increaseVolume();
+    volume++;
+  }
+  Serial.println(volume);
+}
+
+void volumeDownButton() {
+  Serial.println(F("=== volumeUp()"));
+  if (volume > mySettings.minVolume) {
+    mp3.decreaseVolume();
+    volume--;
+  }
+  Serial.println(volume);
+}
+
+void nextButton() {
+  nextTrack(random(65536));
+  delay(1000);
+}
+
+void previousButton() {
+  previousTrack();
+  delay(1000);
+}
+
 void loop() {
   do {
     mp3.loop();
@@ -397,8 +430,6 @@ void loop() {
 
     // admin menu
     if ((pauseButton.pressedFor(LONG_PRESS) || upButton.pressedFor(LONG_PRESS) || downButton.pressedFor(LONG_PRESS)) && pauseButton.isPressed() && upButton.isPressed() && downButton.isPressed()) {
-      Serial.println(F("ADMIN MENU"));
-      Serial.println(F("=========="));
       mp3.pause();
       do {
         readButtons();
@@ -437,31 +468,33 @@ void loop() {
     }
 
     if (upButton.pressedFor(LONG_PRESS)) {
-      Serial.println(F("Volume Up"));
-      if (volume < mySettings.maxVolume) {
-        mp3.increaseVolume();
-        volume++;
-      }
+      if (!mySettings.invertVolumeButtons)
+        volumeUpButton();
+      else
+        nextButton();
       ignoreUpButton = true;
     } else if (upButton.wasReleased()) {
       if (!ignoreUpButton)
-        nextTrack(random(65536));
-      else
-        ignoreUpButton = false;
+        if (!mySettings.invertVolumeButtons)
+          nextButton();
+        else
+          volumeUpButton();
+      ignoreUpButton = false;
     }
 
     if (downButton.pressedFor(LONG_PRESS)) {
-      Serial.println(F("Volume Down"));
-      if (volume > mySettings.minVolume) {
-        mp3.decreaseVolume();
-        volume--;
-      }
+      if (!mySettings.invertVolumeButtons)
+        volumeDownButton();
+      else
+        previousButton();
       ignoreDownButton = true;
     } else if (downButton.wasReleased()) {
       if (!ignoreDownButton)
-        previousTrack();
-      else
-        ignoreDownButton = false;
+        if (!mySettings.invertVolumeButtons)
+          previousButton();
+        else
+          volumeDownButton();
+      ignoreDownButton = false;
     }
     // Ende der Buttons
   } while (!mfrc522.PICC_IsNewCardPresent());
@@ -516,7 +549,7 @@ void loop() {
       if (myCard.mode == 5) {
         Serial.println(F("Hörbuch Modus -> kompletten Ordner spielen und "
                          "Fortschritt merken"));
-        currentTrack = EEPROM.read(myCard.folder);
+        currentTrack = max(1,EEPROM.read(myCard.folder));
         mp3.playFolderTrack(myCard.folder, currentTrack);
       }
       // Spezialmodus Von-Bin: Hörspiel: eine zufällige Datei aus dem Ordner
@@ -565,11 +598,12 @@ void loop() {
 }
 
 void adminMenu() {
+  disablestandbyTimer();
   mp3.pause();
   Serial.println(F("=== adminMenu()"));
   knownCard = false;
 
-  int subMenu = voiceMenu(9, 900, 900);
+  int subMenu = voiceMenu(10, 900, 900);
   if (subMenu == 1) {
     resetCard();
     mfrc522.PICC_HaltA();
@@ -585,6 +619,12 @@ void adminMenu() {
     mySettings.eq = voiceMenu(6, 920, 920, false, false, mySettings.eq);
   else if (subMenu == 6) {
     // create master card
+  }
+  else if (subMenu == 7) {
+    // Tasten mit einem Shortcut konfigurieren
+  }
+  else if (subMenu == 8) {
+    // Den Standbytimer konfigurieren
   }
   else if (subMenu == 9) {
     // Ordner abfragen
@@ -617,7 +657,16 @@ void adminMenu() {
       waitForTrackToFinish();
     }
   }
+  else if (subMenu == 10) {
+    // Funktion der Lautstärketasten umdrehen
+    int temp = voiceMenu(2, 933, 933, false);
+    if (temp == 2)
+      mySettings.invertVolumeButtons = true;
+    else
+      mySettings.invertVolumeButtons = false;
+  }
   writeSettingsToFlash();
+  setstandbyTimer();
 }
 
 int voiceMenu(int numberOfOptions, int startMessage, int messageOffset,

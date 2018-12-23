@@ -136,6 +136,10 @@ say -v Anna "Einzelkarten für einen Ordner erstellen." -o 0909.aiff
 sox 0909.aiff 0909.wav pitch 800
 lame -b 128 0909.wav 0909_batch_cards.mp3
 
+say -v Anna "Funktion der Lautstärke Tasten umdrehen." -o 0910.aiff
+sox 0910.aiff 0910.wav pitch 800
+lame -b 128 0910.wav 0910_batch_cards.mp3
+
 say -v Anna "Bitte wähle eine Einstellung für den EQ mit den Lautstärke Tasten aus und bestätige sie mit der Pause Taste." -o 0920.aiff
 sox 0920.aiff 0920.wav pitch 800
 lame -b 128 0920.wav 0920_eq_intro.mp3
