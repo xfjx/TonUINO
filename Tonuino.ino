@@ -393,7 +393,7 @@ void setup() {
       EEPROM.update(i, 0);
     }
   }
-  // Start Shortcut "at Startup" - e.g. Welcome Sound  
+  // Start Shortcut "at Startup" - e.g. Welcome Sound
   playShortCut(3);
 }
 
@@ -547,8 +547,8 @@ void loop() {
           setstandbyTimer();
         }
         else if (knownCard) {
-          disablestandbyTimer();
           mp3.start();
+          disablestandbyTimer();
         }
       ignorePauseButton = false;
     } else if (pauseButton.pressedFor(LONG_PRESS) &&
@@ -577,15 +577,15 @@ void loop() {
         else
           nextButton();
         ignoreUpButton = true;
-      } else if (upButton.wasReleased()) {
-        if (!ignoreUpButton)
-          if (!mySettings.invertVolumeButtons)
-            nextButton();
-          else
-            volumeUpButton();
       }
       else
         playShortCut(1);
+    } else if (upButton.wasReleased()) {
+      if (!ignoreUpButton)
+        if (!mySettings.invertVolumeButtons)
+          nextButton();
+        else
+          volumeUpButton();
       ignoreUpButton = false;
     }
 
@@ -596,15 +596,15 @@ void loop() {
         else
           previousButton();
         ignoreDownButton = true;
-      } else if (downButton.wasReleased()) {
-        if (!ignoreDownButton)
-          if (!mySettings.invertVolumeButtons)
-            previousButton();
-          else
-            volumeDownButton();
       }
       else
         playShortCut(2);
+    } else if (downButton.wasReleased()) {
+      if (!ignoreDownButton)
+        if (!mySettings.invertVolumeButtons)
+          previousButton();
+        else
+          volumeDownButton();
       ignoreDownButton = false;
     }
     // Ende der Buttons
