@@ -117,9 +117,9 @@ void resetSettings() {
   Serial.println(F("=== resetSettings()"));
   mySettings.cookie = 322417479;
   mySettings.version = 1;
-  mySettings.maxVolume = 15;
+  mySettings.maxVolume = 25;
   mySettings.minVolume = 5;
-  mySettings.initVolume = 10;
+  mySettings.initVolume = 15;
   mySettings.eq = 1;
   mySettings.locked = false;
   mySettings.standbyTimer = 5;
