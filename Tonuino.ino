@@ -6,6 +6,8 @@
 #include <SoftwareSerial.h>
 #include <avr/sleep.h>
 
+static const uint32_t cardCookie = 322417479;
+
 // DFPlayer Mini
 SoftwareSerial mySoftwareSerial(2, 3); // RX, TX
 uint16_t numTracksInFolder;
@@ -116,7 +118,7 @@ void writeSettingsToFlash() {
 
 void resetSettings() {
   Serial.println(F("=== resetSettings()"));
-  mySettings.cookie = 322417479;
+  mySettings.cookie = cardCookie;
   mySettings.version = 1;
   mySettings.maxVolume = 25;
   mySettings.minVolume = 5;
@@ -140,7 +142,7 @@ void loadSettingsFromFlash() {
   Serial.println(F("=== loadSettingsFromFlash()"));
   int address = sizeof(myFolder->folder) * 100;
   EEPROM.get(address, mySettings);
-  if (mySettings.cookie != 322417479)
+  if (mySettings.cookie != cardCookie)
     resetSettings();
   migradeSettings(mySettings.version);
 
@@ -652,7 +654,7 @@ void loop() {
   if (readCard(&myCard) == true) {
     // make random a little bit more "random"
     randomSeed(millis());
-    if (myCard.cookie == 322417479 && myFolder->folder != 0 && myFolder->mode != 0) {
+    if (myCard.cookie == cardCookie && myFolder->folder != 0 && myFolder->mode != 0) {
       playFolder();
     }
 
@@ -717,7 +719,7 @@ void adminMenu() {
     // Create Cards for Folder
     // Ordner abfragen
     nfcTagObject tempCard;
-    tempCard.cookie = 322417479;
+    tempCard.cookie = cardCookie;
     tempCard.version = 1;
     tempCard.nfcFolderSettings.mode = 4;
     tempCard.nfcFolderSettings.folder = voiceMenu(99, 301, 0, true);
