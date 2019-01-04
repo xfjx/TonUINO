@@ -4,6 +4,7 @@
 #include <MFRC522.h>
 #include <SPI.h>
 #include <SoftwareSerial.h>
+#include <avr/sleep.h>
 
 // DFPlayer Mini
 SoftwareSerial mySoftwareSerial(2, 3); // RX, TX
@@ -122,8 +123,8 @@ void resetSettings() {
   mySettings.initVolume = 15;
   mySettings.eq = 1;
   mySettings.locked = false;
-  mySettings.standbyTimer = 5;
-  mySettings.invertVolumeButtons = false;
+  mySettings.standbyTimer = 0;
+  mySettings.invertVolumeButtons = true;
   mySettings.shortCuts[0].folder = 0;
   mySettings.shortCuts[1].folder = 0;
   mySettings.shortCuts[2].folder = 0;
@@ -167,29 +168,6 @@ void loadSettingsFromFlash() {
   Serial.print(F("Inverted Volume Buttons: "));
   Serial.println(mySettings.invertVolumeButtons);
 }
-
-/// Funktionen für den Standby Timer (z.B. über Pololu-Switch oder Mosfet)
-
-void setstandbyTimer() {
-  Serial.println(F("=== setstandbyTimer()"));
-  if (mySettings.standbyTimer != 0)
-    sleepAtMillis = millis() + (mySettings.standbyTimer * 1000);
-  else
-    sleepAtMillis = 0;
-  Serial.println(sleepAtMillis);
-}
-
-void disablestandbyTimer() {
-  Serial.println(F("=== disablestandby()"));
-  sleepAtMillis = 0;
-}
-
-void checkStandbyAtMillis() {
-  if (sleepAtMillis != 0 && millis() > sleepAtMillis) {
-    // enter sleep state
-  }
-}
-
 
 // Leider kann das Modul selbst keine Queue abspielen, daher müssen wir selbst die Queue verwalten
 static uint16_t _lastTrackFinished;
@@ -316,6 +294,7 @@ MFRC522::StatusCode status;
 #define buttonUp A1
 #define buttonDown A2
 #define busyPin 4
+#define shutdownPin 8
 
 #define LONG_PRESS 1000
 
@@ -325,6 +304,41 @@ Button downButton(buttonDown);
 bool ignorePauseButton = false;
 bool ignoreUpButton = false;
 bool ignoreDownButton = false;
+
+
+/// Funktionen für den Standby Timer (z.B. über Pololu-Switch oder Mosfet)
+
+void setstandbyTimer() {
+  Serial.println(F("=== setstandbyTimer()"));
+  if (mySettings.standbyTimer != 0)
+    sleepAtMillis = millis() + (mySettings.standbyTimer * 60 * 1000);
+  else
+    sleepAtMillis = 0;
+  Serial.println(sleepAtMillis);
+}
+
+void disablestandbyTimer() {
+  Serial.println(F("=== disablestandby()"));
+  sleepAtMillis = 0;
+}
+
+void checkStandbyAtMillis() {
+  if (sleepAtMillis != 0 && millis() > sleepAtMillis) {
+    Serial.println(F("=== power off!"));
+    // enter sleep state
+
+    // http://discourse.voss.earth/t/intenso-s10000-powerbank-automatische-abschaltung-software-only/805
+    // powerdown to 27mA (powerbank switches off after 30-60s)
+    mfrc522.PCD_AntennaOff();
+    mfrc522.PCD_SoftPowerDown();
+    mp3.sleep();
+
+    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+    cli();  // Disable interrupts
+    sleep_mode();
+  }
+}
+
 
 bool isPlaying() {
   return !digitalRead(busyPin);
@@ -524,6 +538,7 @@ void playShortCut(uint8_t shortCut) {
 
 void loop() {
   do {
+    checkStandbyAtMillis();
     mp3.loop();
     // Buttons werden nun über JS_Button gehandelt, dadurch kann jede Taste
     // doppelt belegt werden
@@ -555,56 +570,70 @@ void loop() {
                ignorePauseButton == false) {
       if (isPlaying()) {
         uint8_t advertTrack;
-        if (myFolder->mode == 3 || myFolder->mode == 9)
+        if (myFolder->mode == 3 || myFolder->mode == 9) {
           advertTrack = (queue[currentTrack - 1]);
-        else
+        }
+        else {
           advertTrack = currentTrack;
+        }
         // Spezialmodus Von-Bis für Album und Party gibt die Dateinummer relativ zur Startposition wieder
-        if (myFolder->mode == 8 || myFolder->mode == 9)
+        if (myFolder->mode == 8 || myFolder->mode == 9) {
           advertTrack = advertTrack - myFolder->special + 1;
-
+        }
         mp3.playAdvertisement(advertTrack);
       }
-      else
+      else {
         playShortCut(0);
+      }
       ignorePauseButton = true;
     }
 
     if (upButton.pressedFor(LONG_PRESS)) {
       if (isPlaying()) {
-        if (!mySettings.invertVolumeButtons)
+        if (!mySettings.invertVolumeButtons) {
           volumeUpButton();
-        else
+        }
+        else {
           nextButton();
+        }
         ignoreUpButton = true;
       }
-      else
+      else {
         playShortCut(1);
+      }
     } else if (upButton.wasReleased()) {
       if (!ignoreUpButton)
-        if (!mySettings.invertVolumeButtons)
+        if (!mySettings.invertVolumeButtons) {
           nextButton();
-        else
+        }
+        else {
           volumeUpButton();
+        }
       ignoreUpButton = false;
     }
 
     if (downButton.pressedFor(LONG_PRESS)) {
       if (isPlaying()) {
-        if (!mySettings.invertVolumeButtons)
+        if (!mySettings.invertVolumeButtons) {
           volumeDownButton();
-        else
+        }
+        else {
           previousButton();
+        }
         ignoreDownButton = true;
       }
-      else
+      else {
         playShortCut(2);
+      }
     } else if (downButton.wasReleased()) {
-      if (!ignoreDownButton)
-        if (!mySettings.invertVolumeButtons)
+      if (!ignoreDownButton) {
+        if (!mySettings.invertVolumeButtons) {
           previousButton();
-        else
+        }
+        else {
           volumeDownButton();
+        }
+      }
       ignoreDownButton = false;
     }
     // Ende der Buttons
@@ -646,18 +675,22 @@ void adminMenu() {
     mfrc522.PICC_HaltA();
     mfrc522.PCD_StopCrypto1();
   }
-  else if (subMenu == 2)
+  else if (subMenu == 2) {
     // Maximum Volume
     mySettings.maxVolume = voiceMenu(30, 930, 0, false, false, mySettings.maxVolume);
-  else if (subMenu == 3)
+  }
+  else if (subMenu == 3) {
     // Minimum Volume
     mySettings.minVolume = voiceMenu(30, 931, 0, false, false, mySettings.minVolume);
-  else if (subMenu == 4)
+  }
+  else if (subMenu == 4) {
     // Initial Volume
     mySettings.initVolume = voiceMenu(30, 932, 0, false, false, mySettings.initVolume);
-  else if (subMenu == 5)
+  }
+  else if (subMenu == 5) {
     // EQ
     mySettings.eq = voiceMenu(6, 920, 920, false, false, mySettings.eq);
+  }
   else if (subMenu == 6) {
     // create master card
   }
@@ -667,7 +700,13 @@ void adminMenu() {
     mp3.playMp3FolderTrack(400);
   }
   else if (subMenu == 8) {
-    // Den Standbytimer konfigurieren
+    switch (voiceMenu(5, 960, 960)) {
+      case 1: mySettings.standbyTimer = 5; break;
+      case 2: mySettings.standbyTimer = 15; break;
+      case 3: mySettings.standbyTimer = 30; break;
+      case 4: mySettings.standbyTimer = 60; break;
+      case 5: mySettings.standbyTimer = 0; break;
+    }
   }
   else if (subMenu == 9) {
     // Create Cards for Folder
@@ -712,10 +751,12 @@ void adminMenu() {
   else if (subMenu == 10) {
     // Invert Functions for Up/Down Buttons
     int temp = voiceMenu(2, 933, 933, false);
-    if (temp == 2)
+    if (temp == 2) {
       mySettings.invertVolumeButtons = true;
-    else
+    }
+    else {
       mySettings.invertVolumeButtons = false;
+    }
   }
   writeSettingsToFlash();
   setstandbyTimer();
@@ -773,14 +814,16 @@ uint8_t voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
         mp3.playMp3FolderTrack(messageOffset + returnValue);
         if (preview) {
           waitForTrackToFinish();
-          if (previewFromFolder == 0)
+          if (previewFromFolder == 0) {
             mp3.playFolderTrack(returnValue, 1);
-          else
+          } else {
             mp3.playFolderTrack(previewFromFolder, returnValue);
+          }
           delay(1000);
         }
-      } else
+      } else {
         ignoreUpButton = false;
+      }
     }
 
     if (downButton.pressedFor(LONG_PRESS)) {
@@ -810,8 +853,9 @@ uint8_t voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
             mp3.playFolderTrack(previewFromFolder, returnValue);
           delay(1000);
         }
-      } else
+      } else {
         ignoreDownButton = false;
+      }
     }
   } while (true);
 }

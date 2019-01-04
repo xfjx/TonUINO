@@ -49,5 +49,10 @@ mp3/0941_pause.mp3|Pausetaste
 mp3/0942_up.mp3|Vor- bzw. Lautertaste
 mp3/0943_down.mp3|Zurück- bzw. Leisertaste
 mp3/0944_startup.mp3|Shortcut beim Start festlegen
-
+mp3/0960_timer_intro.mp3|Nach wievielen Minuten Leerlauf soll der TonUINO ausgeschaltet werden? Du brauchst hierfür aber eine entsprechenden Schaltung.
+mp3/0961_timer_5.mp3|5 Minuten.
+mp3/0962_timer_15.mp3|15 Minuten.
+mp3/0963_timer_30.mp3|30 Minuten.
+mp3/0964_timer_60.mp3|60 Minuten.
+mp3/0965_timer_disabled.mp3|nicht automatisch abschalten
 mp3/0999_reset_ok.mp3|Reset wurde durchgeführt!
