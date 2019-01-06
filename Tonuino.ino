@@ -294,7 +294,7 @@ MFRC522::StatusCode status;
 #define buttonUp A1
 #define buttonDown A2
 #define busyPin 4
-#define shutdownPin 8
+#define shutdownPin 7
 
 #define LONG_PRESS 1000
 
@@ -326,7 +326,9 @@ void checkStandbyAtMillis() {
   if (sleepAtMillis != 0 && millis() > sleepAtMillis) {
     Serial.println(F("=== power off!"));
     // enter sleep state
-
+    digitalWrite(shutdownPin, HIGH);
+    delay(500);
+    
     // http://discourse.voss.earth/t/intenso-s10000-powerbank-automatische-abschaltung-software-only/805
     // powerdown to 27mA (powerbank switches off after 30-60s)
     mfrc522.PCD_AntennaOff();
@@ -398,6 +400,8 @@ void setup() {
   pinMode(buttonPause, INPUT_PULLUP);
   pinMode(buttonUp, INPUT_PULLUP);
   pinMode(buttonDown, INPUT_PULLUP);
+  pinMode(shutdownPin, OUTPUT);
+  digitalWrite(shutdownPin, LOW);
 
   // RESET --- ALLE DREI KNÖPFE BEIM STARTEN GEDRÜCKT HALTEN -> alle EINSTELLUNGEN werden gelöscht
   if (digitalRead(buttonPause) == LOW && digitalRead(buttonUp) == LOW &&
@@ -531,6 +535,7 @@ void playShortCut(uint8_t shortCut) {
   if (mySettings.shortCuts[shortCut].folder != 0) {
     myFolder = &mySettings.shortCuts[shortCut];
     playFolder();
+    disablestandbyTimer();
   }
   else
     Serial.println(F("Shortcut not configured!"));
@@ -847,10 +852,12 @@ uint8_t voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
         mp3.playMp3FolderTrack(messageOffset + returnValue);
         if (preview) {
           waitForTrackToFinish();
-          if (previewFromFolder == 0)
+          if (previewFromFolder == 0) {
             mp3.playFolderTrack(returnValue, 1);
-          else
+          }
+          else {
             mp3.playFolderTrack(previewFromFolder, returnValue);
+          } 
           delay(1000);
         }
       } else {
