@@ -328,7 +328,7 @@ void checkStandbyAtMillis() {
     // enter sleep state
     digitalWrite(shutdownPin, HIGH);
     delay(500);
-    
+
     // http://discourse.voss.earth/t/intenso-s10000-powerbank-automatische-abschaltung-software-only/805
     // powerdown to 27mA (powerbank switches off after 30-60s)
     mfrc522.PCD_AntennaOff();
@@ -603,11 +603,11 @@ void loop() {
         else {
           nextButton();
         }
-        ignoreUpButton = true;
       }
       else {
         playShortCut(1);
       }
+      ignoreUpButton = true;
     } else if (upButton.wasReleased()) {
       if (!ignoreUpButton)
         if (!mySettings.invertVolumeButtons) {
@@ -627,11 +627,11 @@ void loop() {
         else {
           previousButton();
         }
-        ignoreDownButton = true;
       }
       else {
         playShortCut(2);
       }
+      ignoreDownButton = true;
     } else if (downButton.wasReleased()) {
       if (!ignoreDownButton) {
         if (!mySettings.invertVolumeButtons) {
@@ -859,7 +859,7 @@ uint8_t voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
           }
           else {
             mp3.playFolderTrack(previewFromFolder, returnValue);
-          } 
+          }
           delay(1000);
         }
       } else {
