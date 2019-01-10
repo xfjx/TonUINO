@@ -278,6 +278,7 @@ static void previousTrack() {
     // Fortschritt im EEPROM abspeichern
     EEPROM.update(myFolder->folder, currentTrack);
   }
+  delay(1000);
 }
 
 // MFRC522
