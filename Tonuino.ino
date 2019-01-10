@@ -688,6 +688,64 @@ void loop() {
   mfrc522.PCD_StopCrypto1();
 }
 
+
+enum AdminMenu
+{
+  AM_NULL,
+  AM_RESET_CARD,
+  AM_MAX_VOLUME,
+  AM_MIN_VOLUME,
+  AM_START_VOLUME,
+  AM_EQ_SETTING,
+  AM_CREATE_MASTER_CARD,
+  AM_SHORTCUT,
+  AM_STANDYBY_TIMER,
+  AM_MAKE_FOLDER_CARDS,
+  AM_INVERT_BUTTONS
+};
+
+void adminMenuMakeFolderCards() {
+  
+  // Ordner abfragen
+  nfcTagObject tempCard;
+  tempCard.cookie = cardCookie;
+  tempCard.version = 1;
+  tempCard.nfcFolderSettings.mode = 4;
+  tempCard.nfcFolderSettings.folder = voiceMenu(99, 301, 0, true);
+  uint8_t special = voiceMenu(mp3.getFolderTrackCount(tempCard.nfcFolderSettings.folder), 321, 0,
+                              true, tempCard.nfcFolderSettings.folder);
+  uint8_t special2 = voiceMenu(mp3.getFolderTrackCount(tempCard.nfcFolderSettings.folder), 322, 0,
+                               true, tempCard.nfcFolderSettings.folder, special);
+
+  mp3.playMp3FolderTrack(936);
+  waitForTrackToFinish();
+  for (uint8_t x = special; x <= special2; x++) {
+    mp3.playMp3FolderTrack(x);
+    tempCard.nfcFolderSettings.special = x;
+    Serial.print(x);
+    Serial.println(F(" Karte auflegen"));
+    do {
+      readButtons();
+      if (upButton.wasReleased() || downButton.wasReleased()) {
+        Serial.println(F("Abgebrochen!"));
+        mp3.playMp3FolderTrack(802);
+        return;
+      }
+    } while (!mfrc522.PICC_IsNewCardPresent());
+
+    // RFID Karte wurde aufgelegt
+    if (!mfrc522.PICC_ReadCardSerial())
+      return;
+    Serial.println(F("schreibe Karte..."));
+    writeCard(tempCard);
+    delay(100);
+    mfrc522.PICC_HaltA();
+    mfrc522.PCD_StopCrypto1();
+    waitForTrackToFinish();
+  }
+}
+
+
 void adminMenu() {
   disablestandbyTimer();
   mp3.pause();
@@ -695,38 +753,43 @@ void adminMenu() {
   knownCard = false;
 
   int subMenu = voiceMenu(10, 900, 900, false, false, 0, true);
-  if (subMenu == 0)
+  switch (subMenu)
+  {
+  case AM_NULL:
     return;
-  if (subMenu == 1) {
+    
+  case AM_RESET_CARD:
     resetCard();
     mfrc522.PICC_HaltA();
     mfrc522.PCD_StopCrypto1();
-  }
-  else if (subMenu == 2) {
-    // Maximum Volume
+    break;
+  
+  case AM_MAX_VOLUME:
     mySettings.maxVolume = voiceMenu(30, 930, 0, false, false, mySettings.maxVolume);
-  }
-  else if (subMenu == 3) {
-    // Minimum Volume
+    break;
+    
+  case AM_MIN_VOLUME:
     mySettings.minVolume = voiceMenu(30, 931, 0, false, false, mySettings.minVolume);
-  }
-  else if (subMenu == 4) {
-    // Initial Volume
+    break;
+    
+  case AM_START_VOLUME:
     mySettings.initVolume = voiceMenu(30, 932, 0, false, false, mySettings.initVolume);
-  }
-  else if (subMenu == 5) {
-    // EQ
+    break;
+    
+  case AM_EQ_SETTING:
     mySettings.eq = voiceMenu(6, 920, 920, false, false, mySettings.eq);
-  }
-  else if (subMenu == 6) {
+    break;
+    
+  case AM_CREATE_MASTER_CARD:
     // create master card
-  }
-  else if (subMenu == 7) {
-    uint8_t shortcut = voiceMenu(4, 940, 940);
-    setupFolder(&mySettings.shortCuts[shortcut - 1]);
+    break;
+  
+  case AM_SHORTCUT:
+    setupFolder(&mySettings.shortCuts[voiceMenu(4, 940, 940) - 1]);
     mp3.playMp3FolderTrack(400);
-  }
-  else if (subMenu == 8) {
+    break;
+    
+  case AM_STANDYBY_TIMER:
     switch (voiceMenu(5, 960, 960)) {
       case 1: mySettings.standbyTimer = 5; break;
       case 2: mySettings.standbyTimer = 15; break;
@@ -734,56 +797,15 @@ void adminMenu() {
       case 4: mySettings.standbyTimer = 60; break;
       case 5: mySettings.standbyTimer = 0; break;
     }
-  }
-  else if (subMenu == 9) {
-    // Create Cards for Folder
-    // Ordner abfragen
-    nfcTagObject tempCard;
-    tempCard.cookie = cardCookie;
-    tempCard.version = 1;
-    tempCard.nfcFolderSettings.mode = 4;
-    tempCard.nfcFolderSettings.folder = voiceMenu(99, 301, 0, true);
-    uint8_t special = voiceMenu(mp3.getFolderTrackCount(tempCard.nfcFolderSettings.folder), 321, 0,
-                                true, tempCard.nfcFolderSettings.folder);
-    uint8_t special2 = voiceMenu(mp3.getFolderTrackCount(tempCard.nfcFolderSettings.folder), 322, 0,
-                                 true, tempCard.nfcFolderSettings.folder, special);
-
-    mp3.playMp3FolderTrack(936);
-    waitForTrackToFinish();
-    for (uint8_t x = special; x <= special2; x++) {
-      mp3.playMp3FolderTrack(x);
-      tempCard.nfcFolderSettings.special = x;
-      Serial.print(x);
-      Serial.println(F(" Karte auflegen"));
-      do {
-        readButtons();
-        if (upButton.wasReleased() || downButton.wasReleased()) {
-          Serial.println(F("Abgebrochen!"));
-          mp3.playMp3FolderTrack(802);
-          return;
-        }
-      } while (!mfrc522.PICC_IsNewCardPresent());
-
-      // RFID Karte wurde aufgelegt
-      if (!mfrc522.PICC_ReadCardSerial())
-        return;
-      Serial.println(F("schreibe Karte..."));
-      writeCard(tempCard);
-      delay(100);
-      mfrc522.PICC_HaltA();
-      mfrc522.PCD_StopCrypto1();
-      waitForTrackToFinish();
-    }
-  }
-  else if (subMenu == 10) {
-    // Invert Functions for Up/Down Buttons
-    int temp = voiceMenu(2, 933, 933, false);
-    if (temp == 2) {
-      mySettings.invertVolumeButtons = true;
-    }
-    else {
-      mySettings.invertVolumeButtons = false;
-    }
+    break;
+    
+  case AM_MAKE_FOLDER_CARDS:    // Create Cards for Folder
+    adminMenuMakeFolderCards();
+    break;    
+    
+  case AM_INVERT_BUTTONS:    // Invert Functions for Up/Down Buttons
+    mySettings.invertVolumeButtons = (voiceMenu(2, 933, 933, false) == 2);
+    break;
   }
   writeSettingsToFlash();
   setstandbyTimer();
