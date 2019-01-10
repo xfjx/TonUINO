@@ -235,6 +235,7 @@ static void nextTrack(uint16_t track) {
       setstandbyTimer();
     }
   }
+  delay(500);
 }
 
 static void previousTrack() {
@@ -537,7 +538,7 @@ void playShortCut(uint8_t shortCut) {
     myFolder = &mySettings.shortCuts[shortCut];
     playFolder();
     disablestandbyTimer();
-    delay(500);
+    delay(1000);
   }
   else
     Serial.println(F("Shortcut not configured!"));
