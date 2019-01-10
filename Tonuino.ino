@@ -451,6 +451,7 @@ void previousButton() {
 
 void playFolder() {
   disablestandbyTimer();
+  randomSeed(millis + random(1000));
   knownCard = true;
   _lastTrackFinished = 0;
   numTracksInFolder = mp3.getFolderTrackCount(myFolder->folder);
@@ -536,6 +537,7 @@ void playShortCut(uint8_t shortCut) {
     myFolder = &mySettings.shortCuts[shortCut];
     playFolder();
     disablestandbyTimer();
+    delay(500);
   }
   else
     Serial.println(F("Shortcut not configured!"));
