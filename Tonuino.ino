@@ -387,6 +387,7 @@ void setup() {
   mp3.begin();
   volume = mySettings.initVolume;
   mp3.setVolume(volume);
+  mp3.setEq(mySettings.eq - 1);
   // Fix für das Problem mit dem Timeout (ist jetzt in Upstream daher nicht mehr nötig!)
   //mySoftwareSerial.setTimeout(10000);
 
@@ -699,6 +700,7 @@ void adminMenu() {
   else if (subMenu == 5) {
     // EQ
     mySettings.eq = voiceMenu(6, 920, 920, false, false, mySettings.eq);
+    mp3.setEq(mySettings.eq - 1);
   }
   else if (subMenu == 6) {
     // create master card
