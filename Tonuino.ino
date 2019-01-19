@@ -464,19 +464,17 @@ void readButtons() {
 
 void volumeUpButton() {
   Serial.println(F("=== volumeUp()"));
-  if (volume < mySettings.maxVolume) {
-    mp3.increaseVolume();
-    volume++;
-  }
+  if (volume < mySettings.maxVolume)
+    mp3.setVolume(++volume);
+  
   Serial.println(volume);
 }
 
 void volumeDownButton() {
   Serial.println(F("=== volumeDown()"));
-  if (volume > mySettings.minVolume) {
-    mp3.decreaseVolume();
-    volume--;
-  }
+  if (volume > mySettings.minVolume)
+    mp3.setVolume(--volume);
+
   Serial.println(volume);
 }
 
