@@ -274,9 +274,9 @@ static void previousTrack() {
   case Album:
   case SpezialVonBis:
     Serial.println(F("Albummodus ist aktiv -> vorheriger Track"));
-    if (currentTrack != firstTrack) {
+    if (currentTrack != firstTrack)
       currentTrack--;
-    }
+    
     mp3.playFolderTrack(myFolder->folder, currentTrack);
   break;
   
@@ -303,9 +303,9 @@ static void previousTrack() {
   case Hoerbuch:
     Serial.println(F("Hörbuch Modus ist aktiv -> vorheriger Track und "
                      "Fortschritt speichern"));
-    if (currentTrack != 1) {
+    if (currentTrack != 1)
       currentTrack = currentTrack - 1;
-    }
+    
     mp3.playFolderTrack(myFolder->folder, currentTrack);
     // Fortschritt im EEPROM abspeichern
     EEPROM.update(myFolder->folder, currentTrack);
@@ -357,8 +357,8 @@ void disablestandbyTimer() {
   sleepAtMillis = 0;
 }
 
-void checkStandbyAtMillis() {
-  if (sleepAtMillis != 0 && millis() > sleepAtMillis) {
+void powerOff()
+{
     Serial.println(F("=== power off!"));
     // enter sleep state
     digitalWrite(shutdownPin, HIGH);
@@ -373,9 +373,12 @@ void checkStandbyAtMillis() {
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);
     cli();  // Disable interrupts
     sleep_mode();
-  }
 }
 
+void checkStandbyAtMillis() {
+  if (sleepAtMillis != 0 && millis() > sleepAtMillis)
+    powerOff();
+}
 
 bool isPlaying() {
   return !digitalRead(busyPin);
