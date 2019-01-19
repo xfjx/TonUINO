@@ -563,129 +563,143 @@ void playShortCut(uint8_t shortCut) {
 }
 
 void loop() {
-  do {
-    checkStandbyAtMillis();
-    mp3.loop();
-    // Buttons werden nun über JS_Button gehandelt, dadurch kann jede Taste
-    // doppelt belegt werden
-    readButtons();
 
-    // admin menu
-    if ((pauseButton.pressedFor(LONG_PRESS) || upButton.pressedFor(LONG_PRESS) || downButton.pressedFor(LONG_PRESS)) && 
-      pauseButton.isPressed() && upButton.isPressed() && downButton.isPressed()) {
-      mp3.pause();
-      do {
-        readButtons();
-      } while (pauseButton.isPressed() || upButton.isPressed() || downButton.isPressed());
+  checkStandbyAtMillis();
+  mp3.loop();
+  // Buttons werden nun über JS_Button gehandelt, dadurch kann jede Taste
+  // doppelt belegt werden
+  readButtons();
+
+  // admin menu
+  if ((pauseButton.pressedFor(LONG_PRESS) || upButton.pressedFor(LONG_PRESS) || downButton.pressedFor(LONG_PRESS)) && 
+    pauseButton.isPressed() && upButton.isPressed() && downButton.isPressed()) {
+    mp3.pause();
+    do {
       readButtons();
-      adminMenu();
-      break;
-    }
-
-    if (pauseButton.wasReleased()) {
-      if (ignorePauseButton == false)
-        if (isPlaying()) {
-          mp3.pause();
-          setstandbyTimer();
-        }
-        else if (knownCard) {
-          mp3.start();
-          disablestandbyTimer();
-        }
-      ignorePauseButton = false;
-    } else if (pauseButton.pressedFor(LONG_PRESS) &&
-               ignorePauseButton == false) {
-      if (isPlaying()) {
-        uint8_t advertTrack;
-        if (myFolder->mode == Party || myFolder->mode == PartyRandom) {
-          advertTrack = (queue[currentTrack - 1]);
-        }
-        else {
-          advertTrack = currentTrack;
-        }
-        // Spezialmodus Von-Bis für Album und Party gibt die Dateinummer relativ zur Startposition wieder
-        if (myFolder->mode == SpezialVonBis || myFolder->mode == PartyRandom) {
-          advertTrack = advertTrack - myFolder->special + 1;
-        }
-        mp3.playAdvertisement(advertTrack);
-      }
-      else {
-        playShortCut(0);
-      }
-      ignorePauseButton = true;
-    }
-
-    if (upButton.pressedFor(LONG_PRESS)) {
-      if (isPlaying()) {
-        if (!mySettings.invertVolumeButtons) {
-          volumeUpButton();
-        }
-        else {
-          nextButton();
-        }
-        ignoreUpButton = true;
-      }
-      else {
-        playShortCut(1);
-      }
-    } else if (upButton.wasReleased()) {
-      if (!ignoreUpButton)
-        if (!mySettings.invertVolumeButtons) {
-          nextButton();
-        }
-        else {
-          volumeUpButton();
-        }
-      ignoreUpButton = false;
-    }
-
-    if (downButton.pressedFor(LONG_PRESS)) {
-      if (isPlaying()) {
-        if (!mySettings.invertVolumeButtons) {
-          volumeDownButton();
-        }
-        else {
-          previousButton();
-        }
-        ignoreDownButton = true;
-      }
-      else {
-        playShortCut(2);
-      }
-    } else if (downButton.wasReleased()) {
-      if (!ignoreDownButton) {
-        if (!mySettings.invertVolumeButtons) {
-          previousButton();
-        }
-        else {
-          volumeDownButton();
-        }
-      }
-      ignoreDownButton = false;
-    }
-    // Ende der Buttons
-  } while (!mfrc522.PICC_IsNewCardPresent());
-
-  // RFID Karte wurde aufgelegt
-
-  if (!mfrc522.PICC_ReadCardSerial())
+    } while (pauseButton.isPressed() || upButton.isPressed() || downButton.isPressed());
+    readButtons();
+    adminMenu();
     return;
+  }
 
-  if (readCard(&myCard) == true) {
-    // make random a little bit more "random"
-    randomSeed(millis());
-    if (myCard.cookie == cardCookie && myFolder->folder != 0 && myFolder->mode != Uninitialized) {
-      playFolder();
+  if (pauseButton.wasReleased())
+  {
+    if (!ignorePauseButton)
+    {
+      if (isPlaying())
+      {
+        mp3.pause();
+        setstandbyTimer();
+      }
+      else if (knownCard)
+      {
+        mp3.start();
+        disablestandbyTimer();
+      }
     }
+    ignorePauseButton = false;
+  }
+  else if (pauseButton.pressedFor(LONG_PRESS) && !ignorePauseButton)
+  {
+    if (isPlaying())
+    {
+      uint8_t advertTrack = 
+        (myFolder->mode == Party || myFolder->mode == PartyRandom) ? 
+        queue[currentTrack - 1] : currentTrack;
+        
+      // Spezialmodus Von-Bis für Album und Party gibt die Dateinummer relativ zur Startposition wieder
+      if (myFolder->mode == SpezialVonBis || myFolder->mode == PartyRandom)
+      {
+        advertTrack = advertTrack - myFolder->special + 1;
+      }
+      mp3.playAdvertisement(advertTrack);
+    }
+    else
+    {
+      playShortCut(0);
+    }
+    ignorePauseButton = true;
+  }
 
-    // Neue Karte konfigurieren
-    else {
-      knownCard = false;
-      setupCard();
+  if (upButton.pressedFor(LONG_PRESS))
+  {
+    if (isPlaying())
+    {
+      if (!mySettings.invertVolumeButtons)
+        volumeUpButton();
+      else
+        nextButton();
+      
+      ignoreUpButton = true;
+    }
+    else
+    {
+      playShortCut(1);
     }
   }
-  mfrc522.PICC_HaltA();
-  mfrc522.PCD_StopCrypto1();
+  else if (upButton.wasReleased())
+  {
+    if (!ignoreUpButton)
+    {
+      if (!mySettings.invertVolumeButtons)
+        nextButton();
+      else
+        volumeUpButton();
+    }
+    ignoreUpButton = false;
+  }
+
+  if (downButton.pressedFor(LONG_PRESS))
+  {
+    if (isPlaying())
+    {
+      if (!mySettings.invertVolumeButtons)
+        volumeDownButton();
+      else
+        previousButton();
+      
+      ignoreDownButton = true;
+    }
+    else
+    {
+      playShortCut(2);
+    }
+  }
+  else if (downButton.wasReleased())
+  {
+    if (!ignoreDownButton)
+    {
+      if (!mySettings.invertVolumeButtons)
+        previousButton();
+      else
+        volumeDownButton();
+    }
+    ignoreDownButton = false;
+  }  
+  // Ende der Buttons
+  
+  if (mfrc522.PICC_IsNewCardPresent())  // RFID Karte wurde aufgelegt
+  {
+    if (mfrc522.PICC_ReadCardSerial())
+    {
+      if (readCard(&myCard))
+      {    
+        if (myCard.cookie == cardCookie && myFolder->folder != 0 && myFolder->mode != Uninitialized)
+        {
+          randomSeed(millis()); // make random a little bit more "random"
+          playFolder();
+        }       
+        else
+        {
+          // Neue Karte konfigurieren
+          knownCard = false;
+          setupCard();
+        }
+      }
+      mfrc522.PICC_HaltA();
+      mfrc522.PCD_StopCrypto1();
+    }
+  }  
 }
 
 
