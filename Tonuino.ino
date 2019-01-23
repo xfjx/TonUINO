@@ -597,7 +597,7 @@ void loop() {
     } while (pauseButton.isPressed() || upButton.isPressed() || downButton.isPressed());
     readButtons();
     adminMenu();
-  return;
+    return;
   }
   
   if (pauseButton.wasReleased()) {
@@ -632,7 +632,7 @@ void loop() {
     }
     ignorePauseButton = true;
   }
-  
+
   if (upButton.pressedFor(LONG_PRESS)) {
     if (isPlaying()) {
       if (!mySettings.invertVolumeButtons) {
@@ -674,13 +674,13 @@ void loop() {
     if (!ignoreDownButton) {
       if (!mySettings.invertVolumeButtons) {
         previousButton();
-      }
+    }
       else {
         volumeDownButton();
-      }
+    }
     }
     ignoreDownButton = false;
-  }
+    }
   // Ende der Buttons
   
   if (mfrc522.PICC_IsNewCardPresent())  // RFID Karte wurde aufgelegt
@@ -692,7 +692,7 @@ void loop() {
         if (myCard.cookie == cardCookie && myFolder->folder != 0 && myFolder->mode != Uninitialized) {
           randomSeed(millis()); // make random a little bit more "random"
           playFolder();
-        }         
+        }
         else { 
 		  // Neue Karte konfigurieren
           knownCard = false;
@@ -745,13 +745,8 @@ void adminMenu() {
     mp3.playMp3FolderTrack(400);
   }
   else if (subMenu == 8) {
-    switch (voiceMenu(5, 960, 960)) {
-      case 1: mySettings.standbyTimer = 5; break;
-      case 2: mySettings.standbyTimer = 15; break;
-      case 3: mySettings.standbyTimer = 30; break;
-      case 4: mySettings.standbyTimer = 60; break;
-      case 5: mySettings.standbyTimer = 0; break;
-    }
+      const byte aStandbyTimer[] = { 5, 15, 30, 60, 0};
+      mySettings.standbyTimer = aStandbyTimer[voiceMenu(5, 960, 960) - 1];
   }
   else if (subMenu == 9) {
     // Create Cards for Folder
@@ -902,7 +897,7 @@ uint8_t voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
         }
       } else {
         ignoreDownButton = false;
-      }
+	}
     }
   } while (true);
 }
