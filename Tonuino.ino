@@ -1235,13 +1235,8 @@ void adminMenu(bool fromCard = false) {
     mp3.playMp3FolderTrack(400);
   }
   else if (subMenu == 8) {
-    switch (voiceMenu(5, 960, 960)) {
-      case 1: mySettings.standbyTimer = 5; break;
-      case 2: mySettings.standbyTimer = 15; break;
-      case 3: mySettings.standbyTimer = 30; break;
-      case 4: mySettings.standbyTimer = 60; break;
-      case 5: mySettings.standbyTimer = 0; break;
-    }
+      const byte aStandbyTimer[] = { 5, 15, 30, 60, 0};	// TODO: PROGMEM
+      mySettings.standbyTimer = aStandbyTimer[voiceMenu(5, 960, 960) - 1];
   }
   else if (subMenu == 9) {
     // Create Cards for Folder
