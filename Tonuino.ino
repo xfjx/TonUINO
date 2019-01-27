@@ -932,7 +932,7 @@ void setupCard() {
   writeCard(myCard);
 }
 
-bool readCard(nfcTagObject *nfcTag) {
+bool readCard(nfcTagObject * nfcTag) {
   bool returnValue = true;
   // Show some details of the PICC (that is: the tag/card)
   Serial.print(F("Card UID:"));
@@ -1028,8 +1028,7 @@ bool readCard(nfcTagObject *nfcTag) {
     memcpy(buffer + 12, buffer2, 4);
   }
 
-  Serial.print(F("Data in block "));
-  Serial.print(blockAddr);
+  Serial.print(F("Data on Card "));
   Serial.println(F(":"));
   dump_byte_array(buffer, 16);
   Serial.println();
@@ -1047,6 +1046,8 @@ bool readCard(nfcTagObject *nfcTag) {
   nfcTag->nfcFolderSettings.mode = buffer[6];
   nfcTag->nfcFolderSettings.special = buffer[7];
   nfcTag->nfcFolderSettings.special2 = buffer[8];
+
+  myFolder = &nfcTag->nfcFolderSettings;
 
   return returnValue;
 }
