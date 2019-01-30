@@ -933,7 +933,6 @@ void setupCard() {
 }
 
 bool readCard(nfcTagObject * nfcTag) {
-  bool returnValue = true;
   // Show some details of the PICC (that is: the tag/card)
   Serial.print(F("Card UID:"));
   dump_byte_array(mfrc522.uid.uidByte, mfrc522.uid.size);
@@ -964,10 +963,9 @@ bool readCard(nfcTagObject * nfcTag) {
   }
 
   if (status != MFRC522::STATUS_OK) {
-    returnValue = false;
     Serial.print(F("PCD_Authenticate() failed: "));
     Serial.println(mfrc522.GetStatusCodeName(status));
-    return;
+    return false;
   }
 
   // Show the whole sector as it currently is
@@ -985,9 +983,9 @@ bool readCard(nfcTagObject * nfcTag) {
     Serial.println(F(" ..."));
     status = (MFRC522::StatusCode)mfrc522.MIFARE_Read(blockAddr, buffer, &size);
     if (status != MFRC522::STATUS_OK) {
-      returnValue = false;
       Serial.print(F("MIFARE_Read() failed: "));
       Serial.println(mfrc522.GetStatusCodeName(status));
+      return false;
     }
   }
   else if (piccType == MFRC522::PICC_TYPE_MIFARE_UL )
@@ -997,33 +995,33 @@ bool readCard(nfcTagObject * nfcTag) {
 
     status = (MFRC522::StatusCode)mfrc522.MIFARE_Read(8, buffer2, &size2);
     if (status != MFRC522::STATUS_OK) {
-      returnValue = false;
       Serial.print(F("MIFARE_Read_1() failed: "));
       Serial.println(mfrc522.GetStatusCodeName(status));
+      return false;
     }
     memcpy(buffer, buffer2, 4);
 
     status = (MFRC522::StatusCode)mfrc522.MIFARE_Read(9, buffer2, &size2);
     if (status != MFRC522::STATUS_OK) {
-      returnValue = false;
       Serial.print(F("MIFARE_Read_2() failed: "));
       Serial.println(mfrc522.GetStatusCodeName(status));
+      return false;
     }
     memcpy(buffer + 4, buffer2, 4);
 
     status = (MFRC522::StatusCode)mfrc522.MIFARE_Read(10, buffer2, &size2);
     if (status != MFRC522::STATUS_OK) {
-      returnValue = false;
       Serial.print(F("MIFARE_Read_3() failed: "));
       Serial.println(mfrc522.GetStatusCodeName(status));
+      return false;
     }
     memcpy(buffer + 8, buffer2, 4);
 
     status = (MFRC522::StatusCode)mfrc522.MIFARE_Read(11, buffer2, &size2);
     if (status != MFRC522::STATUS_OK) {
-      returnValue = false;
       Serial.print(F("MIFARE_Read_4() failed: "));
       Serial.println(mfrc522.GetStatusCodeName(status));
+      return false;
     }
     memcpy(buffer + 12, buffer2, 4);
   }
@@ -1049,7 +1047,7 @@ bool readCard(nfcTagObject * nfcTag) {
 
   myFolder = &nfcTag->nfcFolderSettings;
 
-  return returnValue;
+  return true;
 }
 
 void writeCard(nfcTagObject nfcTag) {
