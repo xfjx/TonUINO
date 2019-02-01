@@ -385,6 +385,8 @@ void setup() {
 
   // DFPlayer Mini initialisieren
   mp3.begin();
+  // Zwei Sekunden warten bis der DFPlayer Mini initialisiert ist
+  delay(2000);
   volume = mySettings.initVolume;
   mp3.setVolume(volume);
   mp3.setEq(mySettings.eq - 1);
