@@ -497,7 +497,10 @@ void playFolder() {
   if (myFolder->mode == 5) {
     Serial.println(F("Hörbuch Modus -> kompletten Ordner spielen und "
                      "Fortschritt merken"));
-    currentTrack = max(1, EEPROM.read(myFolder->folder));
+    currentTrack = EEPROM.read(myFolder->folder);
+    if (currentTrack == 0 || currentTrack > numTracksInFolder) {
+      currentTrack = 1;
+    }
     mp3.playFolderTrack(myFolder->folder, currentTrack);
   }
   // Spezialmodus Von-Bin: Hörspiel: eine zufällige Datei aus dem Ordner
