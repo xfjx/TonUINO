@@ -456,7 +456,7 @@ void previousButton() {
 
 void playFolder() {
   disablestandbyTimer();
-  randomSeed(millis + random(1000));
+  randomSeed(millis() + random(1000));
   knownCard = true;
   _lastTrackFinished = 0;
   numTracksInFolder = mp3.getFolderTrackCount(myFolder->folder);
@@ -661,7 +661,7 @@ void loop() {
 
   if (readCard(&myCard) == true) {
     // make random a little bit more "random"
-    randomSeed(millis());
+    randomSeed(millis() + random(1000));
     if (myCard.cookie == 322417479 && myFolder->folder != 0 && myFolder->mode != 0) {
       playFolder();
     }
