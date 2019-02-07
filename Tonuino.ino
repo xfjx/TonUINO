@@ -44,10 +44,6 @@ struct nfcTagObject {
   uint32_t cookie;
   uint8_t version;
   folderSettings nfcFolderSettings;
-  //  uint8_t folder;
-  //  uint8_t mode;
-  //  uint8_t special;
-  //  uint8_t special2;
 };
 
 // admin settings stored in eeprom
@@ -150,7 +146,7 @@ void resetSettings() {
   writeSettingsToFlash();
 }
 
-void migradeSettings(int oldVersion) {
+void migrateSettings(int oldVersion) {
 
 }
 
@@ -160,7 +156,7 @@ void loadSettingsFromFlash() {
   EEPROM.get(address, mySettings);
   if (mySettings.cookie != cardCookie)
     resetSettings();
-  migradeSettings(mySettings.version);
+  migrateSettings(mySettings.version);
 
   Serial.print(F("Version: "));
   Serial.println(mySettings.version);
@@ -196,7 +192,7 @@ static void nextTrack(uint16_t track) {
   Serial.println(F("=== nextTrack()"));
   _lastTrackFinished = track;
 
-  if (knownCard == false)
+  if (!knownCard)
     // Wenn eine neue Karte angelernt wird soll das Ende eines Tracks nicht
     // verarbeitet werden
     return;
@@ -207,18 +203,16 @@ static void nextTrack(uint16_t track) {
   case HoerspielRandom:
     Serial.println(F("Hörspielmodus ist aktiv -> keinen neuen Track spielen"));
     setstandbyTimer();
-    //    mp3.sleep(); // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
   break;
   
   case Album:
   case SpezialVonBis:
     if (currentTrack != numTracksInFolder) {
-      currentTrack = currentTrack + 1;
+      currentTrack++;
       mp3.playFolderTrack(myFolder->folder, currentTrack);
       Serial.print(F("Albummodus ist aktiv -> nächster Track: "));
       Serial.print(currentTrack);
     } else
-      //      mp3.sleep();   // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
       setstandbyTimer();
     break;
   
@@ -240,7 +234,6 @@ static void nextTrack(uint16_t track) {
 
   case EinzelTitel:
     Serial.println(F("Einzel Modus aktiv -> Strom sparen"));
-    //    mp3.sleep();      // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
     setstandbyTimer();
     break;
   
@@ -253,7 +246,6 @@ static void nextTrack(uint16_t track) {
       // Fortschritt im EEPROM abspeichern
       EEPROM.update(myFolder->folder, currentTrack);
     } else {
-      //      mp3.sleep();  // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
       // Fortschritt zurück setzen
       EEPROM.update(myFolder->folder, 1);
       setstandbyTimer();
@@ -304,7 +296,7 @@ static void previousTrack() {
     Serial.println(F("Hörbuch Modus ist aktiv -> vorheriger Track und "
                      "Fortschritt speichern"));
     if (currentTrack != 1)
-      currentTrack = currentTrack - 1;
+      currentTrack--;
     
     mp3.playFolderTrack(myFolder->folder, currentTrack);
     // Fortschritt im EEPROM abspeichern
@@ -319,10 +311,9 @@ static void previousTrack() {
 #define SS_PIN 10                 // Configurable, see typical pin layout above
 MFRC522 mfrc522(SS_PIN, RST_PIN); // Create MFRC522
 MFRC522::MIFARE_Key key;
-bool successRead;
-byte sector = 1;
-byte blockAddr = 4;
-byte trailerBlock = 7;
+const byte sector = 1;
+const byte blockAddr = 4;
+const byte trailerBlock = 7;
 MFRC522::StatusCode status;
 
 #define buttonPause A0
@@ -386,10 +377,10 @@ bool isPlaying() {
 
 void waitForTrackToFinish() {
   long currentTime = millis();
-#define TIMEOUT 1000
+  const int timeoutMs = 1000;
   do {
     mp3.loop();
-  } while (!isPlaying() && millis() < currentTime + TIMEOUT);
+  } while (!isPlaying() && millis() < currentTime + timeoutMs);
   delay(1000);
   do {
     mp3.loop();
@@ -432,8 +423,7 @@ void setup() {
   // NFC Leser initialisieren
   SPI.begin();        // Init SPI bus
   mfrc522.PCD_Init(); // Init MFRC522
-  mfrc522
-  .PCD_DumpVersionToSerial(); // Show details of PCD - MFRC522 Card Reader
+  mfrc522.PCD_DumpVersionToSerial(); // Show details of PCD - MFRC522 Card Reader
   for (byte i = 0; i < 6; i++) {
     key.keyByte[i] = 0xFF;
   }
@@ -585,8 +575,6 @@ void loop() {
 
   checkStandbyAtMillis();
   mp3.loop();
-  // Buttons werden nun über JS_Button gehandelt, dadurch kann jede Taste
-  // doppelt belegt werden
   readButtons();
   
   // admin menu
@@ -963,8 +951,7 @@ void setupCard() {
   setupFolder(&myCard.nfcFolderSettings);
   // Karte ist konfiguriert -> speichern
   mp3.pause();
-  do {
-  } while (isPlaying());
+  while (isPlaying());
   writeCard(myCard);
 }
 
@@ -1017,7 +1004,7 @@ bool readCard(nfcTagObject * nfcTag) {
     Serial.print(F("Reading data from block "));
     Serial.print(blockAddr);
     Serial.println(F(" ..."));
-    status = (MFRC522::StatusCode)mfrc522.MIFARE_Read(blockAddr, buffer, &size);
+    status = mfrc522.MIFARE_Read(blockAddr, buffer, &size);
     if (status != MFRC522::STATUS_OK) {
       Serial.print(F("MIFARE_Read() failed: "));
       Serial.println(mfrc522.GetStatusCodeName(status));
@@ -1029,7 +1016,7 @@ bool readCard(nfcTagObject * nfcTag) {
     byte buffer2[18];
     byte size2 = sizeof(buffer2);
 
-    status = (MFRC522::StatusCode)mfrc522.MIFARE_Read(8, buffer2, &size2);
+    status = mfrc522.MIFARE_Read(8, buffer2, &size2);
     if (status != MFRC522::STATUS_OK) {
       Serial.print(F("MIFARE_Read_1() failed: "));
       Serial.println(mfrc522.GetStatusCodeName(status));
@@ -1037,7 +1024,7 @@ bool readCard(nfcTagObject * nfcTag) {
     }
     memcpy(buffer, buffer2, 4);
 
-    status = (MFRC522::StatusCode)mfrc522.MIFARE_Read(9, buffer2, &size2);
+    status = mfrc522.MIFARE_Read(9, buffer2, &size2);
     if (status != MFRC522::STATUS_OK) {
       Serial.print(F("MIFARE_Read_2() failed: "));
       Serial.println(mfrc522.GetStatusCodeName(status));
@@ -1045,7 +1032,7 @@ bool readCard(nfcTagObject * nfcTag) {
     }
     memcpy(buffer + 4, buffer2, 4);
 
-    status = (MFRC522::StatusCode)mfrc522.MIFARE_Read(10, buffer2, &size2);
+    status = mfrc522.MIFARE_Read(10, buffer2, &size2);
     if (status != MFRC522::STATUS_OK) {
       Serial.print(F("MIFARE_Read_3() failed: "));
       Serial.println(mfrc522.GetStatusCodeName(status));
@@ -1053,7 +1040,7 @@ bool readCard(nfcTagObject * nfcTag) {
     }
     memcpy(buffer + 8, buffer2, 4);
 
-    status = (MFRC522::StatusCode)mfrc522.MIFARE_Read(11, buffer2, &size2);
+    status = mfrc522.MIFARE_Read(11, buffer2, &size2);
     if (status != MFRC522::STATUS_OK) {
       Serial.print(F("MIFARE_Read_4() failed: "));
       Serial.println(mfrc522.GetStatusCodeName(status));
@@ -1087,7 +1074,6 @@ bool readCard(nfcTagObject * nfcTag) {
 }
 
 void writeCard(nfcTagObject nfcTag) {
-  MFRC522::PICC_Type mifareType;
   byte buffer[16] = {0x13, 0x37, 0xb3, 0x47, // 0x1337 0xb347 magic cookie to
                      // identify our nfc tags
                      0x02,                   // version 1
@@ -1100,7 +1086,7 @@ void writeCard(nfcTagObject nfcTag) {
 
   byte size = sizeof(buffer);
 
-  mifareType = mfrc522.PICC_GetType(mfrc522.uid.sak);
+  MFRC522::PICC_Type mifareType = mfrc522.PICC_GetType(mfrc522.uid.sak);
 
   // Authenticate using key B
   //authentificate with the card and set card specific parameters
@@ -1139,7 +1125,7 @@ void writeCard(nfcTagObject nfcTag) {
       (mifareType == MFRC522::PICC_TYPE_MIFARE_1K ) ||
       (mifareType == MFRC522::PICC_TYPE_MIFARE_4K ) )
   {
-    status = (MFRC522::StatusCode)mfrc522.MIFARE_Write(blockAddr, buffer, 16);
+    status = mfrc522.MIFARE_Write(blockAddr, buffer, 16);
   }
   else if (mifareType == MFRC522::PICC_TYPE_MIFARE_UL )
   {
@@ -1148,19 +1134,19 @@ void writeCard(nfcTagObject nfcTag) {
 
     memset(buffer2, 0, size2);
     memcpy(buffer2, buffer, 4);
-    status = (MFRC522::StatusCode)mfrc522.MIFARE_Write(8, buffer2, 16);
+    status = mfrc522.MIFARE_Write(8, buffer2, 16);
 
     memset(buffer2, 0, size2);
     memcpy(buffer2, buffer + 4, 4);
-    status = (MFRC522::StatusCode)mfrc522.MIFARE_Write(9, buffer2, 16);
+    status = mfrc522.MIFARE_Write(9, buffer2, 16);
 
     memset(buffer2, 0, size2);
     memcpy(buffer2, buffer + 8, 4);
-    status = (MFRC522::StatusCode)mfrc522.MIFARE_Write(10, buffer2, 16);
+    status = mfrc522.MIFARE_Write(10, buffer2, 16);
 
     memset(buffer2, 0, size2);
     memcpy(buffer2, buffer + 12, 4);
-    status = (MFRC522::StatusCode)mfrc522.MIFARE_Write(11, buffer2, 16);
+    status = mfrc522.MIFARE_Write(11, buffer2, 16);
   }
 
   if (status != MFRC522::STATUS_OK) {
