@@ -630,10 +630,9 @@ static void previousTrack() {
 #define SS_PIN 10                 // Configurable, see typical pin layout above
 MFRC522 mfrc522(SS_PIN, RST_PIN); // Create MFRC522
 MFRC522::MIFARE_Key key;
-bool successRead;
-byte sector = 1;
-byte blockAddr = 4;
-byte trailerBlock = 7;
+const byte sector = 1;
+const byte blockAddr = 4;
+const byte trailerBlock = 7;
 MFRC522::StatusCode status;
 
 #define buttonPause A0
@@ -760,8 +759,7 @@ void setup() {
   // NFC Leser initialisieren
   SPI.begin();        // Init SPI bus
   mfrc522.PCD_Init(); // Init MFRC522
-  mfrc522
-  .PCD_DumpVersionToSerial(); // Show details of PCD - MFRC522 Card Reader
+  mfrc522.PCD_DumpVersionToSerial(); // Show details of PCD - MFRC522 Card Reader
   for (byte i = 0; i < 6; i++) {
     key.keyByte[i] = 0xFF;
   }
@@ -1509,24 +1507,22 @@ bool readCard(nfcTagObject * nfcTag) {
   Serial.print(F("PICC type: "));
   MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(mfrc522.uid.sak);
   Serial.println(mfrc522.PICC_GetTypeName(piccType));
+  const bool bIsMifareUL = piccType == MFRC522::PICC_TYPE_MIFARE_UL;
 
-  byte buffer[18];
-  byte size = sizeof(buffer);
+  byte buffer[18+12];   // add more room at the end so that UL read with offset of up to 12 bytes fits
+  byte size = 18;
 
   // Authenticate using key A
-  if ((piccType == MFRC522::PICC_TYPE_MIFARE_MINI ) ||
-      (piccType == MFRC522::PICC_TYPE_MIFARE_1K ) ||
-      (piccType == MFRC522::PICC_TYPE_MIFARE_4K ) )
+  if (!bIsMifareUL)
   {
     Serial.println(F("Authenticating Classic using key A..."));
     status = mfrc522.PCD_Authenticate(
                MFRC522::PICC_CMD_MF_AUTH_KEY_A, trailerBlock, &key, &(mfrc522.uid));
   }
-  else if (piccType == MFRC522::PICC_TYPE_MIFARE_UL )
+  else
   {
     byte pACK[] = {0, 0}; //16 bit PassWord ACK returned by the tempCard
 
-    // Authenticate using key A
     Serial.println(F("Authenticating MIFARE UL..."));
     status = mfrc522.PCD_NTAG216_AUTH(key.keyByte, pACK);
   }
@@ -1537,62 +1533,33 @@ bool readCard(nfcTagObject * nfcTag) {
     return false;
   }
 
-  // Show the whole sector as it currently is
-  // Serial.println(F("Current data in sector:"));
-  // mfrc522.PICC_DumpMifareClassicSectorToSerial(&(mfrc522.uid), &key, sector);
-  // Serial.println();
-
   // Read data from the block
-  if ((piccType == MFRC522::PICC_TYPE_MIFARE_MINI ) ||
-      (piccType == MFRC522::PICC_TYPE_MIFARE_1K ) ||
-      (piccType == MFRC522::PICC_TYPE_MIFARE_4K ) )
+  Serial.print(F("Reading data from block "));
+  Serial.print(blockAddr);
+  Serial.println(F(" ..."));
+  
+  if (!bIsMifareUL)
   {
-    Serial.print(F("Reading data from block "));
-    Serial.print(blockAddr);
-    Serial.println(F(" ..."));
-    status = (MFRC522::StatusCode)mfrc522.MIFARE_Read(blockAddr, buffer, &size);
+	// classic cards read 16 bytes at once
+    status = mfrc522.MIFARE_Read(blockAddr, buffer, &size);
     if (status != MFRC522::STATUS_OK) {
       Serial.print(F("MIFARE_Read() failed: "));
       Serial.println(mfrc522.GetStatusCodeName(status));
       return false;
     }
   }
-  else if (piccType == MFRC522::PICC_TYPE_MIFARE_UL )
+  else
   {
-    byte buffer2[18];
-    byte size2 = sizeof(buffer2);
-
-    status = (MFRC522::StatusCode)mfrc522.MIFARE_Read(8, buffer2, &size2);
-    if (status != MFRC522::STATUS_OK) {
-      Serial.print(F("MIFARE_Read_1() failed: "));
-      Serial.println(mfrc522.GetStatusCodeName(status));
-      return false;
+    // UL cards read 4 bytes at once -> 4 parts for 16 bytes
+    for (byte part = 0; part < 4; part++)
+    {
+      status = mfrc522.MIFARE_Read(8 + part, buffer + 4 * part, &size);
+      if (status != MFRC522::STATUS_OK) {
+        Serial.print(F("MIFARE_Read() failed: "));
+        Serial.println(mfrc522.GetStatusCodeName(status));
+        return false;
+      }
     }
-    memcpy(buffer, buffer2, 4);
-
-    status = (MFRC522::StatusCode)mfrc522.MIFARE_Read(9, buffer2, &size2);
-    if (status != MFRC522::STATUS_OK) {
-      Serial.print(F("MIFARE_Read_2() failed: "));
-      Serial.println(mfrc522.GetStatusCodeName(status));
-      return false;
-    }
-    memcpy(buffer + 4, buffer2, 4);
-
-    status = (MFRC522::StatusCode)mfrc522.MIFARE_Read(10, buffer2, &size2);
-    if (status != MFRC522::STATUS_OK) {
-      Serial.print(F("MIFARE_Read_3() failed: "));
-      Serial.println(mfrc522.GetStatusCodeName(status));
-      return false;
-    }
-    memcpy(buffer + 8, buffer2, 4);
-
-    status = (MFRC522::StatusCode)mfrc522.MIFARE_Read(11, buffer2, &size2);
-    if (status != MFRC522::STATUS_OK) {
-      Serial.print(F("MIFARE_Read_4() failed: "));
-      Serial.println(mfrc522.GetStatusCodeName(status));
-      return false;
-    }
-    memcpy(buffer + 12, buffer2, 4);
   }
 
   Serial.print(F("Data on Card "));
@@ -1684,7 +1651,6 @@ bool readCard(nfcTagObject * nfcTag) {
 
 
 void writeCard(nfcTagObject nfcTag) {
-  MFRC522::PICC_Type mifareType;
   byte buffer[16] = {0x13, 0x37, 0xb3, 0x47, // 0x1337 0xb347 magic cookie to
                      // identify our nfc tags
                      0x02,                   // version 1
@@ -1697,7 +1663,7 @@ void writeCard(nfcTagObject nfcTag) {
 
   byte size = sizeof(buffer);
 
-  mifareType = mfrc522.PICC_GetType(mfrc522.uid.sak);
+  MFRC522::PICC_Type mifareType = mfrc522.PICC_GetType(mfrc522.uid.sak);
 
   // Authenticate using key B
   //authentificate with the card and set card specific parameters
@@ -1736,7 +1702,7 @@ void writeCard(nfcTagObject nfcTag) {
       (mifareType == MFRC522::PICC_TYPE_MIFARE_1K ) ||
       (mifareType == MFRC522::PICC_TYPE_MIFARE_4K ) )
   {
-    status = (MFRC522::StatusCode)mfrc522.MIFARE_Write(blockAddr, buffer, 16);
+    status = mfrc522.MIFARE_Write(blockAddr, buffer, 16);
   }
   else if (mifareType == MFRC522::PICC_TYPE_MIFARE_UL )
   {
@@ -1745,19 +1711,19 @@ void writeCard(nfcTagObject nfcTag) {
 
     memset(buffer2, 0, size2);
     memcpy(buffer2, buffer, 4);
-    status = (MFRC522::StatusCode)mfrc522.MIFARE_Write(8, buffer2, 16);
+    status = mfrc522.MIFARE_Write(8, buffer2, 16);
 
     memset(buffer2, 0, size2);
     memcpy(buffer2, buffer + 4, 4);
-    status = (MFRC522::StatusCode)mfrc522.MIFARE_Write(9, buffer2, 16);
+    status = mfrc522.MIFARE_Write(9, buffer2, 16);
 
     memset(buffer2, 0, size2);
     memcpy(buffer2, buffer + 8, 4);
-    status = (MFRC522::StatusCode)mfrc522.MIFARE_Write(10, buffer2, 16);
+    status = mfrc522.MIFARE_Write(10, buffer2, 16);
 
     memset(buffer2, 0, size2);
     memcpy(buffer2, buffer + 12, 4);
-    status = (MFRC522::StatusCode)mfrc522.MIFARE_Write(11, buffer2, 16);
+    status = mfrc522.MIFARE_Write(11, buffer2, 16);
   }
 
   if (status != MFRC522::STATUS_OK) {
