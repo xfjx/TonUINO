@@ -227,11 +227,12 @@ void loop() {
     downButton.read();
 
     if (pauseButton.wasReleased()) {
-      if (ignorePauseButton == false)
+      if (ignorePauseButton == false) {
         if (isPlaying())
           mp3.pause();
         else
           mp3.start();
+      }
       ignorePauseButton = false;
     } else if (pauseButton.pressedFor(LONG_PRESS) &&
                ignorePauseButton == false) {
