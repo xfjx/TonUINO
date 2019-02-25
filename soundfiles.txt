@@ -30,6 +30,7 @@ mp3/0907_shortcut.mp3|Tasten mit einem Shortcut konfigurieren. Ein Shortcut wird
 mp3/0908_standbytimer.mp3|Den Timer konfigurieren.
 mp3/0909_batch_cards.mp3|Einzelkarten für einen Ordner erstellen.
 mp3/0910_switch_volume.mp3|Funktion der Lautstärketasten umdrehen.
+mp3/0911_reset.mp3|Alle Einstellungen löschen.
 mp3/0920_eq_intro.mp3|Bitte wähle eine Einstellung für den EQ mit den Lautstärketasten aus und bestätige sie mit der Pausetaste.
 mp3/0921_normal.mp3|Normal
 mp3/0922_pop.mp3|Pop
