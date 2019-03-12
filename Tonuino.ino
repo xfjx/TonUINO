@@ -738,6 +738,8 @@ void loop() {
     // Neue Karte konfigurieren
     else {
       knownCard = false;
+      mp3.playMp3FolderTrack(300);
+      waitForTrackToFinish();
       setupCard();
     }
   }
