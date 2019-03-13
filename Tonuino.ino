@@ -1172,9 +1172,9 @@ void writeCard(nfcTagObject nfcTag) {
       (mifareType == MFRC522::PICC_TYPE_MIFARE_1K ) ||
       (mifareType == MFRC522::PICC_TYPE_MIFARE_4K ) )
   {
-    Serial.println(F("Authenticating again using key B..."));
+    Serial.println(F("Authenticating again using key A..."));
     status = mfrc522.PCD_Authenticate(
-               MFRC522::PICC_CMD_MF_AUTH_KEY_B, trailerBlock, &key, &(mfrc522.uid));
+               MFRC522::PICC_CMD_MF_AUTH_KEY_A, trailerBlock, &key, &(mfrc522.uid));
   }
   else if (mifareType == MFRC522::PICC_TYPE_MIFARE_UL )
   {
