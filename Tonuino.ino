@@ -160,7 +160,7 @@ void resetSettings() {
   writeSettingsToFlash();
 }
 
-void migradeSettings(int oldVersion) {
+void migrateSettings(int oldVersion) {
   if (oldVersion == 1) {
     Serial.println(F("=== resetSettings()"));
     Serial.println(F("1 -> 2"));
@@ -180,7 +180,7 @@ void loadSettingsFromFlash() {
   EEPROM.get(address, mySettings);
   if (mySettings.cookie != cardCookie)
     resetSettings();
-  migradeSettings(mySettings.version);
+  migrateSettings(mySettings.version);
 
   Serial.print(F("Version: "));
   Serial.println(mySettings.version);
@@ -322,8 +322,8 @@ class Locked: public Modifier {
       Serial.println(F("== Locked::handlePause() -> LOCKED!"));
       return true;
     }
-    virtual bool handeNextButton()       {
-      Serial.println(F("== Locked::handeNextButton() -> LOCKED!"));
+    virtual bool handleNextButton()       {
+      Serial.println(F("== Locked::handleNextButton() -> LOCKED!"));
       return true;
     }
     virtual bool handlePreviousButton() {
@@ -358,8 +358,8 @@ class ToddlerMode: public Modifier {
       Serial.println(F("== ToddlerMode::handlePause() -> LOCKED!"));
       return true;
     }
-    virtual bool handeNextButton()       {
-      Serial.println(F("== ToddlerMode::handeNextButton() -> LOCKED!"));
+    virtual bool handleNextButton()       {
+      Serial.println(F("== ToddlerMode::handleNextButton() -> LOCKED!"));
       return true;
     }
     virtual bool handlePreviousButton() {
@@ -408,7 +408,7 @@ class KindergardenMode: public Modifier {
       return false;
     }
     virtual bool handleNextButton()       {
-      Serial.println(F("== KindergardenMode::handeNextButton() -> LOCKED!"));
+      Serial.println(F("== KindergardenMode::handleNextButton() -> LOCKED!"));
       return true;
     }
     virtual bool handlePreviousButton() {
@@ -726,6 +726,7 @@ void setup() {
   pinMode(shutdownPin, OUTPUT);
   digitalWrite(shutdownPin, LOW);
 
+
   // RESET --- ALLE DREI KNÖPFE BEIM STARTEN GEDRÜCKT HALTEN -> alle EINSTELLUNGEN werden gelöscht
   if (digitalRead(buttonPause) == LOW && digitalRead(buttonUp) == LOW &&
       digitalRead(buttonDown) == LOW) {
@@ -733,7 +734,9 @@ void setup() {
     for (int i = 0; i < EEPROM.length(); i++) {
       EEPROM.update(i, 0);
     }
+  loadSettingsFromFlash();
   }
+
 
   // Start Shortcut "at Startup" - e.g. Welcome Sound
   playShortCut(3);
@@ -1311,7 +1314,7 @@ uint8_t voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
     if (pauseButton.pressedFor(LONG_PRESS)) {
       mp3.playMp3FolderTrack(802);
       ignorePauseButton = true;
-      return 0;
+      return defaultValue;
     }
     if (pauseButton.wasReleased()) {
       if (returnValue != 0) {
