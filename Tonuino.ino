@@ -407,6 +407,10 @@ class KindergardenMode: public Modifier {
       }
       return false;
     }
+    virtual bool handlePause()     {
+      Serial.println(F("== KindergardenMode::handlePause() -> LOCKED!"));
+      return true;
+    }
     virtual bool handleNextButton()       {
       Serial.println(F("== KindergardenMode::handleNextButton() -> LOCKED!"));
       return true;
