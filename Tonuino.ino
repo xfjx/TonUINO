@@ -1706,7 +1706,7 @@ void writeCard(nfcTagObject nfcTag) {
   else
     mp3.playMp3FolderTrack(400);
   Serial.println();
-  delay(1000);
+  delay(3000);
 }
 
 
