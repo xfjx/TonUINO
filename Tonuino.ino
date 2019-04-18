@@ -1168,6 +1168,7 @@ void adminMenu(bool fromCard = false) {
           case 4: tempCard.nfcFolderSettings.special = 60; break;
         }
       }
+      mp3.playMp3FolderTrack(800);
       do {
         readButtons();
         if (upButton.wasReleased() || downButton.wasReleased()) {
@@ -1423,7 +1424,7 @@ void resetCard() {
   setupCard();
 }
 
-void setupFolder(folderSettings * theFolder) {
+bool setupFolder(folderSettings * theFolder) {
   // Ordner abfragen
   theFolder->folder = voiceMenu(99, 301, 0, true);
 
@@ -1455,12 +1456,13 @@ void setupFolder(folderSettings * theFolder) {
 void setupCard() {
   mp3.pause();
   Serial.println(F("=== setupCard()"));
-  setupFolder(&myCard.nfcFolderSettings);
+  nfcTagObject newCard;
+  setupFolder(&newCard.nfcFolderSettings);
   // Karte ist konfiguriert -> speichern
   mp3.pause();
   do {
   } while (isPlaying());
-  writeCard(myCard);
+  writeCard(newCard);
 }
 
 bool readCard(nfcTagObject * nfcTag) {
@@ -1595,7 +1597,7 @@ bool readCard(nfcTagObject * nfcTag) {
       }
 
       switch (tempCard.nfcFolderSettings.mode ) {
-        case 0: adminMenu(true); break;
+        case 0: mfrc522.PICC_HaltA(); mfrc522.PCD_StopCrypto1(); adminMenu(true);  break;
         case 1: activeModifier = new SleepTimer(tempCard.nfcFolderSettings.special); break;
         case 2: activeModifier = new FreezeDance(); break;
         case 3: activeModifier = new Locked(); break;
@@ -1704,7 +1706,7 @@ void writeCard(nfcTagObject nfcTag) {
   else
     mp3.playMp3FolderTrack(400);
   Serial.println();
-  delay(100);
+  delay(1000);
 }
 
 

@@ -26,6 +26,7 @@ mp3/0322_select_last_file.mp3|Wähle nun bitte die Enddatei mit den Lautstärket
 #mp3/0332.mp3|Ja, Nummer ansagen.
 mp3/0400_ok.mp3|OK. Ich habe die Karte konfiguriert.
 mp3/0401_error.mp3|Oh weh! Das hat leider nicht geklappt!
+mp3/0800_waiting_for_card.mp3|Bitte lege nun die Karte auf!
 mp3/0802_reset_aborted.mp3|OK, ich habe den Vorgang abgebrochen.
 mp3/0900_admin.mp3|Willkommen im Admin Menü. Bitte wähle eine Funktion mit den Lautstärketasten aus und bestätige sie mit der Pausetaste! Durch einen langen Druck auf die Pausetaste kannst du den Vorgang abbrechen.
 mp3/0901_card_reset.mp3|Eine Karte neu konfigurieren.
