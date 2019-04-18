@@ -737,7 +737,7 @@ void setup() {
     for (int i = 0; i < EEPROM.length(); i++) {
       EEPROM.update(i, 0);
     }
-  loadSettingsFromFlash();
+    loadSettingsFromFlash();
   }
 
 
@@ -1599,15 +1599,19 @@ bool readCard(nfcTagObject * nfcTag) {
         case 5: activeModifier = new KindergardenMode(); break;
       }
       return false;
-    } else {
+    }
+    else {
       memcpy(nfcTag, &tempCard, sizeof(nfcTagObject));
       Serial.println( nfcTag->nfcFolderSettings.folder);
       myFolder = &nfcTag->nfcFolderSettings;
       Serial.println( myFolder->folder);
-
     }
+    return true;
   }
-  return true;
+  else {
+    memcpy(nfcTag, &tempCard, sizeof(nfcTagObject));
+    return true;
+  }
 }
 
 
