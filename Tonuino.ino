@@ -419,6 +419,9 @@ class KindergardenMode: public Modifier {
       Serial.println(F("== KindergardenMode::handleRFID() -> queued!"));
       this->nextCard = *newCard;
       this->cardQueued = true;
+      if (!isPlaying()) {
+        handleNext();
+      }
       return true;
     }
     KindergardenMode() {
