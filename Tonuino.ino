@@ -1398,7 +1398,7 @@ void adminMenu(bool fromCard = false) {
   }
   //Wiedergabe stoppen wenn Karte entfernt wird
   else if (subMenu == 13) {
-    int temp = voiceMenu(2, 933, 933, false);
+    int temp = voiceMenu(2, 937, 937, false);
     if (temp == 2) {
       mySettings.stopWhenCardAway = true;
       Serial.println(F("StopWhenCardAway --> yes"));
