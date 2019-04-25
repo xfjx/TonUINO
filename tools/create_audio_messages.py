@@ -18,6 +18,7 @@ if __name__ == '__main__':
     argparser.add_argument('-o', '--output', type=str, default='sd-card', help='The directory where to create the audio messages. (default: `sd-card`)')
     text_to_speech.addArgumentsToArgparser(argparser)
     argparser.add_argument('--skip-numbers', action='store_true', help='If set, no number messages will be generated (`0001.mp3` - `0255.mp3`)')
+    argparser.add_argument('--only-new', action='store_true', help='If set, only new messages will be created.')
     args = argparser.parse_args()
 
 
@@ -31,7 +32,6 @@ if __name__ == '__main__':
     targetDir = args.output
     if os.path.isdir(targetDir):
         print("Directory `" + targetDir + "` already exists.")
-        exit(1)
     else:
         os.mkdir(targetDir)
         os.mkdir(targetDir + '/advert')
@@ -51,5 +51,7 @@ if __name__ == '__main__':
             match = lineRe.match(line.strip())
             if match:
                 fileName = match.group(1)
+                if args.only_new and os.path.isfile(targetDir + "/" + fileName):
+                    continue
                 text = match.group(2)
-                text_to_speech.textToSpeechUsingArgs(text=text, targetFile=targetDir + '/mp3/' + fileName, args=args)
+                text_to_speech.textToSpeechUsingArgs(text=text, targetFile=targetDir + "/" + fileName, args=args)
