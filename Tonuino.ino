@@ -167,9 +167,9 @@ void migrateSettings(int oldVersion) {
     mySettings.version = 2;
     mySettings.adminMenuLocked = 0;
     mySettings.adminMenuPin[0] = 1;
-    mySettings.adminMenuPin[1] = 2;
-    mySettings.adminMenuPin[2] = 3;
-    mySettings.adminMenuPin[3] = 4;
+    mySettings.adminMenuPin[1] = 1;
+    mySettings.adminMenuPin[2] = 1;
+    mySettings.adminMenuPin[3] = 1;
     writeSettingsToFlash();
   }
 }
@@ -440,6 +440,22 @@ class KindergardenMode: public Modifier {
     }
 };
 
+class RepeatSingleModifier: public Modifier {
+  public:
+    virtual bool handleNext() {
+      Serial.println(F("== RepeatSingleModifier::handleNext() -> REPEAT CURRENT TRACK"));
+      mp3.playFolderTrack(myFolder->folder, currentTrack);
+      return true;
+    }
+    RepeatSingleModifier() {
+      Serial.println(F("=== RepeatSingleModifier()"));
+    }
+    uint8_t getActive() {
+      Serial.println(F("== KindergardenMode::getActive()"));
+      return 6;
+    }
+};
+
 // An modifier can also do somethings in addition to the modified action
 // by returning false (not handled) at the end
 // This simple FeedbackModifier will tell the volume before changing it and
@@ -477,17 +493,17 @@ class FeedbackModifier: public Modifier {
 // Leider kann das Modul selbst keine Queue abspielen, daher müssen wir selbst die Queue verwalten
 static uint16_t _lastTrackFinished;
 static void nextTrack(uint16_t track) {
-  Serial.println(F("=== nextTrack()"));
   if (track == _lastTrackFinished) {
     return;
   }
-
   _lastTrackFinished = track;
 
   if (knownCard == false)
     // Wenn eine neue Karte angelernt wird soll das Ende eines Tracks nicht
     // verarbeitet werden
     return;
+
+  Serial.println(F("=== nextTrack()"));
 
   if (activeModifier != NULL)
     if (activeModifier->handleNext() == true)
@@ -1134,15 +1150,15 @@ void adminMenu(bool fromCard = false) {
   }
   else if (subMenu == 2) {
     // Maximum Volume
-    mySettings.maxVolume = voiceMenu(30, 930, 0, false, false, mySettings.maxVolume);
+    mySettings.maxVolume = voiceMenu(30 - mySettings.minVolume, 930, mySettings.minVolume, false, false, mySettings.maxVolume - mySettings.minVolume) + mySettings.minVolume;
   }
   else if (subMenu == 3) {
     // Minimum Volume
-    mySettings.minVolume = voiceMenu(30, 931, 0, false, false, mySettings.minVolume);
+    mySettings.minVolume = voiceMenu(mySettings.maxVolume - 1, 931, 0, false, false, mySettings.minVolume);
   }
   else if (subMenu == 4) {
     // Initial Volume
-    mySettings.initVolume = voiceMenu(30, 932, 0, false, false, mySettings.initVolume);
+    mySettings.initVolume = voiceMenu(mySettings.maxVolume - mySettings.minVolume + 1, 932, mySettings.minVolume - 1, false, false, mySettings.initVolume - mySettings.minVolume) + mySettings.minVolume - 1;
   }
   else if (subMenu == 5) {
     // EQ
@@ -1157,11 +1173,11 @@ void adminMenu(bool fromCard = false) {
     tempCard.nfcFolderSettings.folder = 0;
     tempCard.nfcFolderSettings.special = 0;
     tempCard.nfcFolderSettings.special2 = 0;
-    tempCard.nfcFolderSettings.mode = voiceMenu(5, 970, 970, false, false, 0, true);
+    tempCard.nfcFolderSettings.mode = voiceMenu(6, 970, 970, false, false, 0, true);
 
     if (tempCard.nfcFolderSettings.mode != 0) {
       if (tempCard.nfcFolderSettings.mode == 1) {
-        switch (voiceMenu(5, 960, 960)) {
+        switch (voiceMenu(4, 960, 960)) {
           case 1: tempCard.nfcFolderSettings.special = 5; break;
           case 2: tempCard.nfcFolderSettings.special = 15; break;
           case 3: tempCard.nfcFolderSettings.special = 30; break;
@@ -1462,7 +1478,8 @@ void setupCard() {
   mp3.pause();
   do {
   } while (isPlaying());
-  writeCard(newCard);
+  if (newCard.nfcFolderSettings.folder != 0 && newCard.nfcFolderSettings.mode != 0)
+    writeCard(newCard);
 }
 
 bool readCard(nfcTagObject * nfcTag) {
@@ -1592,6 +1609,7 @@ bool readCard(nfcTagObject * nfcTag) {
         if (activeModifier->getActive() == tempCard.nfcFolderSettings.mode) {
           activeModifier = NULL;
           Serial.println(F("modifier removed"));
+          delay(2000);
           return false;
         }
       }
@@ -1603,7 +1621,9 @@ bool readCard(nfcTagObject * nfcTag) {
         case 3: activeModifier = new Locked(); break;
         case 4: activeModifier = new ToddlerMode(); break;
         case 5: activeModifier = new KindergardenMode(); break;
+        case 6: activeModifier = new RepeatSingleModifier(); break;
       }
+      delay(2000);
       return false;
     }
     else {
@@ -1706,7 +1726,7 @@ void writeCard(nfcTagObject nfcTag) {
   else
     mp3.playMp3FolderTrack(400);
   Serial.println();
-  delay(3000);
+  delay(2000);
 }
 
 
