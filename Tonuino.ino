@@ -509,20 +509,9 @@ static void nextTrack(uint16_t track) {
       
   if (myFolder->mode == 1 || myFolder->mode == 7) {
     Serial.println(F("Hörspielmodus ist aktiv -> keinen neuen Track spielen"));
-    //setstandbyTimer();
+    setstandbyTimer();
     //    mp3.sleep(); // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
-    
-    
-      //anderen zufälligen Track abspielen WENN der vorhergehende nicht mehr spielt und Play gedrückt wird
-      Serial.println(F("Hörspielmodus ist aktiv -> neuer Track nur bei Play"));
-      currentTrack = random(1, numTracksInFolder + 1);
-      Serial.println(currentTrack);
-      mp3.playFolderTrack(myFolder->folder, currentTrack);
-      delay(100);
-      mp3.pause();
-      Serial.println(F("Kurz angespielt und pausiert: warte auf Taste"));
-      setstandbyTimer();
-    
+  
    
   }
   if (myFolder->mode == 2 || myFolder->mode == 8) {
@@ -1010,8 +999,7 @@ void handleCardReader()
       mp3.start();
       disablestandbyTimer();
     }
-    //Wenn die gleiche Karte (mehrmals) aufgelegt wird, mache nichts, wenn gerade gespielt wird
-    else if (!isPlaying()) {
+    else {
       onNewCard();
     }
       break;
