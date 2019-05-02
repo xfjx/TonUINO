@@ -118,6 +118,15 @@ class Mp3Notify {
     static void OnCardRemoved(uint16_t code) {
       Serial.println(F("SD Karte entfernt "));
     }
+    static void OnUsbOnline(uint16_t code) {
+      Serial.println(F("USB online "));
+    }
+    static void OnUsbInserted(uint16_t code) {
+      Serial.println(F("USB bereit "));
+    }
+    static void OnUsbRemoved(uint16_t code) {
+      Serial.println(F("USB entfernt "));
+    }
 };
 
 static DFMiniMp3<SoftwareSerial, Mp3Notify> mp3(mySoftwareSerial);
