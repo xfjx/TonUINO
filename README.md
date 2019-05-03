@@ -1,6 +1,8 @@
 # TonUINO
 Die DIY Musikbox (nicht nur) für Kinder
 
+Die benötigten Dateien für die SD-Karte findet Ihr ab nun hier: https://to.voss.earth/tonuino-sd
+
 
 # Change Log
 
@@ -14,6 +16,8 @@ Die DIY Musikbox (nicht nur) für Kinder
 - Shortcuts können konfiguriert werden!
 - Support für 5 Knöpfe hinzugefügt
 - Reset der Einstellungen ins Adminmenü verschoben
+- Modikationskarten (Sleeptimer, Tastensperre, Stopptanz, KiTa-Modus)
+- Admin-Menü kann abgesichert werden
 
 ## Version 2.01 (01.11.2018)
 - kleiner Fix um die Probleme beim Anlernen von Karten zu reduzieren
