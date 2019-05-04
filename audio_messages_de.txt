@@ -1,5 +1,4 @@
 advert/0300_freeze_into.mp3|Wir spielen jetzt den Stopptanz. Wenn die Musik stoppt, bleibe stehen!
-advert/0300_freeze_freeze.mp3|Und Stopp!<break strength="medium">nicht bewegen...<break strength="medium">weiter geht's!
 advert/0301_freeze_freeze1.mp3|Und Stopp!
 advert/0301_freeze_freeze2.mp3|Nicht bewegen!
 advert/0301_freeze_freeze3.mp3|weiter geht´s!
