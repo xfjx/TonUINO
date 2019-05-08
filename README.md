@@ -1,8 +1,6 @@
 # TonUINO
 Die DIY Musikbox (nicht nur) für Kinder
 
-Die benötigten Dateien für die SD-Karte findet Ihr ab nun hier: https://to.voss.earth/tonuino-sd
-
 
 # Change Log
 
