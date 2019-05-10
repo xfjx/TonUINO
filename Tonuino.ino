@@ -68,6 +68,7 @@ adminSettings mySettings;
 nfcTagObject myCard;
 folderSettings *myFolder;
 unsigned long sleepAtMillis = 0;
+static uint16_t _lastTrackFinished;
 
 static void nextTrack(uint16_t track);
 uint8_t voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
@@ -458,14 +459,17 @@ class RepeatSingleModifier: public Modifier {
   public:
     virtual bool handleNext() {
       Serial.println(F("== RepeatSingleModifier::handleNext() -> REPEAT CURRENT TRACK"));
+      delay(50);
+      if (isPlaying()) return true;
       mp3.playFolderTrack(myFolder->folder, currentTrack);
+      _lastTrackFinished = 0;
       return true;
     }
     RepeatSingleModifier() {
       Serial.println(F("=== RepeatSingleModifier()"));
     }
     uint8_t getActive() {
-      Serial.println(F("== KindergardenMode::getActive()"));
+      Serial.println(F("== RepeatSingleModifier::getActive()"));
       return 6;
     }
 };
@@ -505,8 +509,12 @@ class FeedbackModifier: public Modifier {
 };
 
 // Leider kann das Modul selbst keine Queue abspielen, daher müssen wir selbst die Queue verwalten
-static uint16_t _lastTrackFinished;
 static void nextTrack(uint16_t track) {
+  Serial.println(track);
+  if (activeModifier != NULL)
+    if (activeModifier->handleNext() == true)
+      return;
+
   if (track == _lastTrackFinished) {
     return;
   }
@@ -518,10 +526,6 @@ static void nextTrack(uint16_t track) {
     return;
 
   Serial.println(F("=== nextTrack()"));
-
-  if (activeModifier != NULL)
-    if (activeModifier->handleNext() == true)
-      return;
 
   if (myFolder->mode == 1 || myFolder->mode == 7) {
     Serial.println(F("Hörspielmodus ist aktiv -> keinen neuen Track spielen"));
