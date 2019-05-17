@@ -719,13 +719,13 @@ void waitForTrackToFinish() {
 void setup() {
 
   Serial.begin(115200); // Es gibt ein paar Debug Ausgaben über die serielle Schnittstelle
-   
+
   // Wert für randomSeed() erzeugen durch das mehrfache Sammeln von rauschenden LSBs eines offenen Analogeingangs
   uint32_t ADC_LSB;
   uint32_t ADCSeed;
-  for(uint8_t i = 0; i < 128; i++) {
+  for (uint8_t i = 0; i < 128; i++) {
     ADC_LSB = analogRead(openAnalogPin) & 0x1;
-    ADCSeed ^= ADC_LSB << (i % 32); 
+    ADCSeed ^= ADC_LSB << (i % 32);
   }
   randomSeed(ADCSeed); // Zufallsgenerator initialisieren
 
@@ -760,8 +760,7 @@ void setup() {
   // NFC Leser initialisieren
   SPI.begin();        // Init SPI bus
   mfrc522.PCD_Init(); // Init MFRC522
-  mfrc522
-  .PCD_DumpVersionToSerial(); // Show details of PCD - MFRC522 Card Reader
+  mfrc522.PCD_DumpVersionToSerial(); // Show details of PCD - MFRC522 Card Reader
   for (byte i = 0; i < 6; i++) {
     key.keyByte[i] = 0xFF;
   }
@@ -1644,7 +1643,7 @@ bool readCard(nfcTagObject * nfcTag) {
             mp3.start();
             delay(100);
             mp3.playAdvertisement(261);
-            delay(100);
+            waitForTrackToFinish();
             mp3.pause();
           }
           delay(2000);
@@ -1659,7 +1658,7 @@ bool readCard(nfcTagObject * nfcTag) {
           mp3.start();
           delay(100);
           mp3.playAdvertisement(260);
-          delay(100);
+          waitForTrackToFinish();
           mp3.pause();
         }
       }
