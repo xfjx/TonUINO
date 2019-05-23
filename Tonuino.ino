@@ -785,8 +785,6 @@ void setup() {
   delay(2000);
 
   #ifdef POTI
-
-  mySettings.invertVolumeButtons=false;
   PotiValue = analogRead(POTIPIN);
   PotiValue = map(PotiValue, 0,1024,mySettings.minVolume, mySettings.maxVolume+1);
   Serial.print(F("Poti Bereich: ")); Serial.print(mySettings.minVolume); Serial.print(" - "); Serial.println(mySettings.maxVolume+1);
@@ -796,7 +794,6 @@ void setup() {
   #endif
   
   #ifndef POTI
-  mySettings.invertVolumeButtons=true;
   volume = mySettings.initVolume;
   mp3.setVolume(volume);
   #endif
@@ -863,6 +860,9 @@ void volumeUpButton() {
   }
   Serial.println(volume);
   #endif
+  #ifdef POTI
+nextButton();
+  #endif
 }
 
 void volumeDownButton() {
@@ -877,6 +877,9 @@ void volumeDownButton() {
     volume--;
   }
   Serial.println(volume);
+  #endif
+    #ifdef POTI
+previousButton();
   #endif
 }
 
