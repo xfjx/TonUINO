@@ -796,6 +796,7 @@ void setup() {
   #endif
   
   #ifndef POTI
+  mySettings.invertVolumeButtons=true;
   volume = mySettings.initVolume;
   mp3.setVolume(volume);
   #endif
