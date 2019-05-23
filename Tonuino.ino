@@ -20,6 +20,8 @@
 // uncomment the below line to enable five button support
 //#define FIVEBUTTONS
 
+// uncomment the below line to enable volume control with a potentiometer
+//#define POTI
 static const uint32_t cardCookie = 322417479;
 
 // DFPlayer Mini
@@ -71,6 +73,7 @@ static bool hasCard = false;
 static byte lastCardUid[4];
 static byte retries;
 static bool lastCardWasUL;
+static bool configurationBefore=false;
 
 const byte PCS_NO_CHANGE     = 0; // no change detected since last pollCard() call
 const byte PCS_NEW_CARD      = 1; // card with new UID detected (had no card or other card before)
@@ -81,6 +84,17 @@ adminSettings mySettings;
 nfcTagObject myCard;
 folderSettings *myFolder;
 unsigned long sleepAtMillis = 0;
+static uint16_t _lastTrackFinished;
+
+
+
+#ifdef POTI
+const byte POTIPIN      =7;
+uint16_t PotiValue;
+uint16_t oldPotiValue;
+#endif
+
+
 
 static void nextTrack(uint16_t track);
 uint8_t voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
@@ -262,11 +276,17 @@ class Modifier {
     virtual bool handleVolumeDown() {
       return false;
     }
+    virtual bool handlePotiVolume() {
+      return false;
+    }
     virtual bool handleRFID(nfcTagObject *newCard) {
       return false;
     }
     virtual uint8_t getActive() {
       return 0;
+    }
+    Modifier() {
+
     }
 };
 
@@ -281,6 +301,7 @@ class SleepTimer: public Modifier {
       if (this->sleepAtMillis != 0 && millis() > this->sleepAtMillis) {
         Serial.println(F("=== SleepTimer::loop() -> SLEEP!"));
         mp3.pause();
+        setstandbyTimer();
         activeModifier = NULL;
         delete this;
       }
@@ -290,9 +311,9 @@ class SleepTimer: public Modifier {
       Serial.println(F("=== SleepTimer()"));
       Serial.println(minutes);
       this->sleepAtMillis = millis() + minutes * 60000;
-      if (isPlaying())
-        mp3.playAdvertisement(302);
-      delay(500);
+      //      if (isPlaying())
+      //        mp3.playAdvertisement(302);
+      //      delay(500);
     }
     uint8_t getActive() {
       Serial.println(F("== SleepTimer::getActive()"));
@@ -327,6 +348,7 @@ class FreezeDance: public Modifier {
     FreezeDance(void) {
       Serial.println(F("=== FreezeDance()"));
       if (isPlaying()) {
+        delay(1000);
         mp3.playAdvertisement(300);
         delay(500);
       }
@@ -360,14 +382,18 @@ class Locked: public Modifier {
       Serial.println(F("== Locked::handleVolumeDown() -> LOCKED!"));
       return true;
     }
+    virtual bool handlePotiVolume() {
+      Serial.println(F("== Locked::handlePotiVolume() -> LOCKED!"));
+      return true;
+    }
     virtual bool handleRFID(nfcTagObject *newCard) {
       Serial.println(F("== Locked::handleRFID() -> LOCKED!"));
       return true;
     }
     Locked(void) {
       Serial.println(F("=== Locked()"));
-      if (isPlaying())
-        mp3.playAdvertisement(303);
+      //      if (isPlaying())
+      //        mp3.playAdvertisement(303);
     }
     uint8_t getActive() {
       return 3;
@@ -396,10 +422,14 @@ class ToddlerMode: public Modifier {
       Serial.println(F("== ToddlerMode::handleVolumeDown() -> LOCKED!"));
       return true;
     }
+    virtual bool handlePotiVolume() {
+      Serial.println(F("== ToddlerMode::handlePotiVolume() -> LOCKED!"));
+      return true;
+    }
     ToddlerMode(void) {
       Serial.println(F("=== ToddlerMode()"));
-      if (isPlaying())
-        mp3.playAdvertisement(304);
+      //      if (isPlaying())
+      //        mp3.playAdvertisement(304);
     }
     uint8_t getActive() {
       Serial.println(F("== ToddlerMode::getActive()"));
@@ -429,10 +459,10 @@ class KindergardenMode: public Modifier {
       }
       return false;
     }
-    virtual bool handlePause()     {
-      Serial.println(F("== KindergardenMode::handlePause() -> LOCKED!"));
-      return true;
-    }
+    //    virtual bool handlePause()     {
+    //      Serial.println(F("== KindergardenMode::handlePause() -> LOCKED!"));
+    //      return true;
+    //    }
     virtual bool handleNextButton()       {
       Serial.println(F("== KindergardenMode::handleNextButton() -> LOCKED!"));
       return true;
@@ -452,9 +482,9 @@ class KindergardenMode: public Modifier {
     }
     KindergardenMode() {
       Serial.println(F("=== KindergardenMode()"));
-      if (isPlaying())
-        mp3.playAdvertisement(305);
-      delay(500);
+      //      if (isPlaying())
+      //        mp3.playAdvertisement(305);
+      //      delay(500);
     }
     uint8_t getActive() {
       Serial.println(F("== KindergardenMode::getActive()"));
@@ -466,14 +496,17 @@ class RepeatSingleModifier: public Modifier {
   public:
     virtual bool handleNext() {
       Serial.println(F("== RepeatSingleModifier::handleNext() -> REPEAT CURRENT TRACK"));
+      delay(50);
+      if (isPlaying()) return true;
       mp3.playFolderTrack(myFolder->folder, currentTrack);
+      _lastTrackFinished = 0;
       return true;
     }
     RepeatSingleModifier() {
       Serial.println(F("=== RepeatSingleModifier()"));
     }
     uint8_t getActive() {
-      Serial.println(F("== KindergardenMode::getActive()"));
+      Serial.println(F("== RepeatSingleModifier::getActive()"));
       return 6;
     }
 };
@@ -514,8 +547,13 @@ class FeedbackModifier: public Modifier {
 
 
 // Leider kann das Modul selbst keine Queue abspielen, daher müssen wir selbst die Queue verwalten
-static uint16_t _lastTrackFinished;
+//static uint16_t _lastTrackFinished;
 static void nextTrack(uint16_t track) {
+  Serial.println(track);
+  if (activeModifier != NULL)
+    if (activeModifier->handleNext() == true)
+      return;
+
   if (track == _lastTrackFinished) {
     return;
   }
@@ -527,10 +565,7 @@ static void nextTrack(uint16_t track) {
     return;
 
   Serial.println(F("=== nextTrack()"));
-  if (activeModifier != NULL)
-    if (activeModifier->handleNext() == true)
-      return;
-      
+
   if (myFolder->mode == 1 || myFolder->mode == 7) {
     Serial.println(F("Hörspielmodus ist aktiv -> keinen neuen Track spielen"));
     setstandbyTimer();
@@ -731,7 +766,7 @@ void setup() {
   Serial.println(F("|_   _|___ ___|  |  |     |   | |     |"));
   Serial.println(F("  | | | . |   |  |  |-   -| | | |  |  |"));
   Serial.println(F("  |_| |___|_|_|_____|_____|_|___|_____|\n"));
-  Serial.println(F("TonUINO Version 2.1"));
+  Serial.println(F("TonUINO Version 2.1 + mods by McGreg"));
   Serial.println(F("created by Thorsten Voß and licensed under GNU/GPL."));
   Serial.println(F("Information and contribution at https://tonuino.de.\n"));
 
@@ -748,8 +783,23 @@ void setup() {
   mp3.begin();
   // Zwei Sekunden warten bis der DFPlayer Mini initialisiert ist
   delay(2000);
+
+  #ifdef POTI
+
+  mySettings.invertVolumeButtons=false;
+  PotiValue = analogRead(POTIPIN);
+  PotiValue = map(PotiValue, 0,1024,mySettings.minVolume, mySettings.maxVolume+1);
+  Serial.print(F("Poti Bereich: ")); Serial.print(mySettings.minVolume); Serial.print(" - "); Serial.println(mySettings.maxVolume+1);
+  mp3.setVolume(PotiValue);
+    Serial.println(F("Initiale Lautstärke über Poti:"));
+    Serial.println(PotiValue);
+  #endif
+  
+  #ifndef POTI
   volume = mySettings.initVolume;
   mp3.setVolume(volume);
+  #endif
+  
   mp3.setEq(mySettings.eq - 1);
   // Fix für das Problem mit dem Timeout (ist jetzt in Upstream daher nicht mehr nötig!)
   //mySoftwareSerial.setTimeout(10000);
@@ -800,6 +850,7 @@ void readButtons() {
 }
 
 void volumeUpButton() {
+  #ifndef POTI
   if (activeModifier != NULL)
     if (activeModifier->handleVolumeUp() == true)
       return;
@@ -810,9 +861,11 @@ void volumeUpButton() {
     volume++;
   }
   Serial.println(volume);
+  #endif
 }
 
 void volumeDownButton() {
+  #ifndef POTI
   if (activeModifier != NULL)
     if (activeModifier->handleVolumeDown() == true)
       return;
@@ -823,6 +876,7 @@ void volumeDownButton() {
     volume--;
   }
   Serial.println(volume);
+  #endif
 }
 
 void nextButton() {
@@ -842,7 +896,25 @@ void previousButton() {
   previousTrack();
   delay(1000);
 }
+#ifdef POTI
+void potiVolume() {
 
+  PotiValue = analogRead(POTIPIN);
+  //Serial.println("Analog output Poti:");
+  //Serial.println(PotiValue);
+  PotiValue = map(PotiValue, 0,1024,mySettings.minVolume, mySettings.maxVolume+1);
+  if (PotiValue > oldPotiValue || PotiValue < oldPotiValue ) {
+      oldPotiValue=PotiValue;
+      if (activeModifier != NULL)
+        if (activeModifier->handlePotiVolume() == true)
+          return;  
+    Serial.print(F("PotiLautstärke: "));
+    Serial.println(PotiValue);
+    mp3.setVolume(PotiValue);
+    
+  }
+}
+#endif
 void playFolder() {
   Serial.println(F("== playFolder()")) ;
   disablestandbyTimer();
@@ -948,16 +1020,20 @@ byte pollCard()
 
   if (!hasCard)
   {
-    if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial() && readCard(&myCard))
+    if (mfrc522.PICC_IsNewCardPresent())
     {
+      if (mfrc522.PICC_ReadCardSerial())
+      {
+        Serial.print(F("ReadCardSerial finished"));
+        if (readCard(&myCard))
+        {
       bool bSameUID = !memcmp(lastCardUid, mfrc522.uid.uidByte, 4);
       if (bSameUID) {
-        Serial.print(F("Gleiche Karte="));
+        Serial.print(F("Gleiche Karte"));
       }
       else {
-        Serial.print(F("Neue Karte="));
+        Serial.print(F("Neue Karte"));
       }
-      Serial.println(bSameUID);
       // store info about current card
       memcpy(lastCardUid, mfrc522.uid.uidByte, 4);
       lastCardWasUL = mfrc522.PICC_GetType(mfrc522.uid.sak) == MFRC522::PICC_TYPE_MIFARE_UL;
@@ -965,6 +1041,8 @@ byte pollCard()
       retries = maxRetries;
       hasCard = true;
       return bSameUID ? PCS_CARD_IS_BACK : PCS_NEW_CARD;
+    }
+    }
     }
     return PCS_NO_CHANGE;
   }
@@ -1020,13 +1098,20 @@ void handleCardReader()
       break;
       
     case PCS_CARD_IS_BACK:
-    if (mySettings.stopWhenCardAway) {
-      mp3.start();
-      disablestandbyTimer();
+    if (mySettings.stopWhenCardAway) 
+    {
+      //nur weiterspielen wenn vorher nicht konfiguriert wurde
+      if (!configurationBefore) 
+      {
+          mp3.start();
+          disablestandbyTimer();
+      }
+      else 
+      {
+          onNewCard();
+      }
     }
-    else {
-      onNewCard();
-    }
+
       break;
     }    
   }
@@ -1178,6 +1263,9 @@ void loop() {
     }
 #endif
     // Ende der Buttons
+    #ifdef POTI
+    potiVolume();
+    #endif
       handleCardReader();
 }
 
@@ -1199,6 +1287,8 @@ void onNewCard()
 }
 
 void adminMenu(bool fromCard = false) {
+  //Vergesse die vorherige Karte, wenn das Admin Menü betreten wird
+  configurationBefore=true;
   disablestandbyTimer();
   mp3.pause();
   Serial.println(F("=== adminMenu()"));
@@ -1268,7 +1358,7 @@ void adminMenu(bool fromCard = false) {
   }
   else if (subMenu == 4) {
     // Initial Volume
-    mySettings.initVolume = voiceMenu(mySettings.maxVolume - mySettings.minVolume + 1, 932, mySettings.minVolume - 1, false, false, mySettings.initVolume - mySettings.minVolume) + mySettings.minVolume - 1;
+    mySettings.initVolume = voiceMenu(mySettings.maxVolume - mySettings.minVolume + 1, 932, mySettings.minVolume - 1, false, false, mySettings.initVolume - mySettings.minVolume + 1) + mySettings.minVolume - 1;
   }
   else if (subMenu == 5) {
     // EQ
@@ -1283,11 +1373,11 @@ void adminMenu(bool fromCard = false) {
     tempCard.nfcFolderSettings.folder = 0;
     tempCard.nfcFolderSettings.special = 0;
     tempCard.nfcFolderSettings.special2 = 0;
-    tempCard.nfcFolderSettings.mode = voiceMenu(5, 970, 970, false, false, 0, true);
+    tempCard.nfcFolderSettings.mode = voiceMenu(6, 970, 970, false, false, 0, true);
 
     if (tempCard.nfcFolderSettings.mode != 0) {
       if (tempCard.nfcFolderSettings.mode == 1) {
-        switch (voiceMenu(5, 960, 960)) {
+        switch (voiceMenu(4, 960, 960)) {
           case 1: tempCard.nfcFolderSettings.special = 5; break;
           case 2: tempCard.nfcFolderSettings.special = 15; break;
           case 3: tempCard.nfcFolderSettings.special = 30; break;
@@ -1564,10 +1654,12 @@ void resetCard() {
 
 bool setupFolder(folderSettings * theFolder) {
   // Ordner abfragen
-  theFolder->folder = voiceMenu(99, 301, 0, true);
+  theFolder->folder = voiceMenu(99, 301, 0, true, 0, 0, true);
+  if (theFolder->folder == 0) return false;
 
   // Wiedergabemodus abfragen
-  theFolder->mode = voiceMenu(9, 310, 310);
+  theFolder->mode = voiceMenu(9, 310, 310, false, 0, 0, true);
+  if (theFolder->mode == 0) return false;
 
   //  // Hörbuchmodus -> Fortschritt im EEPROM auf 1 setzen
   //  EEPROM.update(theFolder->folder, 1);
@@ -1580,7 +1672,7 @@ bool setupFolder(folderSettings * theFolder) {
   if (theFolder->mode == 6) {
     //theFolder->special = voiceMenu(3, 320, 320);
     theFolder->folder = 0;
-    theFolder->mode = 0;
+    theFolder->mode = 255;
   }
   // Spezialmodus Von-Bis
   if (theFolder->mode == 7 || theFolder->mode == 8 || theFolder->mode == 9) {
@@ -1589,21 +1681,24 @@ bool setupFolder(folderSettings * theFolder) {
     theFolder->special2 = voiceMenu(mp3.getFolderTrackCount(theFolder->folder), 322, 0,
                                     true, theFolder->folder, theFolder->special);
   }
+  return true;
 }
 
 void setupCard() {
   mp3.pause();
   Serial.println(F("=== setupCard()"));
   nfcTagObject newCard;
-  setupFolder(&newCard.nfcFolderSettings);
-  // Karte ist konfiguriert -> speichern
-  mp3.pause();
-  do {
-  } while (isPlaying());
-  if (newCard.nfcFolderSettings.folder != 0 && newCard.nfcFolderSettings.mode != 0)
+  if (setupFolder(&newCard.nfcFolderSettings) == true)
+  {
+    // Karte ist konfiguriert -> speichern
+    mp3.pause();
+    do {
+    } while (isPlaying());
     writeCard(newCard);
+    configurationBefore=true;
+  }
+  delay(1000);
 }
-
 bool readCard(nfcTagObject * nfcTag) {
   nfcTagObject tempCard;
   // Show some details of the PICC (that is: the tag/card)
@@ -1731,13 +1826,39 @@ bool readCard(nfcTagObject * nfcTag) {
         if (activeModifier->getActive() == tempCard.nfcFolderSettings.mode) {
           activeModifier = NULL;
           Serial.println(F("modifier removed"));
+          if (isPlaying()) {
+            mp3.playAdvertisement(261);
+          }
+          else {
+            mp3.start();
+            delay(100);
+            mp3.playAdvertisement(261);
+            delay(1000);
+            mp3.pause();
+          }
+          mfrc522.PICC_HaltA();
+          mfrc522.PCD_StopCrypto1();
           delay(2000);
           return false;
         }
       }
-
+      if (tempCard.nfcFolderSettings.mode != 0 && tempCard.nfcFolderSettings.mode != 255) {
+        Serial.println(F("modifier active"));
+        if (isPlaying()) {
+          mp3.playAdvertisement(260);
+        }
+        else {
+          mp3.start();
+          delay(100);
+          mp3.playAdvertisement(260);
+          delay(1000);
+          mp3.pause();
+        }
+      }
       switch (tempCard.nfcFolderSettings.mode ) {
-        case 0: mfrc522.PICC_HaltA(); mfrc522.PCD_StopCrypto1(); adminMenu(true);  break;
+        case 0:
+        case 255:
+          mfrc522.PICC_HaltA(); mfrc522.PCD_StopCrypto1(); adminMenu(true);  break;
         case 1: activeModifier = new SleepTimer(tempCard.nfcFolderSettings.special); break;
         case 2: activeModifier = new FreezeDance(); break;
         case 3: activeModifier = new Locked(); break;
@@ -1745,6 +1866,8 @@ bool readCard(nfcTagObject * nfcTag) {
         case 5: activeModifier = new KindergardenMode(); break;
         case 6: activeModifier = new RepeatSingleModifier(); break;
       }
+      mfrc522.PICC_HaltA();
+      mfrc522.PCD_StopCrypto1();
       delay(2000);
       return false;
     }
