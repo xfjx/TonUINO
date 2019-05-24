@@ -73,7 +73,7 @@ static bool hasCard = false;
 static byte lastCardUid[4];
 static byte retries;
 static bool lastCardWasUL;
-static bool configurationBefore=false;
+static bool forgetLastCard=false;
 
 const byte PCS_NO_CHANGE     = 0; // no change detected since last pollCard() call
 const byte PCS_NEW_CARD      = 1; // card with new UID detected (had no card or other card before)
@@ -1105,7 +1105,7 @@ void handleCardReader()
     if (mySettings.stopWhenCardAway) 
     {
       //nur weiterspielen wenn vorher nicht konfiguriert wurde
-      if (!configurationBefore) 
+      if (!forgetLastCard) 
       {
           mp3.start();
           disablestandbyTimer();
@@ -1288,11 +1288,12 @@ void onNewCard()
       waitForTrackToFinish();
       setupCard();
     }
+    forgetLastCard=false;
 }
 
 void adminMenu(bool fromCard = false) {
   //Vergesse die vorherige Karte, wenn das Admin Menü betreten wird
-  configurationBefore=true;
+  forgetLastCard=true;
   disablestandbyTimer();
   mp3.pause();
   Serial.println(F("=== adminMenu()"));
@@ -1699,7 +1700,7 @@ void setupCard() {
     do {
     } while (isPlaying());
     writeCard(newCard);
-    configurationBefore=true;
+    forgetLastCard=true;
   }
   delay(1000);
 }
