@@ -192,7 +192,7 @@ void resetSettings() {
   mySettings.adminMenuPin[1] = 1;
   mySettings.adminMenuPin[2] = 1;
   mySettings.adminMenuPin[3] = 1;
-  mySettings.stopWhenCardAway = false;
+  mySettings.stopWhenCardAway = true;
   writeSettingsToFlash();
 }
 
