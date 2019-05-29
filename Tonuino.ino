@@ -1275,6 +1275,7 @@ void loop() {
 
 void onNewCard()
 {
+   forgetLastCard=false;
   // make random a little bit more "random"
   randomSeed(millis() + random(1000));
     if (myCard.cookie == cardCookie && myCard.nfcFolderSettings.folder != 0 && myCard.nfcFolderSettings.mode != 0) {
@@ -1288,7 +1289,6 @@ void onNewCard()
       waitForTrackToFinish();
       setupCard();
     }
-    forgetLastCard=false;
 }
 
 void adminMenu(bool fromCard = false) {
