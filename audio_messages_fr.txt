@@ -1,5 +1,4 @@
 advert/0300_freeze_into.mp3|On joue la danse du stop maintenant. Quand la musique s'arrête, stoppez !
-advert/0300_freeze_freeze.mp3|Et Stop!<break strength="medium">Ne bouge plus...<break strength="medium">Allez! Allez!
 advert/0301_freeze_freeze1.mp3|Et Stop!
 advert/0301_freeze_freeze2.mp3|Ne bouge plus!
 advert/0301_freeze_freeze3.mp3|Allez allez!
@@ -9,7 +8,7 @@ advert/0304_buttonslocked.mp3|Les boutons sont inactifs.
 advert/0305_kindergarden.mp3|Le mode École maternelle est activé.
 mp3/0300_new_tag.mp3|Voila, une nouvelle carte!
 mp3/0301_select_folder.mp3|Choisis un dossier avec des boutons de volume pour configurer la carte. Appuis sur le bouton pause pour continuer.
-﻿mp3/0310_select_playmode.mp3|Bien, choisis le mode d'exécution de Tonuino à l'aide des boutons de volume.
+mp3/0310_select_playmode.mp3|Bien, choisis le mode d'exécution de Tonuino à l'aide des boutons de volume.
 mp3/0311_mode_random_episode.mp3|Mode de lecture radio : Lecture d'un fichier aléatoire à partir du dossier
 mp3/0312_mode_album.mp3|Mode album: Joue tous les titres du dossier l'un après l'autre.
 mp3/0313_mode_party.mp3|Mode Party: Joue tout les titres d'un dossier au hasard.
