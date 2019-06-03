@@ -1045,6 +1045,12 @@ byte pollCard()
       retries = maxRetries;
       hasCard = true;
       return bSameUID ? PCS_CARD_IS_BACK : PCS_NEW_CARD;
+          }
+          else //readCard war nicht erfolgreich
+          {
+            mfrc522.PICC_HaltA();
+            mfrc522.PCD_StopCrypto1();
+            Serial.print(F("Karte konnte nicht gelesen werden"));
     }
     }
     }
