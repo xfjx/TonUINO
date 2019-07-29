@@ -651,7 +651,7 @@ MFRC522::StatusCode status;
 #endif
 
 #ifdef RESETBUTTON
-#define buttonResetPin A5
+#define buttonReset A5
 #endif
 
 #define LONG_PRESS 1000
@@ -662,9 +662,6 @@ Button downButton(buttonDown);
 #ifdef FIVEBUTTONS
 Button buttonFour(buttonFourPin);
 Button buttonFive(buttonFivePin);
-#endif
-#ifdef RESETBUTTON
-Button buttonReset(buttonResetPin);
 #endif
 bool ignorePauseButton = false;
 bool ignoreUpButton = false;
@@ -783,7 +780,7 @@ void setup() {
   pinMode(buttonFivePin, INPUT_PULLUP);
 #endif
   #ifdef RESETBUTTON
-   pinMode(buttonResetPin, INPUT_PULLUP);
+   pinMode(buttonReset, INPUT_PULLUP);
   #endif
   pinMode(shutdownPin, OUTPUT);
   digitalWrite(shutdownPin, LOW);
