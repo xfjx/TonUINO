@@ -1,26 +1,49 @@
 #ifndef consts_h
     #define consts_h
 
+	// shortcuts
+	#define SHORTCUT_STARTUP 3
+	#define SHORTCUT_PLAY_BUTTON 0
+	
     // folder play modes
     #define MODE_AUDIO_DRAMA 1
     #define MODE_ALBUM 2
     #define MODE_PARTY 3
     #define MODE_SINGLE_TRACK 4
     #define MODE_AUDIO_BOOK 5
+	#define MODE_ADMIN 6
     #define MODE_SPECIAL_AUDIO_BOOK 7
     #define MODE_SPECIAL_ALBUM 8
     #define MODE_SPECIAL_PARTY 9
 
-    // nfc settings modes
-    #define NFC_ADMIN_MENU 255
-    #define NFC_ADMIN_MENU_2 0
-    #define NFC_MODIFIER_SLEEP_TIMER 1
-    #define NFC_MODIFIER_FREEZE_DANCE 2
-    #define NFC_MODIFIER_LOCKED 3
-    #define NFC_MODIFIER_TODDLER 4
-    #define NFC_MODIFIER_DAYCARE 5
-    #define NFC_MODIFIER_REPEATE_SINGLE 6
+    // modifier settings modes
+    #define MODIFIER_ADMIN_MENU 255
+    #define MODIFIER_DEFAULT 0
+    #define MODIFIER_SLEEP_TIMER 1
+    #define MODIFIER_FREEZE_DANCE 2
+    #define MODIFIER_LOCKED 3
+    #define MODIFIER_TODDLER 4
+    #define MODIFIER_DAYCARE 5
+    #define MODIFIER_REPEATE_SINGLE 6
 
+	// lock modes
+	#define ADMIN_LOCK_MODE_CARD 1
+	#define ADMIN_LOCK_MODE_PIN 2
+	#define ADMIN_LOCK_MODE_MATH 3
+	
+	// menus
+	#define MENU_SUB_CREATE_CARDS_FOR_FOLDER 9
+	#define MENU_SUB_STANDBY_TIMER 8
+	#define MENU_SUB_SHORTCUT 7
+	#define MENU_SUB_MODIFIER 6
+	#define MENU_SUB_EQ 5
+	#define MENU_SUB_INIT_VOLUME 4
+	#define MENU_SUB_MIN_VOLUME 3
+	#define MENU_SUB_MAX_VOLUME 2
+	#define MENU_SUB_RESET_CARD 1
+	#define MENU_SUB_EXIT 0
+	
+	
     // advert files
     // 1-255 are numbers only
     #define ADV_LOCKED_SOUND 260
