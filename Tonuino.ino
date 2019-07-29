@@ -1284,7 +1284,7 @@ void adminMenu(bool fromCard = false) {
       }
     }
   }
-  else if (subMenu == 10) {
+  else if (subMenu == MENU_SUB_INVERT_BUTTONS) {
     // Invert Functions for Up/Down Buttons
     int temp = voiceMenu(2, MP3_CONFIGURE_SWITCH_VOLUME_BUTTONS_INTRO, MP3_CONFIGURE_SWITCH_VOLUME_BUTTONS_INTRO, false);
     if (temp == 2) {
@@ -1294,7 +1294,7 @@ void adminMenu(bool fromCard = false) {
       mySettings.invertVolumeButtons = false;
     }
   }
-  else if (subMenu == 11) {
+  else if (subMenu == MENU_SUB_RESET) {
     Serial.println(F("Reset -> EEPROM wird gelöscht"));
     for (int i = 0; i < EEPROM.length(); i++) {
       EEPROM.update(i, 0);
@@ -1303,7 +1303,7 @@ void adminMenu(bool fromCard = false) {
     mp3.playMp3FolderTrack(MP3_RESET_OK);
   }
   // lock admin menu
-  else if (subMenu == 12) {
+  else if (subMenu == MENU_SUB_LOCK_ADMIN) {
     int temp = voiceMenu(4, MP3_CONFIGURE_ADMIN_LOCK_INTRO, MP3_CONFIGURE_ADMIN_LOCK_INTRO, false);
     if (temp == 1) {
       mySettings.adminMenuLocked = 0;
