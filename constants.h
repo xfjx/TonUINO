@@ -45,6 +45,9 @@
 	#define MENU_SUB_SHORTCUT 7
 	#define MENU_SUB_STANDBY_TIMER 8
 	#define MENU_SUB_CREATE_CARDS_FOR_FOLDER 9
+	#define MENU_SUB_INVERT_BUTTONS 10
+	#define MENU_SUB_RESET 11
+	#define MENU_SUB_LOCK_ADMIN 12
 
 	// advert files
 	// 1-255 are numbers only
