@@ -1,6 +1,18 @@
 #ifndef consts_h
 	#define consts_h
 
+    // folder play modes
+    #define MODE_AUDIO_DRAMA 1
+    #define MODE_ALBUM 2
+    #define MODE_PARTY 3
+    #define MODE_SINGLE_TRACK 4
+    #define MODE_AUDIO_BOOK 5
+    #define MODE_SPECIAL_AUDIO_BOOK 7
+    #define MODE_SPECIAL_ALBUM 8
+    #define MODE_SPECIAL_PARTY 9
+
+
+    // advert files
 	#define ADV_FREEZE_INTRO 300
 	#define ADV_FREEZE_STOP 301
 	#define ADV_FREEZE_DONT_MOVE 301
@@ -9,6 +21,8 @@
 	#define ADV_LOCKED 303
 	#define ADV_BUTTONS_LOCKED 304
 	#define ADV_DAYCARE_MODE 305
+
+    // mp3 files
 	#define MP3_NEW_TAG 300
 	#define MP3_SELECT_FOLDER 301
 	#define MP3_SELECT_MODE 310
