@@ -8,7 +8,7 @@
 	#define SHORTCUT_STARTUP 3
 
 	// folder play modes
-	#define MODIFIER_DEFAULT 0
+	#define MODE_DEFAULT 0
 	#define MODE_AUDIO_DRAMA 1
 	#define MODE_ALBUM 2
 	#define MODE_PARTY 3
