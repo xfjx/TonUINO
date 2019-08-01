@@ -19,6 +19,7 @@
 
 // uncomment the below line to enable five button support
 //#define FIVEBUTTONS
+#define POTI_MODUS
 
 static const uint32_t cardCookie = 322417479;
 
@@ -156,7 +157,7 @@ void resetSettings() {
   mySettings.eq = 1;
   mySettings.locked = false;
   mySettings.standbyTimer = 0;
-  mySettings.invertVolumeButtons = true;
+  mySettings.invertVolumeButtons = false;
   mySettings.shortCuts[0].folder = 0;
   mySettings.shortCuts[1].folder = 0;
   mySettings.shortCuts[2].folder = 0;
@@ -648,6 +649,11 @@ MFRC522::StatusCode status;
 
 #define LONG_PRESS 1000
 
+// Volumecontrol with Poti
+#ifdef POTI_MODUS
+#define volumePin A3
+#endif
+
 Button pauseButton(buttonPause);
 Button upButton(buttonUp);
 Button downButton(buttonDown);
@@ -748,8 +754,17 @@ void setup() {
   mp3.begin();
   // Zwei Sekunden warten bis der DFPlayer Mini initialisiert ist
   delay(2000);
+
+#ifdef POTI_MODUS
+  pinMode(volumePin, INPUT);
+  volume = getPotiVolumeValue();
+#else
+  volume = mySettings.initVolume;
+#endif
+
   setVolume(mySettings.initVolume);
   mp3.setEq(static_cast<DfMp3_Eq>(mySettings.eq - 1));
+
   // Fix für das Problem mit dem Timeout (ist jetzt in Upstream daher nicht mehr nötig!)
   //mySoftwareSerial.setTimeout(10000);
 
@@ -962,6 +977,15 @@ void loop() {
     // Buttons werden nun über JS_Button gehandelt, dadurch kann jede Taste
     // doppelt belegt werden
     readButtons();
+
+#ifdef POTI_MODUS
+    const int newVolume = getPotiVolumeValue();
+    if (newVolume != volume) {
+      volume = newVolume;
+      mp3.setVolume(volume);
+    }
+#endif
+
 
     // admin menu
     if ((pauseButton.pressedFor(LONG_PRESS) || upButton.pressedFor(LONG_PRESS) || downButton.pressedFor(LONG_PRESS)) && pauseButton.isPressed() && upButton.isPressed() && downButton.isPressed()) {
@@ -1744,7 +1768,11 @@ void writeCard(const nfcTagObject& nfcTag) {
   delay(2000);
 }
 
-
+#ifdef POTI_MODUS
+int getPotiVolumeValue() {
+  return map(analogRead(volumePin), 0, 1023, mySettings.minVolume, mySettings.maxVolume);
+}
+#endif
 
 /**
   Helper routine to dump a byte array as hex values to Serial.
