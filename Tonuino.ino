@@ -66,9 +66,14 @@ struct adminSettings {
 
 adminSettings mySettings;
 nfcTagObject myCard;
+nfcTagObject newCard; // used for programming mode
 folderSettings *myFolder;
 unsigned long sleepAtMillis = 0;
 static uint16_t _lastTrackFinished;
+
+// used for programming mode
+uint8_t readStatus = 0;
+uint8_t rnum = 0;
 
 static void nextTrack(uint16_t track);
 uint8_t voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
@@ -76,9 +81,10 @@ uint8_t voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
 bool isPlaying();
 bool checkTwo ( uint8_t a[], uint8_t b[] );
 void writeCard(nfcTagObject nfcTag);
-void dump_byte_array(byte * buffer, byte bufferSize);
+void dump_byte_array(byte * buffer, byte bufferSize, bool noSpace = false);
 void adminMenu(bool fromCard = false);
 bool knownCard = false;
+
 
 // implement a notification class,
 // its member methods will get called
@@ -665,6 +671,158 @@ bool ignoreButtonFour = false;
 bool ignoreButtonFive = false;
 #endif
 
+// begin of pc programming mode functions
+
+// clear a rfid card (used for programming mode)
+void ClearCardData(){
+  myCard.cookie = 0;
+  myCard.version = 0;
+  myCard.nfcFolderSettings.folder = 0;
+  myCard.nfcFolderSettings.mode = 0;
+  myCard.nfcFolderSettings.special = 0;
+  myCard.nfcFolderSettings.special2 = 0;
+}
+
+uint8_t GetByte(char c)
+{
+  return (c > '9') ? (c&0x0F) + 9 : (c&0x0F);
+}
+
+bool ReadFromSerial()
+{
+    if (Serial.available() > 0) {
+      char c = Serial.read();
+      if (c != '#' && (c < '0' || c > 'F')) return false;
+      switch (readStatus) {
+      case 0: {
+              // wait for start char (#)
+              if (c == '#') {
+                rnum = 0;
+                readStatus = 1;
+                ClearCardData();
+              }
+            }
+            return false;
+      case 1: {
+              // read magic  (cookie), 8 Hex chars
+              if (c == '#') {
+                rnum = 0;
+                ClearCardData();
+                return false;
+              }
+              myCard.cookie = myCard.cookie*16+GetByte(c);
+              rnum++;
+              if (rnum > 7) {
+                rnum = 0;
+                readStatus = 2;
+              }
+            }
+            return false;
+      case 2: {
+              //read version, 2 chars
+              if (c == '#') {
+                rnum = 0;
+                ClearCardData();
+                readStatus = 1;
+                return false;
+              }
+              myCard.version = myCard.version*16+GetByte(c);
+              rnum++;
+              if (rnum > 1) {
+                rnum = 0;
+                readStatus = 3;
+              }
+            }
+            return false;
+      case 3: {
+              //read folder, 2 chars
+              if (c == '#') {
+                rnum = 0;
+                ClearCardData();
+                readStatus = 1;
+                return false;
+              }
+              myCard.nfcFolderSettings.folder = myCard.nfcFolderSettings.folder*16+GetByte(c);
+              rnum++;
+              if (rnum > 1) {
+                rnum = 0;
+                readStatus = 4;
+              }
+            }
+            return false;
+      case 4: {
+              // read mode, 2 chars
+              if (c == '#') {
+                rnum = 0;
+                ClearCardData();
+                readStatus = 1;
+                return false;
+              }
+              myCard.nfcFolderSettings.mode = myCard.nfcFolderSettings.mode*16+GetByte(c);
+              rnum++;
+              if (rnum > 1) {
+                rnum = 0;
+                readStatus = 5;
+              }
+            }
+            return false;
+      case 5: {
+              // read special (from track), 3 chars
+              if (c == '#') {
+                rnum = 0;
+                ClearCardData();
+                readStatus = 1;
+                return false;
+              }
+              myCard.nfcFolderSettings.special = myCard.nfcFolderSettings.special*16+GetByte(c);
+              rnum++;
+              if (rnum > 1) {
+                rnum = 0;
+                readStatus = 6;
+              }
+            }
+            return false;
+      case 6: {
+              //read special2 (to track), 3 chars
+              if (c == '#') {
+                rnum = 0;
+                ClearCardData();
+                readStatus = 1;
+                return false;
+              }
+              myCard.nfcFolderSettings.special2 = myCard.nfcFolderSettings.special2*16+GetByte(c);
+              rnum++;
+              if (rnum > 1) {
+                rnum = 0;
+                readStatus = 0;
+                return true;
+              }
+            }
+    }
+  }
+  return false;
+}
+
+void WriteCardDataToSerial()
+{
+  // send data from newCard to PC, prefixed by #
+    byte buffer[9] = {0x13, 0x37, 0xb3, 0x47, // 0x1337 0xb347 magic cookie to
+                     // identify our nfc tags
+                     0x02,                   // version 1
+                     newCard.nfcFolderSettings.folder,          // the folder picked by the user
+                     newCard.nfcFolderSettings.mode,    // the playback mode picked by the user
+                     newCard.nfcFolderSettings.special, // track or function for admin cards
+                     newCard.nfcFolderSettings.special2 // to track
+                    };
+
+  byte size = sizeof(buffer);
+  Serial.print('#');
+  dump_byte_array(buffer, size, true);
+  Serial.print('\n');
+}
+
+// end of pc programming mode functions
+
 /// Funktionen für den Standby Timer (z.B. über Pololu-Switch oder Mosfet)
 
 void setstandbyTimer() {
@@ -1164,7 +1322,7 @@ void adminMenu(bool fromCard = false) {
       }
     }
   }
-  int subMenu = voiceMenu(12, 900, 900, false, false, 0, true);
+  int subMenu = voiceMenu(13, 900, 900, false, false, 0, true);
   if (subMenu == 0)
     return;
   if (subMenu == 1) {
@@ -1323,6 +1481,71 @@ void adminMenu(bool fromCard = false) {
     }
 
   }
+  else if(subMenu == 13) { // pc programming mode
+		mp3.playMp3FolderTrack(325); // programming mode intro
+		Serial.println(F("Programmiermodus aktiviert"));
+		bool cancel = false;
+
+		do {
+			readButtons();
+			if(upButton.wasReleased() || downButton.wasReleased() || pauseButton.wasReleased()){
+				cancel = true;
+				Serial.println(F("Abgebrochen"));
+				mp3.playMp3FolderTrack(327); // programming mode finished
+        mfrc522.PICC_HaltA();
+				mfrc522.PCD_StopCrypto1();
+				break;
+			}
+
+			Serial.println(F(" Karte auflegen"));
+			mp3.playMp3FolderTrack(800); // waiting for card
+
+			// wait for card
+			do {
+				readButtons();
+				if(upButton.wasReleased() || downButton.wasReleased() || pauseButton.wasReleased())
+				{
+					cancel = true;
+					Serial.println(F("Abgebrochen!"));
+					mp3.playMp3FolderTrack(802); // reset aborted
+          mfrc522.PICC_HaltA();
+				  mfrc522.PCD_StopCrypto1();
+					return;
+				}
+			} while (!mfrc522.PICC_IsNewCardPresent());
+
+			// RFID card detected
+			if (mfrc522.PICC_ReadCardSerial()) {
+        Serial.println("Lese Karte...");
+				if(readCard(&newCard) == true){
+					WriteCardDataToSerial();
+				}
+
+				while(ReadFromSerial() == false){
+					readButtons();
+					if(upButton.wasReleased() || downButton.wasReleased() || pauseButton.wasReleased())
+					{
+						cancel = true;
+						Serial.println(F("Abgebrochen!"));
+						mp3.playMp3FolderTrack(802); // reset aborted
+            mfrc522.PICC_HaltA();
+				    mfrc522.PCD_StopCrypto1();
+						return;
+					}
+					delay(10);
+				}
+				Serial.println(F("schreibe Karte..."));
+				writeCard(myCard);
+				delay(100);
+
+				if(readCard(&newCard) == true){
+					WriteCardDataToSerial();
+				}
+				mfrc522.PICC_HaltA();
+				mfrc522.PCD_StopCrypto1();				
+			}
+		}while(!cancel);
+	}
   writeSettingsToFlash();
   setstandbyTimer();
 }
@@ -1786,11 +2009,19 @@ void writeCard(nfcTagObject nfcTag) {
 /**
   Helper routine to dump a byte array as hex values to Serial.
 */
-void dump_byte_array(byte * buffer, byte bufferSize) {
+void dump_byte_array(byte * buffer, byte bufferSize, bool noSpace = false) {
   for (byte i = 0; i < bufferSize; i++) {
-    Serial.print(buffer[i] < 0x10 ? " 0" : " ");
-    Serial.print(buffer[i], HEX);
-  }
+		if(noSpace){
+			if(buffer[i]< 0x10){
+				Serial.print("0");
+			}
+		}
+		else{
+			Serial.print(buffer[i] < 0x10 ? " 0" : " ");
+		}
+		
+		Serial.print(buffer[i], HEX);
+	}
 }
 
 ///////////////////////////////////////// Check Bytes   ///////////////////////////////////
