@@ -20,6 +20,9 @@
 // uncomment the below line to enable five button support
 //#define FIVEBUTTONS
 
+// delay for volume buttons
+#define LONG_PRESS_DELAY 300
+
 static const uint32_t cardCookie = 322417479;
 
 // DFPlayer Mini
@@ -814,6 +817,7 @@ void volumeUpButton() {
   if (volume < mySettings.maxVolume) {
     mp3.increaseVolume();
     volume++;
+    delay(LONG_PRESS_DELAY);
   }
   Serial.println(volume);
 }
@@ -827,6 +831,7 @@ void volumeDownButton() {
   if (volume > mySettings.minVolume) {
     mp3.decreaseVolume();
     volume--;
+    delay(LONG_PRESS_DELAY);
   }
   Serial.println(volume);
 }
