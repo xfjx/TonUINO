@@ -40,7 +40,9 @@ jobs:
     steps:
       # First of all, we clone the repo using the `checkout` action.
       - name: Checkout
-        uses: actions/checkout@DEV
+        uses: actions/checkout@v2
+        with:
+          ref: DEV
 
       # We use the `arduino/setup-arduino-cli` action to install and
       # configure the Arduino CLI on the system.
@@ -54,5 +56,5 @@ jobs:
 
       # Finally, we compile the sketch, using the FQBN that was set
       # in the build matrix.
-      - name: Compile Sketch
-        run: make compile
+      - name: Test Sketch
+        run: make test

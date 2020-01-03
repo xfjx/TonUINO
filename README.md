@@ -1,3 +1,5 @@
+![](https://github.com/AlexanderWillner/tonuino/workflows/TonUINO%20Compiler%20Test/badge.svg)
+
 # TonUINO
 Die DIY Musikbox (nicht nur) für Kinder
 
