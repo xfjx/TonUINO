@@ -49,6 +49,11 @@ jobs:
       - name: Setup Arduino CLI
         uses: arduino/setup-arduino-cli@v1.0.0
 
+      - name: Install Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+
       # We then install the platform, which one will be determined
       # dynamically by the build matrix.
       - name: Install platform

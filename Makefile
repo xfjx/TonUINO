@@ -12,7 +12,7 @@ SERIAL = /dev/cu.usbserial-1410
 ## Main
 SKETCH = Tonuino
 ## Helper
-OS = $(shell uname)
+OS = $(shell uname -s)
 .PHONY: help
 
 info:
@@ -40,11 +40,17 @@ ifeq ($(OS),Darwin)
 ifeq (, $(shell which brew))
 	$(error "No brew in PATH, consider installing http://brew.sh")
 else
-	@brew install arduino-cli
-	@brew install platformio
+	@brew install platformio arduino-cli
 endif
-else
-	@echo "todo: auto setup for OS"
+endif
+ifeq ($(OS),Linux)
+ifeq (, $(shell which arduino-cli))
+	@pip install setuptools wheel
+	@curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
+endif
+ifeq (, $(shell which platformio))
+	@pip install -U platformio
+endif
 endif
 
 init:
