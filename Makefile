@@ -24,7 +24,6 @@ help:
 	$(info Available commands:)
 	$(info - install : installation of required binaries (arduino-cli))
 	$(info - init    : initialize environment (arduino-cli))
-	$(info - pio-init: initialize environment (PlatformIO))
 	$(info - compile : create binary)
 	$(info - upload  : store binary on board EEPROM)
 	$(info - find    : get information about the pluged-in board)
@@ -38,6 +37,7 @@ ifeq (, $(shell which brew))
 	$(error "No brew in PATH, consider installing http://brew.sh")
 else
 	@brew install arduino-cli
+	@brew install platformio
 endif
 else
 	@echo "todo: auto setup for OS"
@@ -50,8 +50,6 @@ init:
 	@arduino-cli lib install "DFPlayer Mini Mp3 by Makuna"
 	@arduino-cli lib install "MFRC522"
 	@arduino-cli lib install "JC_Button"
-
-pio-init:
 	@platformio lib install 1561 # DFPlayer Mini Mp3 by Makuna
 	@platformio lib install 2284 # EEPROM
 	@platformio lib install 77   # JC_Button
@@ -73,6 +71,9 @@ upload:
 
 test: prepare
 	@arduino-cli compile --fqbn $(MCU) --warnings more "$(SKETCH)"
+ifneq (, $(shell which pio))
+	@pio test -e native
+endif
 
 clean:
 	@rm -rf "$(SKETCH)"
