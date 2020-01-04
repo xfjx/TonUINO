@@ -1,4 +1,4 @@
-[![GitHub Actions | AlexanderWillner/tonuino](https://github.com/AlexanderWillner/tonuino/workflows/TonUINO%20Compiler%20Test/badge.svg)](https://github.com/AlexanderWillner/tonuino/actions?workflow=TonUINO%20Compiler%20Test)
+[![GitHub Actions | AlexanderWillner/tonuino](https://github.com/AlexanderWillner/tonuino/workflows/building/badge.svg)](https://github.com/AlexanderWillner/tonuino/actions?workflow=building)
 
 # Änderungen in diesem Repository
 
@@ -14,14 +14,14 @@ $ make
 TonUINO Makefile
 ================
 
-Configured to use MCU "arduino:avr:nano:cpu=atmega328old" attached to port "/dev/cu.usbserial-1410".
+ Configured to use MCU "arduino:avr:nano:cpu=atmega328old" attached to port "/dev/cu.usbserial-1410".
 
 Available commands:
 - help    : get support from the community
 - install : installation of required binaries (arduino-cli)
 - init    : initialize environment (arduino-cli)
 - compile : create binary
-- upload  : store binary on board EEPROM
+- upload  : store binary on board flash
 - find    : get information about the pluged-in board
 - test    : run some basic tests on the code
 - clean   : delete temporary files
