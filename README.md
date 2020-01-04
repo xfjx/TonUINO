@@ -1,5 +1,32 @@
 ![](https://github.com/AlexanderWillner/tonuino/workflows/TonUINO%20Compiler%20Test/badge.svg)
 
+# Änderungen in diesem Repository
+
+* Unterstützung für GitHub Actions, um jede eingespielte Änderung zu testen (siehe Badge oben).
+* Integration von PlatformIO inklusive initiale Unterstützung von Unit Tests.
+* Entfernung einiger [Compiler-Warnungen](https://github.com/xfjx/TonUINO/pull/54).
+* Kleinen Fehler bei Erstinbetriebnahme [gefixt](http://discourse.voss.earth/t/version-2-1dev-lautstaerke-durch-langes-druecken-der-tasten-geht-nicht/4523/23).
+* Verzögerung für Lautstärkeregelung [hinzugefügt](http://discourse.voss.earth/t/lautstaerke-kleinschrittiger-erhoehen/3022/5).
+* Make-Datei hinzugefügt:
+```
+$ make
+
+TonUINO Makefile
+================
+
+Configured to use MCU "arduino:avr:nano:cpu=atmega328old" attached to port "/dev/cu.usbserial-1410".
+
+Available commands:
+- help    : get support from the community
+- install : installation of required binaries (arduino-cli)
+- init    : initialize environment (arduino-cli)
+- compile : create binary
+- upload  : store binary on board EEPROM
+- find    : get information about the pluged-in board
+- test    : run some basic tests on the code
+- clean   : delete temporary files
+```
+
 # TonUINO
 Die DIY Musikbox (nicht nur) für Kinder
 
