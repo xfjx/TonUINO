@@ -79,6 +79,9 @@ ifneq (, $(shell which pio))
 	@pio test -e native
 endif
 
+check: *.ino *.h
+	@cppcheck --enable=all --std=c++20 --language=c++ *.ino *.h
+
 clean:
 	@rm -rf "$(SKETCH)"
 	@rm -rf ".pio/build/"
