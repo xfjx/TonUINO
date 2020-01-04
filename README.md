@@ -1,4 +1,4 @@
-![](https://github.com/AlexanderWillner/tonuino/workflows/TonUINO%20Compiler%20Test/badge.svg)
+[![GitHub Actions | AlexanderWillner/tonuino](https://github.com/AlexanderWillner/tonuino/workflows/TonUINO%20Compiler%20Test/badge.svg)](https://github.com/AlexanderWillner/tonuino/actions?workflow=TonUINO%20Compiler%20Test)
 
 # Änderungen in diesem Repository
 
