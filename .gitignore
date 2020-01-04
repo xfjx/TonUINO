@@ -34,4 +34,4 @@ Tonuino
 # Platform.io
 .pio/
 .vscode/
-
+platformio_local.ini

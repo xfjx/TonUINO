@@ -3,7 +3,7 @@
 # Änderungen in diesem Repository
 
 * Unterstützung für GitHub Actions, um jede eingespielte Änderung zu testen (siehe Badge oben).
-* Integration von PlatformIO inklusive initiale Unterstützung von Unit Tests.
+* Integration von PlatformIO inklusive initiale Unterstützung von Unit Tests und eigenen Konfigurationsdateien.
 * Entfernung einiger [Compiler-Warnungen](https://github.com/xfjx/TonUINO/pull/54).
 * Kleinen Fehler bei Erstinbetriebnahme [gefixt](http://discourse.voss.earth/t/version-2-1dev-lautstaerke-durch-langes-druecken-der-tasten-geht-nicht/4523/23).
 * Verzögerung für Lautstärkeregelung [hinzugefügt](http://discourse.voss.earth/t/lautstaerke-kleinschrittiger-erhoehen/3022/5).
