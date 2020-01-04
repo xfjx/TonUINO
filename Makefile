@@ -15,13 +15,14 @@ SKETCH = Tonuino
 OS = $(shell uname)
 .PHONY: help
 
-help:
+info:
 	$(info TonUINO Makefile)
 	$(info ================)
 	$(info )
 	$(info Configured to use MCU "$(MCU)" attached to port "$(SERIAL)".)
 	$(info )
 	$(info Available commands:)
+	$(info - help    : get support from the community)
 	$(info - install : installation of required binaries (arduino-cli))
 	$(info - init    : initialize environment (arduino-cli))
 	$(info - compile : create binary)
@@ -30,6 +31,9 @@ help:
 	$(info - test    : run some basic tests on the code)
 	$(info - clean   : delete temporary files)
 	@true
+
+help:
+	@python -m webbrowser "http://discourse.voss.earth"
 
 install:
 ifeq ($(OS),Darwin)
