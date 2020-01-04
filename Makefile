@@ -76,3 +76,4 @@ test: prepare
 
 clean:
 	@rm -rf "$(SKETCH)"
+	@rm -rf ".pio/build/"
