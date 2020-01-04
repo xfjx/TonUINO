@@ -52,7 +52,7 @@ jobs:
       # We then install the platform, which one will be determined
       # dynamically by the build matrix.
       - name: Install platform
-        run: make init
+        run: make install init
 
       # Finally, we compile the sketch, using the FQBN that was set
       # in the build matrix.
