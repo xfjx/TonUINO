@@ -70,13 +70,13 @@ prepare:
 	@if [ "$(SKETCH)/$(SKETCH).ino" -nt "./$(SKETCH).ino" ]; then echo "ERROR: do not edit files in TonUINO/!"; exit 1; fi;
 	@cp -p "./$(SKETCH).ino" "$(SKETCH)/$(SKETCH).ino"
 
-compile: prepare
+compile: prepare *.ino
 	@arduino-cli compile --fqbn $(MCU) --warnings none "$(SKETCH)"
 
 find:
 	@arduino-cli board list
 
-upload:
+upload: compile
 	@arduino-cli upload -p $(SERIAL) --fqbn $(MCU) --verify "$(SKETCH)"
 
 test: prepare
@@ -85,7 +85,7 @@ ifneq (, $(shell which pio))
 	@pio test -e native
 endif
 
-check: *.ino *.h
+check: *.ino
 	@cppcheck --enable=all --std=c++20 --language=c++ *.ino *.h
 
 clean:
