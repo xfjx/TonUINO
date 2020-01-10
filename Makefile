@@ -45,10 +45,10 @@ endif
 endif
 ifeq ($(OS),Linux)
 ifeq (, $(shell which arduino-cli))
-	@pip install setuptools wheel
 	@curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
 endif
 ifeq (, $(shell which platformio))
+	@pip install setuptools wheel
 	@pip install -U platformio
 endif
 endif
