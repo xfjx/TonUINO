@@ -62,14 +62,15 @@ Es muss gelötet werden. Wir gehen davon aus, dass Lötkolben, Lötzinn und Löt
 | 1 | [USB-Buchse](https://amzn.to/2uHgKoQ) | Zum Aufladen bei Akkubetrieb | [Kein einfaches Thema](http://discourse.voss.earth/t/micro-usb-buchse-fuer-das-gehaeuse/3280/14) und kann sowohl zum Aufladen als auch für ein [Firmware-Upgrade](http://discourse.voss.earth/t/benoetige-hilfe-bei-der-trennung-von-daten-und-strom-des-usb-kabels/975) oder zum [MP3-Aktualisieren](http://discourse.voss.earth/t/daten-auf-sd-kopieren-ueber-usb-anschluss/2185/8) gleichzeitig genutzt werden. | ca. 4-20 EUR / Stück |
 | 1 | [Ein- und Ausschalter](https://amzn.to/30icuHZ) | Zum Strom sparen und Wiederbeleben bei Akkubetrieb | Ein Schalter mit Lichtindikator erscheint sinnvoll [für eine gewisse Grundlast](http://discourse.voss.earth/t/grundlast-erhoehen-um-powerbank-nicht-autom-abzuschalten/1899/9) | ca. 0,50-20 EUR / Stück|
 | Mehrere | [Etiketten](https://amzn.to/2R0eHSL) | Zum Bekleben der NFC-Karten, denn diese müssen irgendwie auseinandergehalten werden | Es gibt ganz viele weitere Varianten zum Bedrucken. Ein einfacher Edding reicht jedoch auch.| ca. 0,80 EUR / Stück|
+| 1 | [Bluetooh-Sender](https://amzn.to/3a5hzrx) | Zum Anschluss von kabellosen Kopfhörern | Details zum Anschluss im Forum [hier](http://discourse.voss.earth/t/hoerbuch-fuer-meine-frau/4344/3) oder [hier](http://discourse.voss.earth/t/erweiterung-anschluss-bluetooth-kopfhoerer-vorerst-theorie/3556/14). | ca. 19 EUR / Stück |
 
-Es gibt zahllose weitere Ergänzungen, wie [LED-Stripes](http://discourse.voss.earth/t/integration-led-strip-und-ring-mit-neopixel/2760), [Bluetooth-Anschluss](http://discourse.voss.earth/t/erweiterung-anschluss-bluetooth-kopfhoerer-vorerst-theorie/3556/14), etc. pp. Positive Erfahrungen sollten gerne in diese Liste hier integriert werden.
+Es gibt zahllose weitere Ergänzungen, wie [LED-Stripes](http://discourse.voss.earth/t/integration-led-strip-und-ring-mit-neopixel/2760) etc. pp. Positive Erfahrungen sollten gerne in diese Liste hier integriert werden.
 
 ### Systemnahe Programmierung
 
 Es muss nicht unbedingt programmiert werden. Die Installation der Firmware auf den Arduino ist sehr einfach. Die Anleitung auf der [offiziellen Webseite](https://www.voss.earth/tonuino/) ist gut. Wenn jedoch mehr Knöpfe angesprochen werden sollen (siehe oben), muss die Software auch geringfügig angepasst werden.
 
-Es gibt zwar, wie bei jeder Software, ein paar kleine Software-Fehler, die jedoch in [unterschiedlichen Branches](https://github.com/xfjx/TonUINO/network) gefixt wurden. Ziel ist es, diese Änderungen in so wenigen Branches wie möglich pflegen zu müssen. 
+Es gibt zwar, wie bei jeder Software, ein paar kleine Software-Fehler, die jedoch in [unterschiedlichen Branches](https://github.com/xfjx/TonUINO/network) gefixt wurden. Ziel ist es, diese Änderungen in so wenigen Branches wie möglich pflegen zu müssen.
 
 #### Für Benutzer
 
