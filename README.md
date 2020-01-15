@@ -1,5 +1,4 @@
-[![GitHub Actions | AlexanderWillner/tonuino](https://github.com/AlexanderWillner/tonuino/workflows/building/badge.svg)](https://github.com/AlexanderWillner/tonuino/actions?workflow=building) [![license](https://img.shields.io/github/license/alexanderwillner/tonuino)](https://github.com/AlexanderWillner/TonUINO/blob/DEV/LICENSE)
-
+[![GitHub Actions | AlexanderWillner/tonuino](https://github.com/AlexanderWillner/tonuino/workflows/building/badge.svg)](https://github.com/AlexanderWillner/tonuino/actions?workflow=building) [![license](https://img.shields.io/github/license/alexanderwillner/tonuino)](https://github.com/AlexanderWillner/TonUINO/blob/DEV/LICENSE) [![download](https://img.shields.io/github/downloads/AlexanderWillner/TonUINO/total)](https://github.com/AlexanderWillner/TonUINO/releases)
 
 # TonUINO
 
