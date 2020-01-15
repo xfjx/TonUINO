@@ -1,4 +1,5 @@
-[![GitHub Actions | AlexanderWillner/tonuino](https://github.com/AlexanderWillner/tonuino/workflows/building/badge.svg)](https://github.com/AlexanderWillner/tonuino/actions?workflow=building)
+[![GitHub Actions | AlexanderWillner/tonuino](https://github.com/AlexanderWillner/tonuino/workflows/building/badge.svg)](https://github.com/AlexanderWillner/tonuino/actions?workflow=building) [![license](https://img.shields.io/github/license/alexanderwillner/tonuino)](https://github.com/AlexanderWillner/TonUINO/blob/DEV/LICENSE)
+
 
 # TonUINO
 
@@ -76,8 +77,8 @@ Es gibt zwar, wie bei jeder Software, ein paar kleine Software-Fehler, die jedoc
 
 Als einfacher Benutzer sollte die Programmierung so einfach gestaltet sein wie möglich. Im Folgenden die notwendigen Schritte. Eine [Community Software FAQ](https://discourse.voss.earth/t/faq-kategorie-software/924) gibt weitere Hilfestellungen.
 
-1. Download der Firmware von [Originalrepository](https://github.com/xfjx/TonUINO/tree/DEV) oder von hier. Dazu oben rechts auf `Clone or Download` klicken und dann auf `Download ZIP`
-2. Die Datei `DEV.zip` landet dann im `Download`-Verzeichnis und muss mit einem Doppelklick entpackt werden. Es sollte dann ein Verzeichnis `TonUINO-DEV` existieren, in der sich die Datei `Tonuino.ino` befindet.
+1. Download der Firmware. Dazu oben auf `release` klicken und dann auf den Pfeil bei `Assets` der aktuellsten Version und über `Source code (zip)` den Quelltext herunter laden.
+2. Die Datei `TonUINO-xxxx.zip` landet dann im `Download`-Verzeichnis und muss mit einem Doppelklick entpackt werden. Es sollte dann ein Verzeichnis `TonUINO-xxxx` existieren, in der sich die Datei `Tonuino.ino` befindet.
 3. Anschließend muss die [Arduino GUI](https://www.arduino.cc/en/main/software) herunter geladen und installiert werden (unter macOS mit [Homebrew](http://brew.sh) einfach über `brew cask install arduino`).
 4. Nach dem Starten der Arduino GUI muss die o.g. Datei geöffnet werden und notwendige Bibliotheken herunter geladen werden. Unter `Werkzeuge` und dann `Bibliotheken Verwalten` folgende Pakete suchen und installieren:
    1. `JC_Button` (von dem Entwickler `Jack Christiansen`)
