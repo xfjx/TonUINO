@@ -1135,7 +1135,11 @@ void loop() {
 
     // Modifier : WIP!
     if (activeModifier != NULL) {
+      if (!isPlaying()) {
+        mp3.start();
+      }
       activeModifier->loop();
+
     }
 
     // Buttons werden nun über JS_Button gehandelt, dadurch kann jede Taste
@@ -1143,6 +1147,7 @@ void loop() {
     readButtons();
 
     // admin menu
+    
     if ((pauseButton.pressedFor(LONG_PRESS) || upButton.pressedFor(LONG_PRESS) || downButton.pressedFor(LONG_PRESS)) && pauseButton.isPressed() && upButton.isPressed() && downButton.isPressed()) {
       mp3.pause();
       do {
@@ -1152,6 +1157,7 @@ void loop() {
       adminMenu();
       return;
     }
+    
 
     if (pauseButton.wasReleased()) {
       if (activeModifier != NULL)
