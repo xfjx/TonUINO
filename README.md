@@ -54,9 +54,13 @@ Es muss gelötet werden. Wir gehen davon aus, dass Lötkolben, Lötzinn und Löt
 | MOSI | 3   | RFID  | 14           | D11           | 3,3V          | 17           | RFID  | 8   | 3,3V |
 | MISO | 4   | RFID  | 15           | D12           | D13           | 16           | RFID  | 2   | SCK  |
 
-Die notwendigen Komponenten können über Reichelt, Conrad, Amazon, E-Bay oder Alibaba bezogen werden. Meist lohnt sich jetzt schon die Planung von mehreren TonUINO-Boxen. Im Folgenden Amazon-Affiliate-Links von Komponenten, die Thorsten und andere aus der Community erfolgreich verbaut haben. In der [Community Hardware FAQ](https://discourse.voss.earth/t/faq-kategorie-hardware/926/2) gibt es weitere wertvolle Hinweise.
+Die passenden Abbildungen:
+
+![PIN-Belegung](TonUINO_PINs.jpg) ![PIN-Schaltplan](TonUINO_Schaltplan.png) 
 
 #### Notwendige Grundausstattung (ca. 30 EUR)
+
+Die notwendigen Komponenten können über Reichelt, Conrad, Amazon, E-Bay oder Alibaba bezogen werden. Meist lohnt sich jetzt schon die Planung von mehreren TonUINO-Boxen. Im Folgenden Amazon-Affiliate-Links von Komponenten, die Thorsten und andere aus der Community erfolgreich verbaut haben. In der [Community Hardware FAQ](https://discourse.voss.earth/t/faq-kategorie-hardware/926/2) gibt es weitere wertvolle Hinweise.
 
 | Anzahl | Produkt | Beschreibung | Hinweis | Kosten |
 | --- | --- | ---  | --- | --- |
