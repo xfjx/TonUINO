@@ -20,6 +20,9 @@
 // uncomment the below line to enable five button support
 //#define FIVEBUTTONS
 
+// uncomment the below line to stop playback when card is removed
+#define PAUSEONCARDREMOVAL
+
 static const uint32_t cardCookie = 322417479;
 
 // DFPlayer Mini
@@ -47,6 +50,9 @@ struct nfcTagObject {
   //  uint8_t special;
   //  uint8_t special2;
 };
+
+bool card_present = false;
+bool card_present_prev = false;
 
 // admin settings stored in eeprom
 struct adminSettings {
@@ -944,7 +950,28 @@ void playShortCut(uint8_t shortCut) {
 }
 
 void loop() {
+  int _rfid_error_counter = 0;
+  
   do {
+
+#ifdef PAUSEONCARDREMOVAL
+    // auf Lesefehler des RFID Moduls prüfen
+    _rfid_error_counter += 1;
+    if(_rfid_error_counter > 2){
+      card_present = false;
+    }
+
+    // Ist eine Karte aufgelegt?
+    byte bufferATQA[2];
+    byte bufferSize = sizeof(bufferATQA);
+    MFRC522::StatusCode result = mfrc522.PICC_RequestA(bufferATQA, &bufferSize);
+  
+    if(result == mfrc522.STATUS_OK){
+      _rfid_error_counter = 0;
+      card_present = true;
+    }
+#endif
+
     checkStandbyAtMillis();
     mp3.loop();
 
@@ -1088,10 +1115,11 @@ void loop() {
     }
 #endif
     // Ende der Buttons
+
+#ifndef PAUSEONCARDREMOVAL
   } while (!mfrc522.PICC_IsNewCardPresent());
-
+  
   // RFID Karte wurde aufgelegt
-
   if (!mfrc522.PICC_ReadCardSerial())
     return;
 
@@ -1099,7 +1127,7 @@ void loop() {
     if (myCard.cookie == cardCookie && myCard.nfcFolderSettings.folder != 0 && myCard.nfcFolderSettings.mode != 0) {
       playFolder();
     }
-
+  
     // Neue Karte konfigurieren
     else if (myCard.cookie != cardCookie) {
       knownCard = false;
@@ -1107,9 +1135,58 @@ void loop() {
       waitForTrackToFinish();
       setupCard();
     }
+   }
+   mfrc522.PICC_HaltA();
+   mfrc522.PCD_StopCrypto1();
+
+#endif
+#ifdef PAUSEONCARDREMOVAL
+  // solange keine Karte aufgelegt oder heruntergenommen wird
+  } while ( !(!card_present && card_present_prev) && !(card_present && !card_present_prev) );
+  
+  // RFID Karte wurde entfernt
+  if (!card_present && card_present_prev){
+    card_present_prev = card_present;
+      // pausiere
+      if (activeModifier != NULL)
+        if (activeModifier->handlePause() == true)
+          return;
+      if (ignorePauseButton == false)
+        if (isPlaying()) {
+          mp3.pause();
+          setstandbyTimer();
+        }
+        else if (knownCard) {
+          mp3.start();
+          disablestandbyTimer();
+        }
+      ignorePauseButton = false;
+      return;
   }
-  mfrc522.PICC_HaltA();
-  mfrc522.PCD_StopCrypto1();
+
+  // RFID Karte wurde aufgelegt
+  if (card_present && !card_present_prev){
+    card_present_prev = card_present;
+
+    if (!mfrc522.PICC_ReadCardSerial())
+      return;
+
+    if (readCard(&myCard) == true) {
+      if (myCard.cookie == cardCookie && myCard.nfcFolderSettings.folder != 0 && myCard.nfcFolderSettings.mode != 0) {
+        playFolder();
+      }
+  
+      // Neue Karte konfigurieren
+      else if (myCard.cookie != cardCookie) {
+        knownCard = false;
+        mp3.playMp3FolderTrack(300);
+        waitForTrackToFinish();
+        setupCard();
+      }
+    }
+    mfrc522.PCD_StopCrypto1();
+  }
+#endif
 }
 
 void adminMenu(bool fromCard = false) {
