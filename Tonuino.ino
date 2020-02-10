@@ -11,7 +11,7 @@
   |_   _|___ ___|  |  |     |   | |     |
     | | | . |   |  |  |-   -| | | |  |  |
     |_| |___|_|_|_____|_____|_|___|_____|
-    TonUINO Version 2.1
+    TonUINO Version 2.1 + McGreg changes v0.1
 
     created by Thorsten Voß and licensed under GNU/GPL.
     Information and contribution at https://tonuino.de.
@@ -682,6 +682,7 @@ MFRC522::StatusCode status;
 #define buttonDown A2
 #define busyPin 4
 #define shutdownPin 7
+#define openAnalogPin A6
 
 #ifdef FIVEBUTTONS
 #define buttonFourPin A3
@@ -759,7 +760,15 @@ void waitForTrackToFinish() {
 void setup() {
 
   Serial.begin(115200); // Es gibt ein paar Debug Ausgaben über die serielle Schnittstelle
-  randomSeed(analogRead(A7)); // Zufallsgenerator initialisieren
+   
+  // Wert für randomSeed() erzeugen durch das mehrfache Sammeln von rauschenden LSBs eines offenen Analogeingangs
+  uint32_t ADC_LSB;
+  uint32_t ADCSeed;
+  for(uint8_t i = 0; i < 128; i++) {
+    ADC_LSB = analogRead(openAnalogPin) & 0x1;
+    ADCSeed ^= ADC_LSB << (i % 32); 
+  }
+  randomSeed(ADCSeed); // Zufallsgenerator initialisieren
 
   // Dieser Hinweis darf nicht entfernt werden
   Serial.println(F("\n _____         _____ _____ _____ _____"));
@@ -922,7 +931,6 @@ void potiVolume() {
 void playFolder() {
   Serial.println(F("== playFolder()")) ;
   disablestandbyTimer();
-  randomSeed(millis() + random(1000));
   knownCard = true;
   _lastTrackFinished = 0;
   numTracksInFolder = mp3.getFolderTrackCount(myFolder->folder);
@@ -1147,7 +1155,6 @@ void loop() {
     readButtons();
 
     // admin menu
-    
     if ((pauseButton.pressedFor(LONG_PRESS) || upButton.pressedFor(LONG_PRESS) || downButton.pressedFor(LONG_PRESS)) && pauseButton.isPressed() && upButton.isPressed() && downButton.isPressed()) {
       mp3.pause();
       do {
@@ -1157,7 +1164,6 @@ void loop() {
       adminMenu();
       return;
     }
-    
 
     if (pauseButton.wasReleased()) {
       if (activeModifier != NULL)
@@ -1850,7 +1856,7 @@ bool readCard(nfcTagObject * nfcTag) {
             mp3.start();
             delay(100);
             mp3.playAdvertisement(261);
-            delay(1000);
+            delay(100);
             mp3.pause();
           }
           mfrc522.PICC_HaltA();
@@ -1868,7 +1874,7 @@ bool readCard(nfcTagObject * nfcTag) {
           mp3.start();
           delay(100);
           mp3.playAdvertisement(260);
-          delay(1000);
+          delay(100);
           mp3.pause();
         }
       }
