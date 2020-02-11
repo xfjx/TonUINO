@@ -6,11 +6,11 @@
 
 # Config
 ## Arduino Nano (old bootloader)
-MCU = arduino:avr:nano:cpu=atmega328old
-BOARD = arduino:avr
-SERIAL = /dev/cu.usbserial-1410
+MCU ?= arduino:avr:nano:cpu=atmega328old
+BOARD ?= arduino:avr
+SERIAL ?= /dev/cu.usbserial-1420
 ## Main
-SKETCH = Tonuino
+SKETCH ?= Tonuino
 ## Helper
 OS = $(shell uname -s)
 .PHONY: help
