@@ -143,6 +143,10 @@ Available commands:
 - clean   : delete temporary files
 ```
 
+Kurzanleitung zum Aufspielen der Firmware für Entwickler:
+
+[![Kurzanleitung zum Aufspielen der Firmware für Entwickler](https://asciinema.org/a/yduPdLWRVGB7ZifyKckmnVFFu.png)](https://asciinema.org/a/yduPdLWRVGB7ZifyKckmnVFFu)
+
 Darüber hinaus gibt es 
 * auf der [offiziellen Webseite](https://www.voss.earth/tonuino/) und im Repository noch einige nützliche Skripte, die noch nicht in das `Makefile` integriert sind
 * [Firmware-Alternativen](https://github.com/seisfeld/TonUINO), die je nach Planung ggf. weitere notwendige Features unterstützen
