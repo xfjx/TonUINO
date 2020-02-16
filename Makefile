@@ -22,14 +22,15 @@ info:
 	$(info Configured to use MCU "$(MCU)" attached to port "$(SERIAL)".)
 	$(info )
 	$(info Available commands:)
-	$(info - help    : get support from the community)
-	$(info - install : installation of required binaries (arduino-cli))
-	$(info - init    : initialize environment (arduino-cli))
-	$(info - compile : create binary)
-	$(info - upload  : store binary on board flash)
-	$(info - find    : get information about the pluged-in board)
-	$(info - test    : run some basic tests on the code)
-	$(info - clean   : delete temporary files)
+	$(info - help     : get support from the community)
+	$(info - install  : installation of required binaries (arduino-cli))
+	$(info - init     : initialize environment (arduino-cli))
+	$(info - compile  : create binary)
+	$(info - upload   : store binary on board flash)
+	$(info - find     : get information about the pluged-in board)
+	$(info - test     : run some basic tests on the code)
+	$(info - clean    : delete temporary files)
+	$(info - feedback : provide feedback and report issues)
 	@true
 
 help:
@@ -91,3 +92,6 @@ check: *.ino
 clean:
 	@rm -rf "$(SKETCH)"
 	@rm -rf ".pio/build/"
+
+feedback:
+	@python -m webbrowser "https://github.com/alexanderwillner/tonuino/issues"
