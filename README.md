@@ -113,6 +113,10 @@ Als einfacher Benutzer sollte die Programmierung so einfach gestaltet sein wie m
    3. `Port` den Punkt `/dev/cu.wchusbserial???` auswählen (je nach Betriebssystem könnte es anders aussehen)
 6. Nun kann die Software unter `Sketch` und dann `Hochladen` auf den Arduino hoch geladen werden.
 
+Kurzanleitung zum Aufspielen der Firmware für Benutzer:
+
+[![Kurzanleitung zum Aufspielen der Firmware für Benutzer](https://j.gifs.com/3Q0rM4.gif)](https://youtu.be/OxXnBpHxEyY)
+
 Darüber hinaus muss noch die SD-Karte vorbereitet werden:
 
 1. Die Karte mit FAT32 formatieren.
