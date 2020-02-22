@@ -101,29 +101,26 @@ class Mp3Notify {
       Serial.print("Com Error ");
       Serial.println(errorCode);
     }
-    static void OnPlayFinished(uint16_t track) {
+    static void PrintlnSourceAction(DfMp3_PlaySources source, const char* action) {
+      if (source & DfMp3_PlaySources_Sd) Serial.print("SD Karte ");
+      if (source & DfMp3_PlaySources_Usb) Serial.print("USB ");
+      if (source & DfMp3_PlaySources_Flash) Serial.print("Flash ");
+      Serial.println(action);
+    }
+    static void OnPlayFinished(DfMp3_PlaySources source, uint16_t track) {
       //      Serial.print("Track beendet");
       //      Serial.println(track);
       //      delay(100);
       nextTrack(track);
     }
-    static void OnCardOnline(uint16_t code) {
-      Serial.println(F("SD Karte online "));
+    static void OnPlaySourceOnline(DfMp3_PlaySources source) {
+      PrintlnSourceAction(source, "online");
     }
-    static void OnCardInserted(uint16_t code) {
-      Serial.println(F("SD Karte bereit "));
+    static void OnPlaySourceInserted(DfMp3_PlaySources source) {
+      PrintlnSourceAction(source, "bereit");
     }
-    static void OnCardRemoved(uint16_t code) {
-      Serial.println(F("SD Karte entfernt "));
-    }
-    static void OnUsbOnline(uint16_t code) {
-      Serial.println(F("USB online "));
-    }
-    static void OnUsbInserted(uint16_t code) {
-      Serial.println(F("USB bereit "));
-    }
-    static void OnUsbRemoved(uint16_t code) {
-      Serial.println(F("USB entfernt "));
+    static void OnPlaySourceRemoved(DfMp3_PlaySources source) {
+      PrintlnSourceAction(source, "entfernt");
     }
 };
 
@@ -731,13 +728,13 @@ void waitForTrackToFinish() {
 void setup() {
 
   Serial.begin(115200); // Es gibt ein paar Debug Ausgaben über die serielle Schnittstelle
-   
+
   // Wert für randomSeed() erzeugen durch das mehrfache Sammeln von rauschenden LSBs eines offenen Analogeingangs
   uint32_t ADC_LSB;
   uint32_t ADCSeed;
-  for(uint8_t i = 0; i < 128; i++) {
+  for (uint8_t i = 0; i < 128; i++) {
     ADC_LSB = analogRead(openAnalogPin) & 0x1;
-    ADCSeed ^= ADC_LSB << (i % 32); 
+    ADCSeed ^= ADC_LSB << (i % 32);
   }
   randomSeed(ADCSeed); // Zufallsgenerator initialisieren
 
