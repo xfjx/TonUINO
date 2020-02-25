@@ -58,9 +58,12 @@ init:
 	@arduino-cli config init
 	@arduino-cli core update-index
 	@arduino-cli core install $(BOARD)
+	@arduino-cli lib update-index
 	@arduino-cli lib install "DFPlayer Mini Mp3 by Makuna"
 	@arduino-cli lib install "MFRC522"
 	@arduino-cli lib install "JC_Button"
+	@platformio upgrade
+	@platformio update
 	@platformio lib install 1561 # DFPlayer Mini Mp3 by Makuna
 	@platformio lib install 2284 # EEPROM
 	@platformio lib install 77   # JC_Button
