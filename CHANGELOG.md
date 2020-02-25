@@ -4,6 +4,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased] - Lokale Änderungen
+- Option hinzugefügt: Abspielen pausieren, wenn Karte entfernt wird (#3: Dank an @awesome-michael)
 - Unterstützung für GitHub Actions, um jede eingespielte Änderung zu testen (siehe Badge oben).
 - Integration von PlatformIO inklusive initiale Unterstützung von Unit Tests und eigenen Konfigurationsdateien.
 - Entfernung einiger [Compiler-Warnungen](https://github.com/xfjx/TonUINO/pull/54).
