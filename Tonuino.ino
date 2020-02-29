@@ -27,7 +27,7 @@
 //#define RTC
 //#define RTC_SETUP
 // uncomment the below line to enable the rotary encoder mode for volume control
-#define ROTARY
+//#define ROTARY
 
 static const uint32_t cardCookie = 322417479;
 #ifdef RTC
@@ -333,7 +333,7 @@ class FreezeDance: public Modifier {
       if (this->nextStopAtMillis != 0 && millis() > this->nextStopAtMillis) {
         Serial.println(F("== FreezeDance::loop() -> FREEZE!"));
         if (isPlaying()) {
-          mp3.playAdvertisement(301);
+          mp3.playAdvertisement(306); // customized; previous value '301'
           delay(500);
         }
         setNextStopAtMillis();
@@ -659,10 +659,12 @@ byte blockAddr = 4;
 byte trailerBlock = 7;
 MFRC522::StatusCode status;
 
-//#define buttonPause A0 // BB - deaktiviert für Switch des Rotary Encoders
-#define buttonPause A5 // BB - Switch des Rotary Encoders
-#define buttonUp A1
-#define buttonDown A2
+// Buttons Piratenbox (mit Rotary): Play/Pause: A5 (Rotary Switch), Vol. Up: A0, Vol. Down: A1, Four: A3, Five: 8
+// Buttons weiße Box (5 Knoepfe): Play/Pause: A5 (Rotary Switch), Vol. Up: A1, Vol. Down: A0, Four: A3, Five: 8
+#define buttonPause A0 // BB - Normaler Switch (kein Rotary Encoder)
+//#define buttonPause A5 // BB - Switch des Rotary Encoders
+#define buttonUp A1 // BB - vorher A1
+#define buttonDown A2 // BB - vorher A2
 #define busyPin 4
 #define shutdownPin 7
 #define openAnalogPin A7
@@ -1092,8 +1094,10 @@ void loop() {
       activeModifier->loop();
     }
 
+    #ifdef ROTARY
     // Read Rotary Encoder
     readRotaryEncoder();
+    #endif ROTARY
     
     // Buttons werden nun über JS_Button gehandelt, dadurch kann jede Taste
     // doppelt belegt werden
