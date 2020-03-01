@@ -73,6 +73,7 @@ mp3/0973_modifier_Locked.mp3|TonUINO Sperren
 mp3/0974_modifier_Toddler.mp3|Krabbler-Modus - Alle Tasten vom TonUINO werden für die ganz Kleinen gesperrt. Karten funktionieren weiterhin.
 mp3/0975_modifier_KinderGarden.mp3|KiTa-Modus - Damit es keinen Streit mehr gibt werden neue Karten nicht sofort gespielt sondern erst nachdem das aktuelle Lied vorbei ist. Die Vor- und Zurücktasten sind gesperrt.
 mp3/0976_modifier_repeat1.mp3|Titel wiederholen - den aktuellen Titel endlos wiederholen.
+mp3/0977_modifier_single_track.mp3|Einzelmodus - Der aktuelle Titel wird wiedergegeben, danach endet die Wiedergabe.
 mp3/0980_admin_lock_intro.mp3|Wähle bitte aus ob und wie das Adminmenü geschützt werden soll.
 mp3/0981_admin_lock_disabled.mp3|Kein Schutz - das Adminmenü kann jederzeit durch drücken von allen drei Tasten aktiviert werden.
 mp3/0982_admin_lock_card.mp3|Nur Adminkarte - das Adminmenü kann nur mit einer Adminkarte geöffnet werden. Eine neue Adminkarte kann jederzeit angelernt werden.

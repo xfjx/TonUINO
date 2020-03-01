@@ -142,6 +142,7 @@ enum Modifiers {
   TODDLER_MODE = 4,
   KINDERGARDEN_MODE = 5,
   REPEAT_SINGLE = 6,
+  SINGLE_TRACK = 7,
   ADMIN = 255
 };
 
@@ -318,7 +319,7 @@ class SleepTimer: public Modifier {
     
     uint8_t getActive() {
       Serial.println(F("== SleepTimer::getActive()"));
-      return 1;
+      return SLEEP_TIMER;
     }
 };
 
@@ -360,7 +361,7 @@ class FreezeDance: public Modifier {
     
     uint8_t getActive() {
       Serial.println(F("== FreezeDance::getActive()"));
-      return 2;
+      return FREEZE_DANCE;
     }
 };
 
@@ -396,7 +397,8 @@ class Locked: public Modifier {
       //        mp3.playAdvertisement(303);
     }
     uint8_t getActive() {
-      return 3;
+      Serial.println(F("== Locked::getActive()"));
+      return LOCKED;
     }
 };
 
@@ -429,7 +431,7 @@ class ToddlerMode: public Modifier {
     }
     uint8_t getActive() {
       Serial.println(F("== ToddlerMode::getActive()"));
-      return 4;
+      return TODDLER_MODE;
     }
 };
 
@@ -492,7 +494,7 @@ class KindergardenMode: public Modifier {
     
     uint8_t getActive() {
       Serial.println(F("== KindergardenMode::getActive()"));
-      return 5;
+      return KINDERGARDEN_MODE;
     }
 };
 
@@ -513,7 +515,40 @@ class RepeatSingleModifier: public Modifier {
     
     uint8_t getActive() {
       Serial.println(F("== RepeatSingleModifier::getActive()"));
-      return 6;
+      return REPEAT_SINGLE;
+    }
+};
+
+//only play the current track and then stop playing, regardless the mode that is configured originally
+class SingleTrackModifier : public Modifier {
+  public:
+    virtual void loop() {}
+    virtual bool handleNext() {
+      Serial.println(F("== SingleTrackModifier::handleNext() -> Stop playing"));
+      setstandbyTimer();
+      //mp3.sleep(); // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
+      activeModifier = NULL;
+      delete this;
+      return true;
+    }
+
+    SingleTrackModifier() {
+      Serial.println(F("=== SingleTrackModifier()"));
+    }
+
+    virtual bool handleNextButton()       {
+      Serial.println(F("== SingleTrackModifier::handleNextButton() -> LOCKED!"));
+      return true;
+    }
+    
+    virtual bool handlePreviousButton() {
+      Serial.println(F("== SingleTrackModifier::handlePreviousButton() -> LOCKED!"));
+      return true;
+    }
+    
+    virtual uint8_t getActive() {
+      Serial.println(F("== SingleTrackModifier::getActive()"));
+      return SINGLE_TRACK;
     }
 };
 
@@ -1258,7 +1293,7 @@ void adminMenu(bool fromCard = false) {
     tempCard.nfcFolderSettings.folder = 0;
     tempCard.nfcFolderSettings.special = 0;
     tempCard.nfcFolderSettings.special2 = 0;
-    tempCard.nfcFolderSettings.mode = voiceMenu(6, 970, 970, false, false, 0, true);
+    tempCard.nfcFolderSettings.mode = voiceMenu(7, 970, 970, false, false, 0, true);
 
     if (tempCard.nfcFolderSettings.mode != 0) {
       if (tempCard.nfcFolderSettings.mode == SLEEP_TIMER) {
@@ -1749,6 +1784,9 @@ bool readCard(nfcTagObject * nfcTag) {
           break;
         case REPEAT_SINGLE: 
           activeModifier = new RepeatSingleModifier(); 
+          break;
+        case SINGLE_TRACK:
+          activeModifier = new SingleTrackModifier();
           break;
       }
       delay(2000);
