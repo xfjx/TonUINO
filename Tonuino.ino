@@ -1077,6 +1077,22 @@ void loop() {
       break;
     }
 
+#ifdef FIVEBUTTONS
+    // continue with last card
+    if (!isPlaying() && buttonFour.pressedFor(LONG_PRESS) && buttonFive.pressedFor(LONG_PRESS)) {
+      do {
+        readButtons();
+      } while (buttonFour.isPressed() || buttonFive.isPressed());
+      readButtons();
+      if (loadLastCard(&myCard) == true) {
+        if (myCard.cookie == cardCookie && myCard.nfcFolderSettings.folder != 0 && myCard.nfcFolderSettings.mode != 0) {
+          playFolder();
+        }
+      }
+      break;
+    }
+#endif
+
     if (pauseButton.wasReleased()) {
       if (activeModifier != NULL)
         if (activeModifier->handlePause() == true)
@@ -1219,6 +1235,30 @@ void loop() {
   }
   mfrc522.PICC_HaltA();
   mfrc522.PCD_StopCrypto1();
+}
+
+bool loadLastCard(nfcTagObject * nfcTag) {
+  Serial.println(F("Loading last folder card from EEPROM"));
+  nfcTagObject tempCard;
+
+  int address = sizeof(folderSettings::folder) * 100 + sizeof(adminSettings);
+  EEPROM.get(address, tempCard);
+
+  // only care about folder cards
+  if (tempCard.nfcFolderSettings.folder != 0) {
+    if (activeModifier != NULL  && activeModifier->handleRFID(&tempCard)) {
+      return false;
+    }
+
+    memcpy(nfcTag, &tempCard, sizeof(nfcTagObject));
+    myFolder = &nfcTag->nfcFolderSettings;
+    Serial.print(F("Loaded last card with folder "));
+    Serial.println(myFolder->folder);
+
+    return true;
+  }
+
+  return false;
 }
 
 void adminMenu(bool fromCard = false) {
@@ -1811,6 +1851,8 @@ bool readCard(nfcTagObject * nfcTag) {
       myFolder = &nfcTag->nfcFolderSettings;
       Serial.print(F("Folder "));
       Serial.println( myFolder->folder);
+      int address = sizeof(folderSettings::folder) * 100 + sizeof(adminSettings);
+      EEPROM.put(address, tempCard);
     }
     return true;
   }
