@@ -18,10 +18,10 @@
 */
 
 // uncomment the below line to enable five button support
-//#define FIVEBUTTONS
+#define FIVEBUTTONS
 
 // uncomment the below line to enable a power led (by default at pin D5)
-//#define POWERLED
+#define POWERLED
 
 static const uint32_t cardCookie = 322417479;
 
@@ -535,7 +535,6 @@ class SingleTrackModifier : public Modifier {
     virtual bool handleNext() {
       Serial.println(F("== SingleTrackModifier::handleNext() -> Stop playing"));
       setstandbyTimer();
-      //mp3.sleep(); // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
       activeModifier = NULL;
       delete this;
       return true;
@@ -662,7 +661,6 @@ static void nextTrack() {
   } else {
     Serial.println(F("keinen neuen Track spielen"));
     setstandbyTimer();
-    //    mp3.sleep(); // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
   }
   
   delay(500);
@@ -738,7 +736,7 @@ MFRC522::StatusCode status;
 
 #ifdef FIVEBUTTONS
 #define buttonFourPin A3
-#define buttonFivePin A4
+#define buttonFivePin A5
 #endif
 
 #ifdef POWERLED
@@ -794,7 +792,6 @@ void checkStandbyAtMillis() {
     // powerdown to 27mA (powerbank switches off after 30-60s)
     mfrc522.PCD_AntennaOff();
     mfrc522.PCD_SoftPowerDown();
-    mp3.sleep();
 
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);
     cli();  // Disable interrupts
