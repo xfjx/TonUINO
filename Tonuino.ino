@@ -91,11 +91,11 @@ class Mp3Notify {
       Serial.print("Com Error ");
       Serial.println(errorCode);
     }
-    static void PrintlnSourceAction(DfMp3_PlaySources source, const char* action) {
-      if (source & DfMp3_PlaySources_Sd) Serial.print("SD Karte ");
-      if (source & DfMp3_PlaySources_Usb) Serial.print("USB ");
-      if (source & DfMp3_PlaySources_Flash) Serial.print("Flash ");
-      Serial.println(action);
+    static void printSource(DfMp3_PlaySources source) {
+      if (source & DfMp3_PlaySources_Sd)    Serial.print(F("SD Karte "));  return;
+      if (source & DfMp3_PlaySources_Usb)   Serial.print(F("USB "));       return;
+      if (source & DfMp3_PlaySources_Flash) Serial.print(F("Flash "));     return;
+            								Serial.print(F("Unbekannt "));
     }
     static void OnPlayFinished(DfMp3_PlaySources source, uint16_t track) {
       //      Serial.print("Track beendet");
@@ -104,13 +104,16 @@ class Mp3Notify {
       nextTrack(track);
     }
     static void OnPlaySourceOnline(DfMp3_PlaySources source) {
-      PrintlnSourceAction(source, "online");
+      printSource(source);
+      Serial.println(F("online"));
     }
     static void OnPlaySourceInserted(DfMp3_PlaySources source) {
-      PrintlnSourceAction(source, "bereit");
+      printSource(source);
+      Serial.println(F("bereit"));
     }
     static void OnPlaySourceRemoved(DfMp3_PlaySources source) {
-      PrintlnSourceAction(source, "entfernt");
+      printSource(source);
+      Serial.println(F("entfernt"));
     }
 };
 
