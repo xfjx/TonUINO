@@ -581,7 +581,7 @@ static void nextTrack(uint16_t track) {
   
   case Hoerbuch:
     if (currentTrack != numTracksInFolder) {
-      currentTrack = currentTrack + 1;
+      currentTrack++;
       Serial.print(F("Hörbuch Modus ist aktiv -> nächster Track und Fortschritt speichern"));
       Serial.println(currentTrack);
       mp3.playFolderTrack(myFolder->folder, currentTrack);
@@ -747,10 +747,9 @@ void setup() {
   Serial.begin(115200); // Es gibt ein paar Debug Ausgaben über die serielle Schnittstelle
 
   // Wert für randomSeed() erzeugen durch das mehrfache Sammeln von rauschenden LSBs eines offenen Analogeingangs
-  uint32_t ADC_LSB;
   uint32_t ADCSeed;
   for (uint8_t i = 0; i < 128; i++) {
-    ADC_LSB = analogRead(openAnalogPin) & 0x1;
+    uint32_t ADC_LSB = analogRead(openAnalogPin) & 0x1;
     ADCSeed ^= ADC_LSB << (i % 32);
   }
   randomSeed(ADCSeed); // Zufallsgenerator initialisieren
@@ -777,8 +776,7 @@ void setup() {
   mp3.begin();
   // Zwei Sekunden warten bis der DFPlayer Mini initialisiert ist
   delay(2000);
-  volume = mySettings.initVolume;
-  mp3.setVolume(volume);
+  setVolume(mySettings.initVolume);
   mp3.setEq(mySettings.eq - 1);
   // Fix für das Problem mit dem Timeout (ist jetzt in Upstream daher nicht mehr nötig!)
   //mySoftwareSerial.setTimeout(10000);
@@ -827,6 +825,14 @@ void readButtons() {
 #endif
 }
 
+void setVolume(uint8_t volnew)
+{
+  Serial.print(F("set volume "));
+  Serial.println(volnew);
+  mp3.setVolume(volnew);
+  volume = volnew;
+}
+
 void volumeUpButton() {
   if (activeModifier != NULL)
     if (activeModifier->handleVolumeUp() == true)
@@ -834,9 +840,7 @@ void volumeUpButton() {
 
   Serial.println(F("=== volumeUp()"));
   if (volume < mySettings.maxVolume)
-    mp3.setVolume(++volume);
-  
-  Serial.println(volume);
+    setVolume(++volume);
 }
 
 void volumeDownButton() {
@@ -846,9 +850,7 @@ void volumeDownButton() {
 
   Serial.println(F("=== volumeDown()"));
   if (volume > mySettings.minVolume)
-    mp3.setVolume(--volume);
-
-  Serial.println(volume);
+    setVolume(--volume);
 }
 
 void nextButton() {
@@ -1250,7 +1252,7 @@ void adminMenu(bool fromCard = false) {
     mp3.playMp3FolderTrack(400);
   }
   else if (subMenu == 8) {
-      const byte aStandbyTimer[] = { 5, 15, 30, 60, 0};
+      const byte aStandbyTimer[] = { 5, 15, 30, 60, 0};	// TODO: PROGMEM
       mySettings.standbyTimer = aStandbyTimer[voiceMenu(5, 960, 960) - 1];
   }
   else if (subMenu == 9) {
@@ -1558,6 +1560,9 @@ bool readCard(nfcTagObject * nfcTag) {
 
   // Read data from the block
   Serial.print(F("Reading data from block "));
+  Serial.print(blockAddr);
+  Serial.println(F(" ..."));
+  
   if (!bIsMifareUL)
   {
 	// classic cards read 16 bytes at once
