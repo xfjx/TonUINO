@@ -590,13 +590,13 @@ static void previousTrack() {
   if (myFolder->mode == 2 || myFolder->mode == 8) {
     Serial.println(F("Albummodus ist aktiv -> vorheriger Track"));
     if (currentTrack != firstTrack) {
-      currentTrack = currentTrack - 1;
+      currentTrack--;
     }
     mp3.playFolderTrack(myFolder->folder, currentTrack);
   }
   if (myFolder->mode == 3 || myFolder->mode == 9) {
     if (currentTrack != 1) {
-      Serial.print(F("Party Modus ist aktiv -> zurück in der Qeueue "));
+      Serial.print(F("Party Modus ist aktiv -> zurück in der Queue "));
       currentTrack--;
     }
     else
@@ -615,7 +615,7 @@ static void previousTrack() {
     Serial.println(F("Hörbuch Modus ist aktiv -> vorheriger Track und "
                      "Fortschritt speichern"));
     if (currentTrack != 1) {
-      currentTrack = currentTrack - 1;
+      currentTrack--;
     }
     mp3.playFolderTrack(myFolder->folder, currentTrack);
     // Fortschritt im EEPROM abspeichern
@@ -719,10 +719,9 @@ void setup() {
   Serial.begin(115200); // Es gibt ein paar Debug Ausgaben über die serielle Schnittstelle
 
   // Wert für randomSeed() erzeugen durch das mehrfache Sammeln von rauschenden LSBs eines offenen Analogeingangs
-  uint32_t ADC_LSB;
   uint32_t ADCSeed;
-  for (uint8_t i = 0; i < 128; i++) {
-    ADC_LSB = analogRead(openAnalogPin) & 0x1;
+  for(uint8_t i = 0; i < 128; i++) {
+    uint32_t ADC_LSB = analogRead(openAnalogPin) & 0x1;
     ADCSeed ^= ADC_LSB << (i % 32);
   }
   randomSeed(ADCSeed); // Zufallsgenerator initialisieren
@@ -750,7 +749,7 @@ void setup() {
   // Zwei Sekunden warten bis der DFPlayer Mini initialisiert ist
   delay(2000);
   setVolume(mySettings.initVolume);
-  mp3.setEq(mySettings.eq - 1);
+  mp3.setEq(static_cast<DfMp3_Eq>(mySettings.eq - 1));
   // Fix für das Problem mit dem Timeout (ist jetzt in Upstream daher nicht mehr nötig!)
   //mySoftwareSerial.setTimeout(10000);
 
@@ -802,18 +801,19 @@ void setVolume(uint8_t volnew)
 {
   Serial.print(F("set volume "));
   Serial.println(volnew);
-  mp3.setVolume(volnew);  
+  mp3.setVolume(volnew);
   volume = volnew;
 }
 
+// changeVolume allows to change the volume by a delta, e.g. +3 or -3.
 void changeVolume(char delta)
 {
   int16_t volnew = volume + delta;
-  if (volnew > mySettings.maxVolume) volnew = mySettings.maxVolume;
-  if (volnew < mySettings.minVolume) volnew = mySettings.minVolume;
+  volnew = max(volnew, mySettings.minVolume);
+  volnew = min(volnew, mySettings.maxVolume);
   if (volnew != volume)
   {
-     setVolume(volnew);
+    setVolume(volnew);
   }
 }
 
@@ -921,14 +921,13 @@ void playFolder() {
     Serial.print(F(" bis "));
     Serial.println(myFolder->special2);
     numTracksInFolder = myFolder->special2;
-    currentTrack = myFolder->special;
+    currentTrack      = myFolder->special;
     mp3.playFolderTrack(myFolder->folder, currentTrack);
   }
 
   // Spezialmodus Von-Bis: Party Ordner in zufälliger Reihenfolge
   if (myFolder->mode == 9) {
-    Serial.println(
-      F("Spezialmodus Von-Bis: Party -> Ordner in zufälliger Reihenfolge wiedergeben"));
+    Serial.println(F("Spezialmodus Von-Bis: Party -> Ordner in zufälliger Reihenfolge wiedergeben"));
     firstTrack = myFolder->special;
     numTracksInFolder = myFolder->special2;
     shuffleQueue();
@@ -1106,7 +1105,7 @@ void loop() {
     if (myCard.cookie == cardCookie && myCard.nfcFolderSettings.folder != 0 && myCard.nfcFolderSettings.mode != 0) {
       playFolder();
     }
-    else if (myCard.cookie != cardCookie) {    
+    else if (myCard.cookie != cardCookie) {
       // Neue Karte konfigurieren
       knownCard = false;
       mp3.playMp3FolderTrack(300);
@@ -1193,7 +1192,7 @@ void adminMenu(bool fromCard = false) {
   else if (subMenu == 5) {
     // EQ
     mySettings.eq = voiceMenu(6, 920, 920, false, false, mySettings.eq);
-    mp3.setEq(mySettings.eq - 1);
+    mp3.setEq(static_cast<DfMp3_Eq>(mySettings.eq - 1));
   }
   else if (subMenu == 6) {
     // create modifier card
