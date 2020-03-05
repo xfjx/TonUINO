@@ -749,8 +749,7 @@ void setup() {
   mp3.begin();
   // Zwei Sekunden warten bis der DFPlayer Mini initialisiert ist
   delay(2000);
-  volume = mySettings.initVolume;
-  mp3.setVolume(volume);
+  setVolume(mySettings.initVolume);
   mp3.setEq(mySettings.eq - 1);
   // Fix für das Problem mit dem Timeout (ist jetzt in Upstream daher nicht mehr nötig!)
   //mySoftwareSerial.setTimeout(10000);
@@ -799,16 +798,32 @@ void readButtons() {
 #endif
 }
 
+void setVolume(uint8_t volnew)
+{
+  Serial.print(F("set volume "));
+  Serial.println(volnew);
+  mp3.setVolume(volnew);  
+  volume = volnew;
+}
+
+void changeVolume(char delta)
+{
+  int16_t volnew = volume + delta;
+  if (volnew > mySettings.maxVolume) volnew = mySettings.maxVolume;
+  if (volnew < mySettings.minVolume) volnew = mySettings.minVolume;
+  if (volnew != volume)
+  {
+     setVolume(volnew);
+  }
+}
+
 void volumeUpButton() {
   if (activeModifier != NULL)
     if (activeModifier->handleVolumeUp() == true)
       return;
 
   Serial.println(F("=== volumeUp()"));
-  if (volume < mySettings.maxVolume)
-    mp3.setVolume(++volume);
-  
-  Serial.println(volume);
+  changeVolume(+1);
 }
 
 void volumeDownButton() {
@@ -817,10 +832,7 @@ void volumeDownButton() {
       return;
 
   Serial.println(F("=== volumeDown()"));
-  if (volume > mySettings.minVolume)
-    mp3.setVolume(--volume);
-
-  Serial.println(volume);
+  changeVolume(-1);
 }
 
 void nextButton() {
