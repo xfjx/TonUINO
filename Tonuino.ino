@@ -335,14 +335,14 @@ class SleepTimer: public Modifier {
 class FreezeDance: public Modifier {
   private:
     unsigned long nextStopAtMillis = 0;
-    const uint8_t minSecondsBetweenStops = 5;
-    const uint8_t maxSecondsBetweenStops = 30;
+    const uint8_t minSecondsBetweenStops = 20;
+    const uint8_t maxSecondsBetweenStops = 45;
 
     void setNextStopAtMillis() {
       uint16_t seconds = random(this->minSecondsBetweenStops, this->maxSecondsBetweenStops + 1);
       Serial.println(F("=== FreezeDance::setNextStopAtMillis()"));
       Serial.print(seconds);
-      Serial.println(F(" seconds"));
+      Serial.println(F(" seconds until next stop"));
       this->nextStopAtMillis = millis() + seconds * 1000;
     }
 
