@@ -92,10 +92,10 @@ class Mp3Notify {
       Serial.println(errorCode);
     }
     static void printSource(DfMp3_PlaySources source) {
-      if (source & DfMp3_PlaySources_Sd)    Serial.print(F("SD Karte "));  return;
-      if (source & DfMp3_PlaySources_Usb)   Serial.print(F("USB "));       return;
-      if (source & DfMp3_PlaySources_Flash) Serial.print(F("Flash "));     return;
-            								Serial.print(F("Unbekannt "));
+      if (source & DfMp3_PlaySources_Sd)    { Serial.print(F("SD Karte "));  return; }
+      if (source & DfMp3_PlaySources_Usb)   { Serial.print(F("USB "));       return; }
+      if (source & DfMp3_PlaySources_Flash) { Serial.print(F("Flash "));     return; }
+            								  Serial.print(F("Unbekannt "));
     }
     static void OnPlayFinished(DfMp3_PlaySources source, uint16_t track) {
       //      Serial.print("Track beendet");
