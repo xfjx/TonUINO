@@ -87,7 +87,7 @@ uint8_t voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
                   bool preview = false, int previewFromFolder = 0, int defaultValue = 0, bool exitWithLongPress = false);
 bool isPlaying();
 bool checkTwo ( uint8_t a[], uint8_t b[] );
-void writeCard(nfcTagObject nfcTag);
+void writeCard(const nfcTagObject& nfcTag);
 void dump_byte_array(byte * buffer, byte bufferSize);
 void adminMenu(bool fromCard = false);
 bool knownCard = false;
@@ -1670,7 +1670,7 @@ bool readCard(nfcTagObject * nfcTag) {
 }
 
 
-void writeCard(nfcTagObject nfcTag) {
+void writeCard(const nfcTagObject& nfcTag) {
   byte buffer[16] = {0x13, 0x37, 0xb3, 0x47, // 0x1337 0xb347 magic cookie to
                      // identify our nfc tags
                      0x02,                   // version 1
