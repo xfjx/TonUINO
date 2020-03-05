@@ -1,0 +1,85 @@
+advert/0300_freeze_into.mp3|Wir spielen jetzt den Stopptanz. Wenn die Musik stoppt, bleibe stehen!
+advert/0301_freeze_freeze1.mp3|Und Stopp!
+advert/0301_freeze_freeze2.mp3|Nicht bewegen!
+advert/0301_freeze_freeze3.mp3|weiter geht´s!
+advert/0302_sleep.mp3|Schlummerfunktion aktiviert.
+advert/0303_locked.mp3|TonUINO ist nun gesperrt.
+advert/0304_buttonslocked.mp3|Tasten sind nun gesperrt.
+advert/0305_kindergarden.mp3|KiTa-Modus aktiviert.
+mp3/0300_new_tag.mp3|Oh, eine neue Karte!
+mp3/0301_select_folder.mp3|Verwende die Lautstärketasten um einen Ordner für die Karte auszuwählen. Drücke die Pausetaste um fortzufahren.
+mp3/0310.mp3|OK, wähle nun mit den Lautstärketasten den Wiedergabemodus aus.
+mp3/0311_mode_random_episode.mp3|Hörspielmodus: Eine zufällige Datei aus dem Ordner wiedergeben
+mp3/0312_mode_album.mp3|Albummodus: Den kompletten Ordner wiedergeben
+mp3/0313_mode_party.mp3|Party Modus: Ordner zufällig wiedergeben.
+mp3/0314_mode_single_track.mp3|Einzel Modus: Eine bestimmte Datei im Ordner wiedergeben.
+mp3/0315_mode_audio_book.mp3|Hörbuch Modus: Einen Ordner wiedergeben und den Fortschritt speichern.
+mp3/0316_admin.mp3|Admin Funktionen.
+mp3/0317_special_random.mp3|Spezialmodus Von-Bis, Hörspiel: Eine zufällige Datei zwischen der Start und Enddatei wiedergeben.
+mp3/0318_special_album.mp3|Spezialmodus Von-Bis, Album: Alle Dateien zwischen der Start und Enddatei wiedergeben.
+mp3/0319_special_party.mp3|Spezialmodus Von-Bis, Party: Alle Dateien zwischen der Start und Enddatei zufällig wiedergeben.
+mp3/0320_select_file.mp3|OK, wähle nun bitte die Datei mit den Lautstärketasten aus.
+mp3/0321_select_first_file.mp3|OK, wähle nun bitte die Startdatei mit den Lautstärketasten aus.
+mp3/0322_select_last_file.mp3|Wähle nun bitte die Enddatei mit den Lautstärketasten aus.
+mp3/0330.mp3|Soll ich vor einer Datei jeweils die Nummer ansagen? Du kannst jederzeit durch einen langen Druck auf die Pausetaste die aktuelle Nummer abfragen.
+mp3/0331.mp3|Nein, Nummer nicht ansagen.
+mp3/0332.mp3|Ja, Nummer ansagen.
+mp3/0400_ok.mp3|OK. Ich habe die Karte konfiguriert.
+mp3/0401_error.mp3|Oh weh! Das hat leider nicht geklappt!
+mp3/0800_waiting_for_card.mp3|Bitte lege nun die Karte auf!
+mp3/0802_reset_aborted.mp3|OK, ich habe den Vorgang abgebrochen.
+mp3/0900_admin.mp3|Willkommen im Admin Menü. Bitte wähle eine Funktion mit den Lautstärketasten aus und bestätige sie mit der Pausetaste! Durch einen langen Druck auf die Pausetaste kannst du den Vorgang abbrechen.
+mp3/0901_card_reset.mp3|Eine Karte neu konfigurieren.
+mp3/0902_max_volume.mp3|Maximale Lautstärke festlegen.
+mp3/0903_min_volume.mp3|Minimale Lautstärke festlegen.
+mp3/0904_init_volume.mp3|Lautstärke beim Start festlegen.
+mp3/0905_eq.mp3|EQ konfigurieren.
+mp3/0906_modifiers.mp3|Eine Modifikationskarte erstellen. Diese Karten werden nach den eigentlichen Musikkarten aufgelegt und ändern das Verhalten deines TonUINOs.
+mp3/0907_shortcut.mp3|Tasten mit einem Shortcut konfigurieren. Ein Shortcut wird über einen langen Tastendruck gestartet und funktioniert nur, wenn gerade nichts abgespielt wird.
+mp3/0908_standbytimer.mp3|Den Timer konfigurieren.
+mp3/0909_batch_cards.mp3|Einzelkarten für einen Ordner erstellen.
+mp3/0910_switch_volume.mp3|Funktion der Lautstärketasten umdrehen.
+mp3/0911_reset.mp3|Alle Einstellungen löschen.
+mp3/0912_admin_lock.mp3|Das Adminmenü absichern.
+mp3/0920_eq_intro.mp3|Bitte wähle eine Einstellung für den EQ mit den Lautstärketasten aus und bestätige sie mit der Pausetaste.
+mp3/0921_normal.mp3|Normal
+mp3/0922_pop.mp3|Pop
+mp3/0923_rock.mp3|Rock
+mp3/0924_jazz.mp3|Jazz
+mp3/0925_classic.mp3|Classic
+mp3/0926_bass.mp3|Bass
+mp3/0930_max_volume_intro.mp3|Maximale Lautstärke wählen und mit der Pausetaste bestätigen.
+mp3/0931_min_volume_into.mp3|Minimale Lautstärke wählen und mit der Pausetaste bestätigen.
+mp3/0932_init_volume_into.mp3|Lautstärke beim Start wählen und mit der Pausetaste bestätigen.
+mp3/0933_switch_volume_intro.mp3|Möchtest du die Funktion der Lautstärketasten umdrehen? Du musst dann die Tasten lange drücken um ein Lied vor oder zurückzugehen.
+mp3/0934_no.mp3|Nein.
+mp3/0935_yes.mp3|Ja.
+mp3/0936_batch_cards_intro.mp3|OK, bitte lege nun nacheinander die Karten auf die Box. Ich werde die jeweilige Nummer vorher ansagen, damit du nicht durcheinander kommst. Zum Abbrechen einfach eine der Lautstärketasten drücken!
+mp3/0940_shortcut_into.mp3|Bitte wähle den Shortcut, den du konfigurieren möchtest, aus.
+mp3/0941_pause.mp3|Pausetaste
+mp3/0942_up.mp3|Vor- bzw. Lautertaste
+mp3/0943_down.mp3|Zurück- bzw. Leisertaste
+mp3/0944_startup.mp3|Shortcut beim Start festlegen
+mp3/0960_timer_intro.mp3|Nach wievielen Minuten soll der TonUINO ausgeschaltet werden?
+mp3/0961_timer_5.mp3|5 Minuten.
+mp3/0962_timer_15.mp3|15 Minuten.
+mp3/0963_timer_30.mp3|30 Minuten.
+mp3/0964_timer_60.mp3|60 Minuten.
+mp3/0965_timer_disabled.mp3|nicht automatisch abschalten
+mp3/0970_modifier_Intro.mp3|Bitte wähle nun deine Modifikationskarte mit den Lautstärketasten aus.
+mp3/0971_modifier_SleepTimer.mp3|Schlummermodus
+mp3/0972_modifier_FreezeDance.mp3|Stopptanz - TonUINO spielt Stopptanz mit dir und hält zufällig für dich die Wiedergabe kurz an.
+mp3/0973_modifier_Locked.mp3|TonUINO Sperren
+mp3/0974_modifier_Toddler.mp3|Krabbler-Modus - Alle Tasten vom TonUINO werden für die ganz Kleinen gesperrt. Karten funktionieren weiterhin.
+mp3/0975_modifier_KinderGarden.mp3|KiTa-Modus - Damit es keinen Streit mehr gibt werden neue Karten nicht sofort gespielt sondern erst nachdem das aktuelle Lied vorbei ist. Die Vor- und Zurücktasten sind gesperrt.
+mp3/0976_modifier_repeat1.mp3|Titel wiederholen - den aktuellen Titel endlos wiederholen.
+mp3/0980_admin_lock_intro.mp3|Wähle bitte aus ob und wie das Adminmenü geschützt werden soll.
+mp3/0981_admin_lock_disabled.mp3|Kein Schutz - das Adminmenü kann jederzeit durch drücken von allen drei Tasten aktiviert werden.
+mp3/0982_admin_lock_card.mp3|Nur Adminkarte - das Adminmenü kann nur mit einer Adminkarte geöffnet werden. Eine neue Adminkarte kann jederzeit angelernt werden.
+mp3/0983_admin_lock_pin.mp3|Codeeingabe - das Adminmenü wird durch eine vierstellige Pin geschützt. Wenn du diese Option auswählst musst du als nächstes die Pin festlegen.
+mp3/0984_admin_lock_calc.mp3|Rechenaufgabe - das Adminmenü kann nur durch Lösen einer Rechenaufgabe betreten werden.
+mp3/0991_admin_pin.mp3|Bitte gebe die Pin ein.
+mp3/0992_admin_calc.mp3|Wieviel ist
+mp3/0993_admin_calc.mp3|plus
+mp3/0994_admin_calc.mp3|minus
+mp3/0999_reset_ok.mp3|Reset wurde durchgeführt!

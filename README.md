@@ -12,6 +12,10 @@ Die DIY Musikbox (nicht nur) für Kinder
 - Karten werden nun über das Admin-Menü neu konfiguriert
 - die Funktion der Lautstärketasten (lauter/leiser oder vor/zurück) kann im Adminmenü vertauscht werden
 - Shortcuts können konfiguriert werden!
+- Support für 5 Knöpfe hinzugefügt
+- Reset der Einstellungen ins Adminmenü verschoben
+- Modikationskarten (Sleeptimer, Tastensperre, Stopptanz, KiTa-Modus)
+- Admin-Menü kann abgesichert werden
 
 ## Version 2.01 (01.11.2018)
 - kleiner Fix um die Probleme beim Anlernen von Karten zu reduzieren
