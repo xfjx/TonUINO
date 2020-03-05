@@ -520,7 +520,7 @@ static void nextTrack(uint16_t track) {
   }
   _lastTrackFinished = track;
 
-  if (knownCard == false)
+  if (!knownCard)
     // Wenn eine neue Karte angelernt wird soll das Ende eines Tracks nicht
     // verarbeitet werden
     return;
@@ -534,14 +534,13 @@ static void nextTrack(uint16_t track) {
   }
   if (myFolder->mode == 2 || myFolder->mode == 8) {
     if (currentTrack != numTracksInFolder) {
-      currentTrack = currentTrack + 1;
+      currentTrack++;
       mp3.playFolderTrack(myFolder->folder, currentTrack);
       Serial.print(F("Albummodus ist aktiv -> nächster Track: "));
       Serial.print(currentTrack);
     } else
-      //      mp3.sleep();   // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
-      setstandbyTimer();
-    { }
+    //      mp3.sleep();   // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
+    setstandbyTimer();
   }
   if (myFolder->mode == 3 || myFolder->mode == 9) {
     if (currentTrack != numTracksInFolder - firstTrack + 1) {
@@ -565,7 +564,7 @@ static void nextTrack(uint16_t track) {
   }
   if (myFolder->mode == 5) {
     if (currentTrack != numTracksInFolder) {
-      currentTrack = currentTrack + 1;
+      currentTrack++;
       Serial.print(F("Hörbuch Modus ist aktiv -> nächster Track und "
                      "Fortschritt speichern"));
       Serial.println(currentTrack);
@@ -705,10 +704,10 @@ bool isPlaying() {
 
 void waitForTrackToFinish() {
   long currentTime = millis();
-#define TIMEOUT 1000
+  const int timeoutMs = 1000;
   do {
     mp3.loop();
-  } while (!isPlaying() && millis() < currentTime + TIMEOUT);
+  } while (!isPlaying() && millis() < currentTime + timeoutMs);
   delay(1000);
   do {
     mp3.loop();
@@ -1093,13 +1092,12 @@ void loop() {
   if (!mfrc522.PICC_ReadCardSerial())
     return;
 
-  if (readCard(&myCard) == true) {
+  if (readCard(&myCard)) {
     if (myCard.cookie == cardCookie && myCard.nfcFolderSettings.folder != 0 && myCard.nfcFolderSettings.mode != 0) {
       playFolder();
     }
-
-    // Neue Karte konfigurieren
-    else if (myCard.cookie != cardCookie) {
+    else if (myCard.cookie != cardCookie) {    
+      // Neue Karte konfigurieren
       knownCard = false;
       mp3.playMp3FolderTrack(300);
       waitForTrackToFinish();
@@ -1488,16 +1486,16 @@ void setupCard() {
   mp3.pause();
   Serial.println(F("=== setupCard()"));
   nfcTagObject newCard;
-  if (setupFolder(&newCard.nfcFolderSettings) == true)
+  if (setupFolder(&newCard.nfcFolderSettings))
   {
     // Karte ist konfiguriert -> speichern
     mp3.pause();
-    do {
-    } while (isPlaying());
+    while (isPlaying());
     writeCard(newCard);
   }
   delay(1000);
 }
+
 bool readCard(nfcTagObject * nfcTag) {
   nfcTagObject tempCard;
   // Show some details of the PICC (that is: the tag/card)
