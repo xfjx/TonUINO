@@ -9,8 +9,8 @@ Die DIY Musikbox (nicht nur) für Kinder.
   - [Zusammenfassung](#zusammenfassung)
   - [Drei Bausteine](#drei-bausteine)
     - [Mikrocontroller-Hardware](#mikrocontroller-hardware)
-      - [Notwendige Grundausstattung (ca. 30 EUR)](#notwendige-grundausstattung-ca-30-eur)
-      - [Optionale erweiterte Hardwareausstattung](#optionale-erweiterte-hardwareausstattung)
+      - [Notwendige Grundausstattung (ca. 50 EUR)](#notwendige-grundausstattung-ca-50-eur)
+      - [Optionale erweiterte Hardwareausstattung (ca. 30-50 EUR)](#optionale-erweiterte-hardwareausstattung-ca-30-50-eur)
     - [Systemnahe Programmierung](#systemnahe-programmierung)
       - [Für Benutzer](#f%c3%bcr-benutzer)
       - [Für Entwickler](#f%c3%bcr-entwickler)
@@ -58,35 +58,37 @@ Die passenden Abbildungen:
 
 ![PIN-Belegung](TonUINO_PINs.jpg) ![PIN-Schaltplan](TonUINO_Schaltplan.png) 
 
-#### Notwendige Grundausstattung (ca. 30 EUR)
+#### Notwendige Grundausstattung (ca. 50 EUR)
 
-Die notwendigen Komponenten können über Reichelt, Conrad, Amazon, E-Bay oder Alibaba bezogen werden. Meist lohnt sich jetzt schon die Planung von mehreren TonUINO-Boxen. Im Folgenden Amazon-Affiliate-Links von Komponenten, die Thorsten und andere aus der Community erfolgreich verbaut haben. In der [Community Hardware FAQ](https://discourse.voss.earth/t/faq-kategorie-hardware/926/2) gibt es weitere wertvolle Hinweise.
+Die notwendigen Komponenten können über Reichelt, Conrad, Amazon, E-Bay oder Alibaba bezogen werden. Meist lohnt sich jetzt schon die Planung von mehreren TonUINO-Boxen (dann kostet eine Box deutlich weniger). Im Folgenden Amazon-Affiliate-Links von Komponenten, die Thorsten und andere aus der Community erfolgreich verbaut haben. In der [Community Hardware FAQ](https://discourse.voss.earth/t/faq-kategorie-hardware/926/2) gibt es weitere wertvolle Hinweise.
 
 | Anzahl | Produkt | Beschreibung | Hinweis | Kosten |
 | --- | --- | ---  | --- | --- |
 | 1 | [TonUINO Set](https://amzn.to/2pHTJQ3) | Die Hauptkomponenten | Sollte das Set ausverkauft sein, im Folgenden die vier Komponenten | ca. xx EUR / Stück |
 | (1)| [Arduino Nano](https://amzn.to/2mQNHaY) | Zum Ansteuern | Es können auch andere Arduino-Varianten gekauft werden | ca. 4 - 8 EUR / Stück |
 | (1) | [DFPlayer Mini](https://amzn.to/2K2JavA) | Zum Abspielen der Musik | Dieser Player ist recht empfindlich was die genaue Bespielung der SD-Karte angeht | ca. 3-6 EUR / Stück |
+| (1) | [Mini-USB-Kabel](https://amzn.to/2J2qv4E) | Zur Stromversorgung |  | ca. 2-4 EUR / Stück |
+| (1) | [USB-Netzteil](https://amzn.to/3b9zUnb) | Zur Stromversorgung |  | ca. 5 EUR / Stück |
 | (1) | [RFID Kit RC522](http://amzn.to/2FnyHJj) | Zum Lesen und Beschreiben der NFC-Karten |  | ca. 2-6 EUR / Stück |
 | (4) | [RFID-Karten](https://amzn.to/2NXZQuL) | Zur Auswahl der Musik | müssen im 13,56 MHz Band funken | ca. 0,40 - 0,80 EUR / Stück |
-| 1 | [Passiver Lautsprecher](https://amzn.to/381ama6) | Zum Anhören der Musik | z.B. ein Regallautsprecher oder etwas kleineres | ca. 2-50 EUR / Stück |
+| 1 | [Passiver Lautsprecher](https://amzn.to/396S73b) | Zum Anhören der Musik | z.B. ein Regallautsprecher oder etwas kleineres | ca. 2-50 EUR / Stück |
 | 1 | [MicroSD-Karte](http://amzn.to/2oXOxDw) | Zum Speichern der Musik | Maximal 32 GB | ca. 4-6 EUR / Stück |
-| 3 | [Knöpfe](https://amzn.to/2mRnyZC) | Zum starten/stoppen, lauter/leiser stellen, ... | Es gibt auch Varianten mit 5 Knöpfen. Knöpfe mit eingebauter LED haben weitere Vorteile. | ca. 0,50 EUR / Stück |
-| 20 | [Kabel](https://amzn.to/3bL6M74) | Zum Verbinden | Der Bedarf an Kabeln kann schnell nach oben gehen (siehe Erweiterungen unten) | ca. 0,05 EUR / Stück |
-| 1 | [1K Resistor](https://amzn.to/3bH3rWA) | zum X | Einzeln zu kaufen ggf. recht teuer | ca. 0,01 EUR / Stück |
+| 3 | [Knöpfe](https://amzn.to/3bdiKoR) | Zum starten/stoppen, lauter/leiser stellen, ... | Es gibt auch Varianten mit 5 Knöpfen. Knöpfe mit eingebauter LED haben weitere Vorteile. | ca. 0,50 EUR / Stück |
+| 20 | [Kabel](https://amzn.to/2Jb7hdz) | Zum Verbinden | Der Bedarf an Kabeln kann schnell nach oben gehen (siehe Erweiterungen unten) | ca. 0,05 EUR / Stück |
+| 1 | [1K Resistor](https://amzn.to/3a3HuzG) | zum X | Einzeln zu kaufen ggf. recht teuer | ca. 0,01 EUR / Stück |
 
-#### Optionale erweiterte Hardwareausstattung
+#### Optionale erweiterte Hardwareausstattung (ca. 30-50 EUR)
 
 | Anzahl | Produkt | Beschreibung | Hinweis | Kosten |
 | --- | --- | ---  | --- | --- |
 | 1 | [TonUINO-Platine](http://discourse.voss.earth/t/neue-platine-version-1-51/63) | Für weniger Kabelsalat. Enthält auch die o.g. Kabel und den Resistor. Wird auch in der o.g. YouTube-Anleitung genutzt. | Kann von Thorsten [per E-Mail](TonUINO@voss.earth) bestellt werden | ca. 10 EUR / Stück
 | 1 | [Köpfhörer-Platine](http://discourse.voss.earth/t/kopfhoererbuchsenplatine/2463) | Zum Anschluss von Kopfhörern |Kann von Thorsten [per E-Mail](TonUINO@voss.earth) bestellt werden. Alternativ [der klassische Weg](https://discourse.voss.earth/t/kopfhoereranschluss-moeglich/96/84). | ca. 7,50 EUR / Stück
-| 1 | [Akku](https://amzn.to/2Stuvki) | Zum Kabellosen Betrieb | Dazu gibt es einige [Diskussionen](http://discourse.voss.earth/c/stromversorgung/5) und Alternativen (z.B. Wemos Battery Shield). Gute Erfahrungen gibt es mit dem Hersteller RAVPower. Wichtige Eigenschaften: power pass trough, automatische Abschaltung. | ca. 15 EUR / Stück |
-| 1 | [Micro-SD-Verlängerung](https://amzn.to/2Svbu0N) | Zum Austausch der SD-Karte von außen | Je nachdem wie das Gehäuse gebaut ist. Auch könnte eine externe USB-Buchse genutzt werden, [um MP3-Dateien aufzuspielen](http://discourse.voss.earth/t/daten-auf-sd-kopieren-ueber-usb-anschluss/2185/8). Das Kabel kann allerdings unter Umständen die [Autoabschaltung verhindern](https://discourse.voss.earth/t/sd-verlaengerungskabel-verhindert-poweroff/1780/4). | ca. 3 EUR / Stück |
-| 1 | [USB-Buchse](https://amzn.to/37yji6e) | Zum Aufladen bei Akkubetrieb | [Kein einfaches Thema](http://discourse.voss.earth/t/micro-usb-buchse-fuer-das-gehaeuse/3280/14) und kann sowohl zum Aufladen als auch für ein [Firmware-Upgrade](http://discourse.voss.earth/t/benoetige-hilfe-bei-der-trennung-von-daten-und-strom-des-usb-kabels/975) oder zum [MP3-Aktualisieren](http://discourse.voss.earth/t/daten-auf-sd-kopieren-ueber-usb-anschluss/2185/8) gleichzeitig genutzt werden. | ca. 4-20 EUR / Stück |
-| 1 | [Ein- und Ausschalter](https://amzn.to/37yiVsm) | Zum Strom sparen und Wiederbeleben bei Akkubetrieb | Ein Schalter mit Lichtindikator erscheint sinnvoll [für eine gewisse Grundlast](http://discourse.voss.earth/t/grundlast-erhoehen-um-powerbank-nicht-autom-abzuschalten/1899/9) | ca. 0,50-20 EUR / Stück|
-| Mehrere | [Etiketten](https://amzn.to/2R0eHSL) | Zum Bekleben der NFC-Karten, denn diese müssen irgendwie auseinandergehalten werden | Es gibt ganz viele weitere Varianten zum Bedrucken. Am Ende sollte ein [DIN EN71-3 Klarlack](https://amzn.to/38t4xmM) aufgetragen werden. Ein einfacher Edding zum Beschriften reicht jedoch auch.| ca. 0,80 EUR / Stück|
-| 1 | [Bluetooh-Sender](https://amzn.to/2SvbcqJ) | Zum Anschluss von kabellosen Kopfhörern | Details zum Anschluss im Forum [hier](http://discourse.voss.earth/t/hoerbuch-fuer-meine-frau/4344/3) oder [hier](http://discourse.voss.earth/t/erweiterung-anschluss-bluetooth-kopfhoerer-vorerst-theorie/3556/14). | ca. 19 EUR / Stück |
+| 1 | [Akku](https://amzn.to/33w0BQz) | Zum Kabellosen Betrieb | Dazu gibt es einige [Diskussionen](http://discourse.voss.earth/c/stromversorgung/5) und Alternativen (z.B. Wemos Battery Shield). Gute Erfahrungen gibt es mit dem Hersteller RAVPower. Wichtige Eigenschaften: power pass trough, automatische Abschaltung. | ca. 15 EUR / Stück |
+| 1 | [Micro-SD-Verlängerung](https://amzn.to/2J0qZsk) | Zum Austausch der SD-Karte von außen | Je nachdem wie das Gehäuse gebaut ist. Auch könnte eine externe USB-Buchse genutzt werden, [um MP3-Dateien aufzuspielen](http://discourse.voss.earth/t/daten-auf-sd-kopieren-ueber-usb-anschluss/2185/8). Das Kabel kann allerdings unter Umständen die [Autoabschaltung verhindern](https://discourse.voss.earth/t/sd-verlaengerungskabel-verhindert-poweroff/1780/4). | ca. 3 EUR / Stück |
+| 1 | [USB-Buchse](https://amzn.to/2QvkPEJ) | Zum Aufladen bei Akkubetrieb | [Kein einfaches Thema](http://discourse.voss.earth/t/micro-usb-buchse-fuer-das-gehaeuse/3280/14) und kann sowohl zum Aufladen als auch für ein [Firmware-Upgrade](http://discourse.voss.earth/t/benoetige-hilfe-bei-der-trennung-von-daten-und-strom-des-usb-kabels/975) oder zum [MP3-Aktualisieren](http://discourse.voss.earth/t/daten-auf-sd-kopieren-ueber-usb-anschluss/2185/8) gleichzeitig genutzt werden. | ca. 4-20 EUR / Stück |
+| 1 | [Ein- und Ausschalter](https://amzn.to/2QvhqWl) | Zum Strom sparen und Wiederbeleben bei Akkubetrieb | Ein Schalter mit Lichtindikator erscheint sinnvoll [für eine gewisse Grundlast](http://discourse.voss.earth/t/grundlast-erhoehen-um-powerbank-nicht-autom-abzuschalten/1899/9) | ca. 0,50-20 EUR / Stück|
+| Mehrere | [Etiketten](https://amzn.to/2R0eHSL) | Zum Bekleben der NFC-Karten, denn diese müssen irgendwie auseinandergehalten werden | Es gibt ganz viele weitere Varianten zum Bedrucken. Am Ende sollte ein [DIN EN71-3 Klarlack](https://amzn.to/3dmy18K) aufgetragen werden. Ein einfacher Edding zum Beschriften reicht jedoch auch.| ca. 0,80 EUR / Stück|
+| 1 | [Bluetooh-Sender](https://amzn.to/3b7N443) | Zum Anschluss von kabellosen Kopfhörern | Details zum Anschluss im Forum [hier](http://discourse.voss.earth/t/hoerbuch-fuer-meine-frau/4344/3) oder [hier](http://discourse.voss.earth/t/erweiterung-anschluss-bluetooth-kopfhoerer-vorerst-theorie/3556/14). | ca. 19 EUR / Stück |
 
 Es gibt zahllose weitere Ergänzungen, wie [LED-Stripes](http://discourse.voss.earth/t/integration-led-strip-und-ring-mit-neopixel/2760) etc. pp. Positive Erfahrungen sollten gerne in diese Liste hier integriert werden.
 
