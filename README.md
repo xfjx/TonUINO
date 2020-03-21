@@ -152,7 +152,7 @@ Available commands:
 
 Kurzanleitung zum Aufspielen der Firmware für Entwickler:
 
-[![Kurzanleitung zum Aufspielen der Firmware für Entwickler](https://asciinema.org/a/yduPdLWRVGB7ZifyKckmnVFFu.png)](https://asciinema.org/a/yduPdLWRVGB7ZifyKckmnVFFu)
+[![Kurzanleitung zum Aufspielen der Firmware für Entwickler](https://asciinema.org/a/kmkM7vLLSfYFLPr55jBCcEUEe.png)](https://asciinema.org/a/kmkM7vLLSfYFLPr55jBCcEUEe)
 
 Darüber hinaus gibt es
 
