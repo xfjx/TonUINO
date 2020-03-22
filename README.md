@@ -74,7 +74,7 @@ Die notwendigen Komponenten können über Reichelt, Conrad, Amazon, E-Bay oder A
 | 1 | [Passiver Lautsprecher](https://amzn.to/396S73b) | Zum Anhören der Musik | z.B. ein Regallautsprecher oder etwas kleineres | ca. 2-50 EUR / Stück |
 | 1 | [MicroSD-Karte](http://amzn.to/2oXOxDw) | Zum Speichern der Musik | Maximal 32 GB | ca. 4-6 EUR / Stück |
 | 3 | [Knöpfe](https://amzn.to/3bdiKoR) | Zum starten/stoppen, lauter/leiser stellen, ... | Es gibt auch Varianten mit 5 Knöpfen. Knöpfe mit eingebauter LED haben weitere Vorteile. | ca. 0,50 EUR / Stück |
-| 20 | [Kabel](https://amzn.to/2Jb7hdz) | Zum Verbinden | Der Bedarf an Kabeln kann schnell nach oben gehen (siehe Erweiterungen unten) | ca. 0,05 EUR / Stück |
+| 20 | [Kabel](https://amzn.to/2Ur116x) | Zum Verbinden | Der Bedarf an Kabeln kann schnell nach oben gehen (siehe Erweiterungen unten) | ca. 0,05 EUR / Stück |
 | 1 | [1K Resistor](https://amzn.to/3a3HuzG) | zum X | Einzeln zu kaufen ggf. recht teuer | ca. 0,01 EUR / Stück |
 
 #### Optionale erweiterte Hardwareausstattung (ca. 30-50 EUR)
