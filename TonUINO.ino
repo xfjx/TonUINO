@@ -614,6 +614,7 @@ static void nextTrack(uint16_t track) {
       //      mp3.sleep();  // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
       // Fortschritt zurück setzen
       EEPROM.update(myFolder->folder, 1);
+      forgetLastCard=true;
       setstandbyTimer();
     }
   }
