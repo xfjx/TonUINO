@@ -1359,6 +1359,7 @@ uint8_t voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
     if (pauseButton.pressedFor(LONG_PRESS)) {
       mp3.playMp3FolderTrack(802);
       ignorePauseButton = true;
+      checkStandbyAtMillis();
       return defaultValue;
     }
     if (pauseButton.wasReleased()) {
