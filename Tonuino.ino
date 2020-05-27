@@ -19,11 +19,32 @@
 
 // uncomment the below line to enable five button support
 //#define FIVEBUTTONS
+#define buttonPause A0
+#define buttonUp A1
+#define buttonDown A2
+#define busyPin 4
+#define shutdownPin 7
+#define openAnalogPin A7
+
+#ifdef FIVEBUTTONS
+#define buttonFourPin A3
+#define buttonFivePin A4
+#endif
+
+#define LONG_PRESS 1000
+
+// MFRC522
+#define MFRC522_RST_PIN 9                 // Configurable, see typical pin layout above
+#define MFRC522_SS_PIN 10                 // Configurable, see typical pin layout above
+
+// DFPlayer Mini
+#define DFPLAYER_RX 2
+#define DFPLAYER_TX 3
 
 static const uint32_t cardCookie = 322417479;
 
 // DFPlayer Mini
-SoftwareSerial mySoftwareSerial(2, 3); // RX, TX
+SoftwareSerial mySoftwareSerial(DFPLAYER_RX, DFPLAYER_RX); // RX, TX
 uint16_t numTracksInFolder;
 uint16_t currentTrack;
 uint16_t firstTrack;
@@ -622,30 +643,14 @@ static void previousTrack() {
   delay(1000);
 }
 
-// MFRC522
-#define RST_PIN 9                 // Configurable, see typical pin layout above
-#define SS_PIN 10                 // Configurable, see typical pin layout above
-MFRC522 mfrc522(SS_PIN, RST_PIN); // Create MFRC522
+
+MFRC522 mfrc522(MFRC522_SS_PIN, MFRC522_RST_PIN); // Create MFRC522
 MFRC522::MIFARE_Key key;
 bool successRead;
 byte sector = 1;
 byte blockAddr = 4;
 byte trailerBlock = 7;
 MFRC522::StatusCode status;
-
-#define buttonPause A0
-#define buttonUp A1
-#define buttonDown A2
-#define busyPin 4
-#define shutdownPin 7
-#define openAnalogPin A7
-
-#ifdef FIVEBUTTONS
-#define buttonFourPin A3
-#define buttonFivePin A4
-#endif
-
-#define LONG_PRESS 1000
 
 Button pauseButton(buttonPause);
 Button upButton(buttonUp);
