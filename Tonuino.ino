@@ -460,8 +460,8 @@ class RepeatSingleModifier: public Modifier {
       if (isPlaying()) return true;
       if (myFolder->mode == 3 || myFolder->mode == 9){
         mp3.playFolderTrack(myFolder->folder, queue[currentTrack - 1]);
-      }
-      else{
+      } 
+       else{
         mp3.playFolderTrack(myFolder->folder, currentTrack);
       }
       _lastTrackFinished = 0;
