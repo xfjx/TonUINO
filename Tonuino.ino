@@ -955,7 +955,9 @@ void playShortCut(uint8_t shortCut) {
 }
 
 void loop() {
+#ifdef PAUSEONCARDREMOVAL
   int _rfid_error_counter = 0;
+#endif
   
   do {
 
