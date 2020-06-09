@@ -5,6 +5,16 @@
 #include <SPI.h>
 #include <SoftwareSerial.h>
 #include <avr/sleep.h>
+#include "SSD1306Ascii.h"
+#include "SSD1306AsciiAvrI2c.h"
+
+// 0X3C+SA0 - 0x3C or 0x3D
+#define I2C_ADDRESS 0x3C
+
+// Define proper RS2T_PIN if required.
+// #define RST_PIN -1
+
+SSD1306AsciiAvrI2c oled;
 
 /*
    _____         _____ _____ _____ _____
@@ -519,12 +529,19 @@ class FeedbackModifier: public Modifier {
 
 // Leider kann das Modul selbst keine Queue abspielen, daher müssen wir selbst die Queue verwalten
 static void nextTrack(uint16_t track) {
+  oled.clear();
+  oled.set2X();
+  oled.println("Naechstes");
+  oled.println("Lied...");
+  oled.set1X();
+  
   Serial.println(track);
   if (activeModifier != NULL)
     if (activeModifier->handleNext() == true)
       return;
 
   if (track == _lastTrackFinished) {
+    oled.println("Schon das letzte gewesen...");
     return;
   }
   _lastTrackFinished = track;
@@ -545,6 +562,9 @@ static void nextTrack(uint16_t track) {
     if (currentTrack != numTracksInFolder) {
       currentTrack = currentTrack + 1;
       mp3.playFolderTrack(myFolder->folder, currentTrack);
+      oled.println(myFolder->folder);
+      oled.println(currentTrack);    
+
       Serial.print(F("Albummodus ist aktiv -> nächster Track: "));
       Serial.print(currentTrack);
     } else
@@ -556,15 +576,21 @@ static void nextTrack(uint16_t track) {
     if (currentTrack != numTracksInFolder - firstTrack + 1) {
       Serial.print(F("Party -> weiter in der Queue "));
       currentTrack++;
+      oled.println(myFolder->folder);
+      oled.println(currentTrack);    
     } else {
       Serial.println(F("Ende der Queue -> beginne von vorne"));
       currentTrack = 1;
+      oled.println(myFolder->folder);
+      oled.println(currentTrack);    
       //// Wenn am Ende der Queue neu gemischt werden soll bitte die Zeilen wieder aktivieren
       //     Serial.println(F("Ende der Queue -> mische neu"));
       //     shuffleQueue();
     }
     Serial.println(queue[currentTrack - 1]);
     mp3.playFolderTrack(myFolder->folder, queue[currentTrack - 1]);
+    oled.println(myFolder->folder);
+    oled.println(queue[currentTrack - 1]);    
   }
 
   if (myFolder->mode == 4) {
@@ -581,6 +607,8 @@ static void nextTrack(uint16_t track) {
       mp3.playFolderTrack(myFolder->folder, currentTrack);
       // Fortschritt im EEPROM abspeichern
       EEPROM.update(myFolder->folder, currentTrack);
+      oled.println(myFolder->folder);
+      oled.println(currentTrack);    
     } else {
       //      mp3.sleep();  // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
       // Fortschritt zurück setzen
@@ -589,16 +617,25 @@ static void nextTrack(uint16_t track) {
     }
   }
   delay(500);
+   oled.println(myFolder->folder);
+   oled.println(currentTrack);    
 }
 
 static void previousTrack() {
   Serial.println(F("=== previousTrack()"));
+  oled.clear();
+  oled.set2X();
+  oled.println("Vorheriges");
+  oled.println("Lied...");
+  oled.set1X();
+  
   /*  if (myCard.mode == 1 || myCard.mode == 7) {
       Serial.println(F("Hörspielmodus ist aktiv -> Track von vorne spielen"));
       mp3.playFolderTrack(myCard.folder, currentTrack);
     }*/
   if (myFolder->mode == 2 || myFolder->mode == 8) {
     Serial.println(F("Albummodus ist aktiv -> vorheriger Track"));
+    oled.println("Album -> vorheriges Lied");
     if (currentTrack != firstTrack) {
       currentTrack = currentTrack - 1;
     }
@@ -606,6 +643,7 @@ static void previousTrack() {
   }
   if (myFolder->mode == 3 || myFolder->mode == 9) {
     if (currentTrack != 1) {
+      oled.println("Party -> zurueck in Queue");
       Serial.print(F("Party Modus ist aktiv -> zurück in der Qeueue "));
       currentTrack--;
     }
@@ -627,11 +665,15 @@ static void previousTrack() {
     if (currentTrack != 1) {
       currentTrack = currentTrack - 1;
     }
+    oled.println("Hoerbuch");
     mp3.playFolderTrack(myFolder->folder, currentTrack);
     // Fortschritt im EEPROM abspeichern
     EEPROM.update(myFolder->folder, currentTrack);
   }
   delay(1000);
+  oled.clear();
+  oled.println(myFolder->folder);
+  oled.println(currentTrack);    
 }
 
 // MFRC522
@@ -766,6 +808,21 @@ void setup() {
   // Fix für das Problem mit dem Timeout (ist jetzt in Upstream daher nicht mehr nötig!)
   //mySoftwareSerial.setTimeout(10000);
 
+  Serial.println(F("Initalizing display..."));
+#if RST_PIN >= 0
+  oled.begin(&Adafruit128x64, I2C_ADDRESS, RST_PIN);
+#else // RST_PIN >= 0
+  oled.begin(&Adafruit128x64, I2C_ADDRESS);
+#endif // RST_PIN >= 0
+  // Call oled.setI2cClock(frequency) to change from the default frequency.
+
+  oled.setFont(Adafruit5x7);
+
+  oled.clear();
+  oled.set2X();
+  oled.println("TonUINO");
+  Serial.println(F("Finished with display initialization."));
+
   // NFC Leser initialisieren
   SPI.begin();        // Init SPI bus
   mfrc522.PCD_Init(); // Init MFRC522
@@ -812,31 +869,45 @@ void readButtons() {
 }
 
 void volumeUpButton() {
+ 
   if (activeModifier != NULL)
     if (activeModifier->handleVolumeUp() == true)
       return;
 
   Serial.println(F("=== volumeUp()"));
+
+  oled.clear();
+  oled.set2X();
+  oled.println("Lauter!");
+  oled.set1X();
+  
   if (volume < mySettings.maxVolume) {
     mp3.increaseVolume();
     volume++;
     delay(LONG_PRESS_DELAY);
   }
   Serial.println(volume);
+  oled.println(volume);
 }
 
-void volumeDownButton() {
+void volumeDownButton() {  
   if (activeModifier != NULL)
     if (activeModifier->handleVolumeDown() == true)
       return;
 
   Serial.println(F("=== volumeDown()"));
+  oled.clear();
+  oled.set2X();
+  oled.println("Leiser!");
+  oled.set1X();
+
   if (volume > mySettings.minVolume) {
     mp3.decreaseVolume();
     volume--;
     delay(LONG_PRESS_DELAY);
   }
   Serial.println(volume);
+  oled.println(volume);
 }
 
 void nextButton() {
@@ -1202,6 +1273,10 @@ void adminMenu(bool fromCard) {
   disablestandbyTimer();
   mp3.pause();
   Serial.println(F("=== adminMenu()"));
+  oled.clear();
+  oled.set2X();
+  oled.println("Admin Menu");
+  
   knownCard = false;
   if (fromCard == false) {
     // Admin menu has been locked - it still can be trigged via admin card
@@ -1586,6 +1661,10 @@ bool setupFolder(folderSettings * theFolder) {
 void setupCard() {
   mp3.pause();
   Serial.println(F("=== setupCard()"));
+  oled.clear();
+  oled.set2X();
+  oled.println("Setup Card");
+  
   nfcTagObject newCard;
   if (setupFolder(&newCard.nfcFolderSettings) == true)
   {
@@ -1598,6 +1677,10 @@ void setupCard() {
   delay(1000);
 }
 bool readCard(nfcTagObject * nfcTag) {
+  oled.clear();
+  oled.set2X();
+  oled.println("Reading Card");
+  
   nfcTagObject tempCard;
   // Show some details of the PICC (that is: the tag/card)
   Serial.print(F("Card UID:"));
