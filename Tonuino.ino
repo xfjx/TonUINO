@@ -1113,54 +1113,61 @@ void adminMenu(bool fromCard = false) {
   disablestandbyTimer();
   mp3.pause();
   Serial.println(F("=== adminMenu()"));
-  knownCard = false;
   if (fromCard == false) {
     // Admin menu has been locked - it still can be trigged via admin card
     if (mySettings.adminMenuLocked == 1) {
+      mp3.start();
       return;
     }
-    // Pin check
-    else if (mySettings.adminMenuLocked == 2) {
-      uint8_t pin[4];
-      mp3.playMp3FolderTrack(991);
-      if (askCode(pin) == true) {
-        if (checkTwo(pin, mySettings.adminMenuPin) == false) {
+    else {
+      knownCard = false;
+      // Pin check
+      if (mySettings.adminMenuLocked == 2) {
+        uint8_t pin[4];
+        mp3.playMp3FolderTrack(991);
+        if (askCode(pin) == true) {
+          if (checkTwo(pin, mySettings.adminMenuPin) == false) {
+            return;
+          }
+        }
+        else {
           return;
         }
-      } else {
-        return;
       }
-    }
-    // Match check
-    else if (mySettings.adminMenuLocked == 3) {
-      uint8_t a = random(10, 20);
-      uint8_t b = random(1, 10);
-      uint8_t c;
-      mp3.playMp3FolderTrack(992);
-      waitForTrackToFinish();
-      mp3.playMp3FolderTrack(a);
+      // Match check
+      else if (mySettings.adminMenuLocked == 3) {
 
-      if (random(1, 3) == 2) {
-        // a + b
-        c = a + b;
+        uint8_t a = random(10, 20);
+        uint8_t b = random(1, 10);
+        uint8_t c;
+        mp3.playMp3FolderTrack(992);
         waitForTrackToFinish();
-        mp3.playMp3FolderTrack(993);
-      } else {
-        // a - b
-        b = random(1, a);
-        c = a - b;
+        mp3.playMp3FolderTrack(a);
+
+        if (random(1, 3) == 2) {
+          // a + b
+          c = a + b;
+          waitForTrackToFinish();
+          mp3.playMp3FolderTrack(993);
+        }
+        else {
+          // a - b
+          b = random(1, a);
+          c = a - b;
+          waitForTrackToFinish();
+          mp3.playMp3FolderTrack(994);
+        }
         waitForTrackToFinish();
-        mp3.playMp3FolderTrack(994);
-      }
-      waitForTrackToFinish();
-      mp3.playMp3FolderTrack(b);
-      Serial.println(c);
-      uint8_t temp = voiceMenu(255, 0, 0, false);
-      if (temp != c) {
-        return;
+        mp3.playMp3FolderTrack(b);
+        Serial.println(c);
+        uint8_t temp = voiceMenu(255, 0, 0, false);
+        if (temp != c) {
+          return;
+        }
       }
     }
   }
+  knownCard = false;
   int subMenu = voiceMenu(12, 900, 900, false, false, 0, true);
   if (subMenu == 0)
     return;
