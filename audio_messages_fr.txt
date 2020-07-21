@@ -1,0 +1,84 @@
+advert/0300_freeze_into.mp3|On joue la danse du stop maintenant. Quand la musique s'arrête, stoppez !
+advert/0301_freeze_freeze1.mp3|Et Stop!
+advert/0301_freeze_freeze2.mp3|Ne bouge plus!
+advert/0301_freeze_freeze3.mp3|Allez allez!
+advert/0302_sleep.mp3|La fonction sommeil est activée.
+advert/0303_locked.mp3|TonUINO est volontairement bloqué maintenant.
+advert/0304_buttonslocked.mp3|Les boutons sont inactifs.
+advert/0305_kindergarden.mp3|Le mode École maternelle est activé.
+mp3/0300_new_tag.mp3|Voila, une nouvelle carte!
+mp3/0301_select_folder.mp3|Choisis un dossier avec des boutons de volume pour configurer la carte. Appuis sur le bouton pause pour continuer.
+mp3/0310_select_playmode.mp3|Bien, choisis le mode d'exécution de Tonuino à l'aide des boutons de volume.
+mp3/0311_mode_random_episode.mp3|Mode de lecture radio : Lecture d'un fichier aléatoire à partir du dossier
+mp3/0312_mode_album.mp3|Mode album: Joue tous les titres du dossier l'un après l'autre.
+mp3/0313_mode_party.mp3|Mode Party: Joue tout les titres d'un dossier au hasard.
+mp3/0314_mode_single_track.mp3|Mode individuel: Joue un titre particulier d'un dossier que tu auras choisi.
+mp3/0315_mode_audio_book.mp3|Mode livre-audio: Jouer un dossier et mémoriser le chapitre.
+mp3/0316_admin.mp3|Fonctions administrateur.
+mp3/0317_special_random.mp3|Mode de choix des titres en pièce radiophonique: Un seul titre de ce dossier sera joué au hasard entre le titre de debut et celui de Fin que tu auras choisi
+mp3/0318_special_album.mp3|Mode special de-à, Album: Passe tous les titres entre celui de debut et celui de Fin que tu auras choisi
+mp3/0319_special_party.mp3|Mode special de-à, Party: Passe tous les titres au hasard, entre le titre de debut et celui de Fin que tu auras choisi .
+mp3/0320_select_file.mp3|Bien, choisis le titre du debut en utilisant les boutons de volume s'il te plait.
+mp3/0322_select_last_file.mp3|Parfait, choisis le titre de fin avec des boutons de volume s'il te plait.
+mp3/0330.mp3|Voudrais-tu, que j'annonce le numero de chaque titre en avance ? Tu peux  toujours demander le numero actuel en appuyant sur le bouton pause quelques secondes.
+mp3/0331.mp3|Non, n'annonce pas le numero des titres.
+mp3/0332.mp3|Oui, annonce le numero des titres.
+mp3/0400_ok.mp3|Bon. La carte est maintenant configurée.
+mp3/0401_error.mp3|Oh, c'est dommage! Cela n'a pas fonctionné!
+mp3/0800_waiting_for_card.mp3|Pose la carte sur le lecteur s'il te plait!
+mp3/0802_reset_aborted.mp3|Maintenant, Je stoppe l'action en cours.
+mp3/0900_admin.mp3|Bienvenu dans menu administrateur. Choisis une fonction avec les boutons de volume et confirme par le bouton pause. Pour sortir du menu pousse le bouton pause quelques secondes.
+mp3/0901_card_reset.mp3|Reconfigurer une carte déjà utilisée.
+mp3/0902_max_volume.mp3|Réglage de volume maximum.
+mp3/0903_min_volume.mp3|Réglage de volume minimum.
+mp3/0904_init_volume.mp3|Réglage du volume au démarrage de Tonuino.
+mp3/0905_eq.mp3|Réglage de tonalité.
+mp3/0906_modifiers.mp3|Créer une carte de modification. Pose une carte neuve sur le lecteur RFID. Elle servira à changer la manière de fonctionner de Tonuino. Tu pourras ainsi le régler comme tu le désire.
+mp3/0907_shortcut.mp3|Configurer un raccourci pour actionner les boutons de Tonuino. Le raccourci fonctionnera quand tu maintiendra enfoncé quelques secondes le bouton ainsi programmé. Attention, Il ne fonctionne seulement que si ton Tonuino n'est pas en train de jouer.
+mp3/0908_standbytimer.mp3|Configure Tonuino pour qu'il s'éteigne automatiquement quand tu le désire.
+mp3/0909_batch_cards.mp3|Création d'une carte de configuration des morceaux préférés. Choisis un dossier et indique les premier et derniers titres de la liste que tu veux écouter.
+mp3/0910_switch_volume.mp3|Changer la fonction des boutons de volume.
+mp3/0911_reset.mp3|Réinitialisation, effacer de tous réglages de Tonuino.
+mp3/0912_admin_lock.mp3|Sécuriser le menu administrateur avec un code pin.
+mp3/0920_eq_intro.mp3|Choisis le réglage de tonalité avec les boutons de volume et confirme avec le bouton pause.
+mp3/0921_normal.mp3|La tonalité est normale
+mp3/0922_pop.mp3|Pop
+mp3/0923_rock.mp3|Rock
+mp3/0924_jazz.mp3|Jazz
+mp3/0925_classic.mp3|Classique
+mp3/0926_bass.mp3|Bass
+mp3/0930_max_volume_intro.mp3|Choisis le volume maximum et confirme avec le bouton pause.
+mp3/0931_min_volume_into.mp3|Choisis le volume minimum et confirme avec le bouton pause.
+mp3/0932_init_volume_into.mp3|Choisis le volume au démarrage de Tonuino et confirme par le bouton pause.
+mp3/0933_switch_volume_intro.mp3|Voudrais-tu modifier la fonction des boutons de volume ? Pour appeler le prochain titre, le suivant ou le dernier, tu dois pousser quelques secondes le bouton du volume.
+mp3/0934_no.mp3|Non.
+mp3/0935_yes.mp3|Oui.
+mp3/0936_batch_cards_intro.mp3|Maintenant, pose les cartes une après l'autre sur le lecteur RFID. Pour éviter des erreurs, je vais dire le numero de carte en avance. Pour arrêter appuie un des boutons de volume.
+mp3/0940_shortcut_into.mp3|Choisis le raccourcis que tu voudrais configurer.
+mp3/0941_pause.mp3|Bouton pause
+mp3/0942_up.mp3|Bouton de volume plus fort.
+mp3/0943_down.mp3|Bouton de volume moins fort.
+mp3/0944_startup.mp3|Raccourcis pour le démarrage de TonUINO.
+mp3/0960_timer_intro.mp3|Apres combien des minutes voudrais-tu que le TonUINO s'éteigne automatiquement ?
+mp3/0961_timer_5.mp3|5 minutes.
+mp3/0962_timer_15.mp3|15 minutes.
+mp3/0963_timer_30.mp3|30 minutes.
+mp3/0964_timer_60.mp3|60 minutes.
+mp3/0965_timer_disabled.mp3|Ne pas éteindre automatiquement.
+mp3/0970_modifier_Intro.mp3|Choisis ta carte de modification avec les boutons de volume.
+mp3/0971_modifier_SleepTimer.mp3|Mode sommeil. Le Tonuino s'arrête de jouer au moment que tu as configuré. Il s'éteint automatiquement.
+mp3/0972_modifier_FreezeDance.mp3|Stop Dance - Tonuino joue à Stop Dance avec toi et stoppe la musique un petit moment au hasard.
+mp3/0973_modifier_Locked.mp3|Bloquer le Tonuino pour que personne à part l'administrateur ne puisse modifier ses fonctions.
+mp3/0974_modifier_Toddler.mp3|Mode bébé - Tous les boutons sont bloqués pour que les bébés ne puissent pas jouer avec. Seulement les cartes fonctionnent.
+mp3/0975_modifier_KinderGarden.mp3|Mode école maternelle - Pour éviter des querelles entre des enfants, les nouvelles cartes ne passent pas avant que le titre actuel soit terminé. Les boutons suivante et dernière sont bloqués.
+mp3/0976_modifier_repeat1.mp3|Repète le titre actuel à l'infinie.
+mp3/0980_admin_lock_intro.mp3|Choisis comment tu veux proteger ton menu administrateur.
+mp3/0981_admin_lock_disabled.mp3|Pas de protection - Le menu administrateur peut être toujours activé en poussant ensemble les trois boutons en même temps.
+mp3/0982_admin_lock_card.mp3|Seulement la carte administrateur - le menu administrateur peut être seulement activé par la carte administrateur. Une nouvelle carte administrateur peut toujours être  configurée.
+mp3/0983_admin_lock_pin.mp3|Code de sécurité - Le menu administrateur est protegé par un PIN de quatre chiffre. Si tu chois cette option, tu dois déclarer le PIN.
+mp3/0984_admin_lock_calc.mp3|Devoir arithmetique - le menu administrateur peut être activé pour configurer la solution d'un devoir arithmetique.
+mp3/0991_admin_pin.mp3|Donne le code PIN s'il te plait.
+mp3/0992_admin_calc.mp3|Combien fait
+mp3/0993_admin_calc.mp3|plus
+mp3/0994_admin_calc.mp3|moins
+mp3/0999_reset_ok.mp3|La réinitialisation a reussie!
