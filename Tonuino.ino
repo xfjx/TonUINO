@@ -75,6 +75,7 @@ uint8_t voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
                   bool preview = false, int previewFromFolder = 0, int defaultValue = 0, bool exitWithLongPress = false);
 bool isPlaying();
 bool checkTwo ( uint8_t a[], uint8_t b[] );
+bool readCard(nfcTagObject *nfcTag);
 void writeCard(nfcTagObject nfcTag);
 void dump_byte_array(byte * buffer, byte bufferSize);
 void adminMenu(bool fromCard = false);
@@ -287,6 +288,8 @@ class SleepTimer: public Modifier {
       Serial.println(F("== SleepTimer::getActive()"));
       return 1;
     }
+
+    virtual ~SleepTimer() {}
 };
 
 class FreezeDance: public Modifier {
@@ -707,7 +710,7 @@ bool isPlaying() {
 }
 
 void waitForTrackToFinish() {
-  long currentTime = millis();
+  unsigned long currentTime = millis();
 #define TIMEOUT 1000
   do {
     mp3.loop();
@@ -755,7 +758,7 @@ void setup() {
   delay(2000);
   volume = mySettings.initVolume;
   mp3.setVolume(volume);
-  mp3.setEq(mySettings.eq - 1);
+  mp3.setEq(DfMp3_Eq(mySettings.eq - 1));
   // Fix für das Problem mit dem Timeout (ist jetzt in Upstream daher nicht mehr nötig!)
   //mySoftwareSerial.setTimeout(10000);
 
@@ -783,7 +786,7 @@ void setup() {
   if (digitalRead(buttonPause) == LOW && digitalRead(buttonUp) == LOW &&
       digitalRead(buttonDown) == LOW) {
     Serial.println(F("Reset -> EEPROM wird gelöscht"));
-    for (int i = 0; i < EEPROM.length(); i++) {
+    for (unsigned int i = 0; i < EEPROM.length(); i++) {
       EEPROM.update(i, 0);
     }
     loadSettingsFromFlash();
@@ -974,7 +977,7 @@ void loop() {
       if (activeModifier != NULL)
         if (activeModifier->handlePause() == true)
           return;
-      if (ignorePauseButton == false)
+      if (ignorePauseButton == false) {
         if (isPlaying()) {
           mp3.pause();
           setstandbyTimer();
@@ -983,6 +986,7 @@ void loop() {
           mp3.start();
           disablestandbyTimer();
         }
+      }
       ignorePauseButton = false;
     } else if (pauseButton.pressedFor(LONG_PRESS) &&
                ignorePauseButton == false) {
@@ -1025,13 +1029,14 @@ void loop() {
       ignoreUpButton = true;
 #endif
     } else if (upButton.wasReleased()) {
-      if (!ignoreUpButton)
+      if (!ignoreUpButton) {
         if (!mySettings.invertVolumeButtons) {
           nextButton();
         }
         else {
           volumeUpButton();
         }
+      }
       ignoreUpButton = false;
     }
 
@@ -1114,7 +1119,7 @@ void loop() {
   mfrc522.PCD_StopCrypto1();
 }
 
-void adminMenu(bool fromCard = false) {
+void adminMenu(bool fromCard) {
   disablestandbyTimer();
   mp3.pause();
   Serial.println(F("=== adminMenu()"));
@@ -1189,7 +1194,7 @@ void adminMenu(bool fromCard = false) {
   else if (subMenu == 5) {
     // EQ
     mySettings.eq = voiceMenu(6, 920, 920, false, false, mySettings.eq);
-    mp3.setEq(mySettings.eq - 1);
+    mp3.setEq(DfMp3_Eq(mySettings.eq - 1));
   }
   else if (subMenu == 6) {
     // create modifier card
@@ -1297,7 +1302,7 @@ void adminMenu(bool fromCard = false) {
   }
   else if (subMenu == 11) {
     Serial.println(F("Reset -> EEPROM wird gelöscht"));
-    for (int i = 0; i < EEPROM.length(); i++) {
+    for (unsigned int i = 0; i < EEPROM.length(); i++) {
       EEPROM.update(i, 0);
     }
     resetSettings();
@@ -1313,7 +1318,7 @@ void adminMenu(bool fromCard = false) {
       mySettings.adminMenuLocked = 1;
     }
     else if (temp == 3) {
-      int8_t pin[4];
+      uint8_t pin[4];
       mp3.playMp3FolderTrack(991);
       if (askCode(pin)) {
         memcpy(mySettings.adminMenuPin, pin, 4);
@@ -1346,7 +1351,7 @@ bool askCode(uint8_t *code) {
 }
 
 uint8_t voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
-                  bool preview = false, int previewFromFolder = 0, int defaultValue = 0, bool exitWithLongPress = false) {
+                  bool preview, int previewFromFolder, int defaultValue, bool exitWithLongPress) {
   uint8_t returnValue = defaultValue;
   if (startMessage != 0)
     mp3.playMp3FolderTrack(startMessage);
@@ -1707,8 +1712,6 @@ void writeCard(nfcTagObject nfcTag) {
                      nfcTag.nfcFolderSettings.special2,
                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
                     };
-
-  byte size = sizeof(buffer);
 
   mifareType = mfrc522.PICC_GetType(mfrc522.uid.sak);
 
