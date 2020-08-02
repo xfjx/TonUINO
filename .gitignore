@@ -29,3 +29,9 @@ Temporary Items
 
 # TonUINO
 /tools/*.pyc
+Tonuino
+
+# Platform.io
+.pio/
+.vscode/
+platformio_local.ini
