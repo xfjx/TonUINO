@@ -22,6 +22,22 @@
 
 static const uint32_t cardCookie = 322417479;
 
+// Werte nicht ändern, die sind auf den Karten gespeichert!
+enum AbspielModus
+{
+    Uninitialized   = 0,
+    Hoerspiel       = 1,  // eine zufällige Datei aus dem Ordner
+    Album           = 2,  // kompletten Ordner spielen
+    Party           = 3,  // Ordner in zufälliger Reihenfolge
+    EinzelTitel     = 4,  // eine Datei aus dem Ordner abspielen
+    Hoerbuch        = 5,  // kompletten Ordner spielen und Fortschritt merken
+    Admin           = 6,
+    HoerspielRandom = 7,  // Spezialmodus Von-Bis: Hörspiel: eine zufällige Datei aus dem Ordner
+    SpezialVonBis   = 8,  // Spezialmodus Von-Bis: Album: alle Dateien zwischen Start und Ende spielen
+    PartyRandom     = 9   // Spezialmodus Von-Bis: Party Ordner in zufälliger Reihenfolge
+};
+
+
 // DFPlayer Mini
 SoftwareSerial mySoftwareSerial(2, 3); // RX, TX
 uint16_t numTracksInFolder;
@@ -42,10 +58,6 @@ struct nfcTagObject {
   uint32_t cookie;
   uint8_t version;
   folderSettings nfcFolderSettings;
-  //  uint8_t folder;
-  //  uint8_t mode;
-  //  uint8_t special;
-  //  uint8_t special2;
 };
 
 // admin settings stored in eeprom
@@ -75,7 +87,7 @@ uint8_t voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
                   bool preview = false, int previewFromFolder = 0, int defaultValue = 0, bool exitWithLongPress = false);
 bool isPlaying();
 bool checkTwo ( uint8_t a[], uint8_t b[] );
-void writeCard(nfcTagObject nfcTag);
+void writeCard(const nfcTagObject& nfcTag);
 void dump_byte_array(byte * buffer, byte bufferSize);
 void adminMenu(bool fromCard = false);
 bool knownCard = false;
@@ -91,11 +103,11 @@ class Mp3Notify {
       Serial.print("Com Error ");
       Serial.println(errorCode);
     }
-    static void PrintlnSourceAction(DfMp3_PlaySources source, const char* action) {
-      if (source & DfMp3_PlaySources_Sd) Serial.print("SD Karte ");
-      if (source & DfMp3_PlaySources_Usb) Serial.print("USB ");
-      if (source & DfMp3_PlaySources_Flash) Serial.print("Flash ");
-      Serial.println(action);
+    static void printSource(DfMp3_PlaySources source) {
+      if (source & DfMp3_PlaySources_Sd)    { Serial.print(F("SD Karte "));  return; }
+      if (source & DfMp3_PlaySources_Usb)   { Serial.print(F("USB "));       return; }
+      if (source & DfMp3_PlaySources_Flash) { Serial.print(F("Flash "));     return; }
+            								  Serial.print(F("Unbekannt "));
     }
     static void OnPlayFinished(DfMp3_PlaySources source, uint16_t track) {
       //      Serial.print("Track beendet");
@@ -104,13 +116,16 @@ class Mp3Notify {
       nextTrack(track);
     }
     static void OnPlaySourceOnline(DfMp3_PlaySources source) {
-      PrintlnSourceAction(source, "online");
+      printSource(source);
+      Serial.println(F("online"));
     }
     static void OnPlaySourceInserted(DfMp3_PlaySources source) {
-      PrintlnSourceAction(source, "bereit");
+      printSource(source);
+      Serial.println(F("bereit"));
     }
     static void OnPlaySourceRemoved(DfMp3_PlaySources source) {
-      PrintlnSourceAction(source, "entfernt");
+      printSource(source);
+      Serial.println(F("entfernt"));
     }
 };
 
@@ -522,30 +537,34 @@ static void nextTrack(uint16_t track) {
   }
   _lastTrackFinished = track;
 
-  if (knownCard == false)
+  if (!knownCard)
     // Wenn eine neue Karte angelernt wird soll das Ende eines Tracks nicht
     // verarbeitet werden
     return;
 
   Serial.println(F("=== nextTrack()"));
-
-  if (myFolder->mode == 1 || myFolder->mode == 7) {
+  
+  switch (myFolder->mode)
+  {    
+  case Hoerspiel:
+  case HoerspielRandom:
     Serial.println(F("Hörspielmodus ist aktiv -> keinen neuen Track spielen"));
     setstandbyTimer();
-    //    mp3.sleep(); // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
-  }
-  if (myFolder->mode == 2 || myFolder->mode == 8) {
+  break;
+  
+  case Album:
+  case SpezialVonBis:
     if (currentTrack != numTracksInFolder) {
-      currentTrack = currentTrack + 1;
+      currentTrack++;
       mp3.playFolderTrack(myFolder->folder, currentTrack);
       Serial.print(F("Albummodus ist aktiv -> nächster Track: "));
       Serial.print(currentTrack);
     } else
-      //      mp3.sleep();   // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
       setstandbyTimer();
-    { }
-  }
-  if (myFolder->mode == 3 || myFolder->mode == 9) {
+    break;
+  
+  case Party:
+  case PartyRandom:
     if (currentTrack != numTracksInFolder - firstTrack + 1) {
       Serial.print(F("Party -> weiter in der Queue "));
       currentTrack++;
@@ -558,48 +577,52 @@ static void nextTrack(uint16_t track) {
     }
     Serial.println(queue[currentTrack - 1]);
     mp3.playFolderTrack(myFolder->folder, queue[currentTrack - 1]);
-  }
+  break;
 
-  if (myFolder->mode == 4) {
+  case EinzelTitel:
     Serial.println(F("Einzel Modus aktiv -> Strom sparen"));
-    //    mp3.sleep();      // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
     setstandbyTimer();
-  }
-  if (myFolder->mode == 5) {
+    break;
+  
+  case Hoerbuch:
     if (currentTrack != numTracksInFolder) {
-      currentTrack = currentTrack + 1;
-      Serial.print(F("Hörbuch Modus ist aktiv -> nächster Track und "
-                     "Fortschritt speichern"));
+      currentTrack++;
+      Serial.print(F("Hörbuch Modus ist aktiv -> nächster Track und Fortschritt speichern"));
       Serial.println(currentTrack);
       mp3.playFolderTrack(myFolder->folder, currentTrack);
       // Fortschritt im EEPROM abspeichern
       EEPROM.update(myFolder->folder, currentTrack);
     } else {
-      //      mp3.sleep();  // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
-      // Fortschritt zurück setzen
+      // Fortschritt zurücksetzen
       EEPROM.update(myFolder->folder, 1);
       setstandbyTimer();
     }
+  break;
   }
   delay(500);
 }
 
 static void previousTrack() {
   Serial.println(F("=== previousTrack()"));
-  /*  if (myCard.mode == 1 || myCard.mode == 7) {
+  /*  if (myFolder->mode == Hoerspiel || myFolder->mode == HoerspielRandom) {
       Serial.println(F("Hörspielmodus ist aktiv -> Track von vorne spielen"));
       mp3.playFolderTrack(myCard.folder, currentTrack);
     }*/
-  if (myFolder->mode == 2 || myFolder->mode == 8) {
+  switch (myFolder->mode)
+  {
+  case Album:
+  case SpezialVonBis:
     Serial.println(F("Albummodus ist aktiv -> vorheriger Track"));
-    if (currentTrack != firstTrack) {
-      currentTrack = currentTrack - 1;
-    }
+    if (currentTrack != firstTrack)
+      currentTrack--;
+    
     mp3.playFolderTrack(myFolder->folder, currentTrack);
-  }
-  if (myFolder->mode == 3 || myFolder->mode == 9) {
+  break;
+  
+  case Party:
+  case PartyRandom:
     if (currentTrack != 1) {
-      Serial.print(F("Party Modus ist aktiv -> zurück in der Qeueue "));
+      Serial.print(F("Party Modus ist aktiv -> zurück in der Queue "));
       currentTrack--;
     }
     else
@@ -609,20 +632,23 @@ static void previousTrack() {
     }
     Serial.println(queue[currentTrack - 1]);
     mp3.playFolderTrack(myFolder->folder, queue[currentTrack - 1]);
-  }
-  if (myFolder->mode == 4) {
+    break;
+  
+  case EinzelTitel:
     Serial.println(F("Einzel Modus aktiv -> Track von vorne spielen"));
     mp3.playFolderTrack(myFolder->folder, currentTrack);
-  }
-  if (myFolder->mode == 5) {
+  break;
+  
+  case Hoerbuch:
     Serial.println(F("Hörbuch Modus ist aktiv -> vorheriger Track und "
                      "Fortschritt speichern"));
-    if (currentTrack != 1) {
-      currentTrack = currentTrack - 1;
-    }
+    if (currentTrack != 1)
+      currentTrack--;
+    
     mp3.playFolderTrack(myFolder->folder, currentTrack);
     // Fortschritt im EEPROM abspeichern
     EEPROM.update(myFolder->folder, currentTrack);
+    break;
   }
   delay(1000);
 }
@@ -632,10 +658,9 @@ static void previousTrack() {
 #define SS_PIN 10                 // Configurable, see typical pin layout above
 MFRC522 mfrc522(SS_PIN, RST_PIN); // Create MFRC522
 MFRC522::MIFARE_Key key;
-bool successRead;
-byte sector = 1;
-byte blockAddr = 4;
-byte trailerBlock = 7;
+const byte sector = 1;
+const byte blockAddr = 4;
+const byte trailerBlock = 7;
 MFRC522::StatusCode status;
 
 #define buttonPause A0
@@ -683,8 +708,8 @@ void disablestandbyTimer() {
   sleepAtMillis = 0;
 }
 
-void checkStandbyAtMillis() {
-  if (sleepAtMillis != 0 && millis() > sleepAtMillis) {
+void powerOff()
+{
     Serial.println(F("=== power off!"));
     // enter sleep state
     digitalWrite(shutdownPin, HIGH);
@@ -699,7 +724,11 @@ void checkStandbyAtMillis() {
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);
     cli();  // Disable interrupts
     sleep_mode();
-  }
+}
+
+void checkStandbyAtMillis() {
+  if (sleepAtMillis != 0 && millis() > sleepAtMillis)
+    powerOff();
 }
 
 bool isPlaying() {
@@ -708,10 +737,10 @@ bool isPlaying() {
 
 void waitForTrackToFinish() {
   long currentTime = millis();
-#define TIMEOUT 1000
+  const int timeoutMs = 1000;
   do {
     mp3.loop();
-  } while (!isPlaying() && millis() < currentTime + TIMEOUT);
+  } while (!isPlaying() && millis() < currentTime + timeoutMs);
   delay(1000);
   do {
     mp3.loop();
@@ -723,10 +752,9 @@ void setup() {
   Serial.begin(115200); // Es gibt ein paar Debug Ausgaben über die serielle Schnittstelle
 
   // Wert für randomSeed() erzeugen durch das mehrfache Sammeln von rauschenden LSBs eines offenen Analogeingangs
-  uint32_t ADC_LSB;
   uint32_t ADCSeed;
   for (uint8_t i = 0; i < 128; i++) {
-    ADC_LSB = analogRead(openAnalogPin) & 0x1;
+    uint32_t ADC_LSB = analogRead(openAnalogPin) & 0x1;
     ADCSeed ^= ADC_LSB << (i % 32);
   }
   randomSeed(ADCSeed); // Zufallsgenerator initialisieren
@@ -753,8 +781,7 @@ void setup() {
   mp3.begin();
   // Zwei Sekunden warten bis der DFPlayer Mini initialisiert ist
   delay(2000);
-  volume = mySettings.initVolume;
-  mp3.setVolume(volume);
+  setVolume(mySettings.initVolume);
   mp3.setEq(mySettings.eq - 1);
   // Fix für das Problem mit dem Timeout (ist jetzt in Upstream daher nicht mehr nötig!)
   //mySoftwareSerial.setTimeout(10000);
@@ -762,8 +789,7 @@ void setup() {
   // NFC Leser initialisieren
   SPI.begin();        // Init SPI bus
   mfrc522.PCD_Init(); // Init MFRC522
-  mfrc522
-  .PCD_DumpVersionToSerial(); // Show details of PCD - MFRC522 Card Reader
+  mfrc522.PCD_DumpVersionToSerial(); // Show details of PCD - MFRC522 Card Reader
   for (byte i = 0; i < 6; i++) {
     key.keyByte[i] = 0xFF;
   }
@@ -804,17 +830,22 @@ void readButtons() {
 #endif
 }
 
+void setVolume(uint8_t volnew)
+{
+  Serial.print(F("set volume "));
+  Serial.println(volnew);
+  mp3.setVolume(volnew);
+  volume = volnew;
+}
+
 void volumeUpButton() {
   if (activeModifier != NULL)
     if (activeModifier->handleVolumeUp() == true)
       return;
 
   Serial.println(F("=== volumeUp()"));
-  if (volume < mySettings.maxVolume) {
-    mp3.increaseVolume();
-    volume++;
-  }
-  Serial.println(volume);
+  if (volume < mySettings.maxVolume)
+    setVolume(++volume);
 }
 
 void volumeDownButton() {
@@ -823,11 +854,8 @@ void volumeDownButton() {
       return;
 
   Serial.println(F("=== volumeDown()"));
-  if (volume > mySettings.minVolume) {
-    mp3.decreaseVolume();
-    volume--;
-  }
-  Serial.println(volume);
+  if (volume > mySettings.minVolume)
+    setVolume(--volume);
 }
 
 void nextButton() {
@@ -859,47 +887,45 @@ void playFolder() {
   Serial.print(F(" Dateien in Ordner "));
   Serial.println(myFolder->folder);
 
-  // Hörspielmodus: eine zufällige Datei aus dem Ordner
-  if (myFolder->mode == 1) {
+  switch (myFolder->mode)
+  {
+  case Hoerspiel:
     Serial.println(F("Hörspielmodus -> zufälligen Track wiedergeben"));
     currentTrack = random(1, numTracksInFolder + 1);
     Serial.println(currentTrack);
     mp3.playFolderTrack(myFolder->folder, currentTrack);
-  }
-  // Album Modus: kompletten Ordner spielen
-  if (myFolder->mode == 2) {
+    break;
+  
+  case Album:
     Serial.println(F("Album Modus -> kompletten Ordner wiedergeben"));
     currentTrack = 1;
     mp3.playFolderTrack(myFolder->folder, currentTrack);
-  }
-  // Party Modus: Ordner in zufälliger Reihenfolge
-  if (myFolder->mode == 3) {
-    Serial.println(
-      F("Party Modus -> Ordner in zufälliger Reihenfolge wiedergeben"));
+    break;
+  
+  case Party:
+    Serial.println(F("Party Modus -> Ordner in zufälliger Reihenfolge wiedergeben"));
     shuffleQueue();
     currentTrack = 1;
     mp3.playFolderTrack(myFolder->folder, queue[currentTrack - 1]);
-  }
-  // Einzel Modus: eine Datei aus dem Ordner abspielen
-  if (myFolder->mode == 4) {
-    Serial.println(
-      F("Einzel Modus -> eine Datei aus dem Odrdner abspielen"));
+    break;
+  
+  case EinzelTitel:
+    Serial.println(F("Einzel Modus -> eine Datei aus dem Odrdner abspielen"));
     currentTrack = myFolder->special;
     mp3.playFolderTrack(myFolder->folder, currentTrack);
-  }
-  // Hörbuch Modus: kompletten Ordner spielen und Fortschritt merken
-  if (myFolder->mode == 5) {
-    Serial.println(F("Hörbuch Modus -> kompletten Ordner spielen und "
-                     "Fortschritt merken"));
+    break;
+  
+  case Hoerbuch:
+    Serial.println(F("Hörbuch Modus -> kompletten Ordner spielen und Fortschritt merken"));
     currentTrack = EEPROM.read(myFolder->folder);
     if (currentTrack == 0 || currentTrack > numTracksInFolder) {
       currentTrack = 1;
     }
     mp3.playFolderTrack(myFolder->folder, currentTrack);
-  }
-  // Spezialmodus Von-Bin: Hörspiel: eine zufällige Datei aus dem Ordner
-  if (myFolder->mode == 7) {
-    Serial.println(F("Spezialmodus Von-Bin: Hörspiel -> zufälligen Track wiedergeben"));
+    break;
+  
+  case HoerspielRandom:
+    Serial.println(F("Spezialmodus Von-Bis: Hörspiel -> zufälligen Track wiedergeben"));
     Serial.print(myFolder->special);
     Serial.print(F(" bis "));
     Serial.println(myFolder->special2);
@@ -907,28 +933,26 @@ void playFolder() {
     currentTrack = random(myFolder->special, numTracksInFolder + 1);
     Serial.println(currentTrack);
     mp3.playFolderTrack(myFolder->folder, currentTrack);
-  }
+    break;
 
-  // Spezialmodus Von-Bis: Album: alle Dateien zwischen Start und Ende spielen
-  if (myFolder->mode == 8) {
+  case SpezialVonBis:
     Serial.println(F("Spezialmodus Von-Bis: Album: alle Dateien zwischen Start- und Enddatei spielen"));
     Serial.print(myFolder->special);
     Serial.print(F(" bis "));
     Serial.println(myFolder->special2);
     numTracksInFolder = myFolder->special2;
-    currentTrack = myFolder->special;
+    currentTrack      = myFolder->special;
     mp3.playFolderTrack(myFolder->folder, currentTrack);
-  }
+    break;
 
-  // Spezialmodus Von-Bis: Party Ordner in zufälliger Reihenfolge
-  if (myFolder->mode == 9) {
-    Serial.println(
-      F("Spezialmodus Von-Bis: Party -> Ordner in zufälliger Reihenfolge wiedergeben"));
+  case PartyRandom:
+    Serial.println(F("Spezialmodus Von-Bis: Party -> Ordner in zufälliger Reihenfolge wiedergeben"));
     firstTrack = myFolder->special;
     numTracksInFolder = myFolder->special2;
     shuffleQueue();
     currentTrack = 1;
     mp3.playFolderTrack(myFolder->folder, queue[currentTrack - 1]);
+    break;
   }
 }
 
@@ -946,120 +970,117 @@ void playShortCut(uint8_t shortCut) {
 }
 
 void loop() {
-  do {
-    checkStandbyAtMillis();
-    mp3.loop();
-
-    // Modifier : WIP!
-    if (activeModifier != NULL) {
-      activeModifier->loop();
-    }
-
-    // Buttons werden nun über JS_Button gehandelt, dadurch kann jede Taste
-    // doppelt belegt werden
-    readButtons();
-
-    // admin menu
-    if ((pauseButton.pressedFor(LONG_PRESS) || upButton.pressedFor(LONG_PRESS) || downButton.pressedFor(LONG_PRESS)) && pauseButton.isPressed() && upButton.isPressed() && downButton.isPressed()) {
-      mp3.pause();
-      do {
-        readButtons();
-      } while (pauseButton.isPressed() || upButton.isPressed() || downButton.isPressed());
+  checkStandbyAtMillis();
+  mp3.loop();
+  
+  // Modifier : WIP!
+  if (activeModifier != NULL) {
+    activeModifier->loop();
+  }
+    
+  readButtons();
+  
+  // admin menu
+  if ((pauseButton.pressedFor(LONG_PRESS) || upButton.pressedFor(LONG_PRESS) || downButton.pressedFor(LONG_PRESS)) && pauseButton.isPressed() && upButton.isPressed() && downButton.isPressed()) {
+    mp3.pause();
+    do {
       readButtons();
-      adminMenu();
-      break;
-    }
-
-    if (pauseButton.wasReleased()) {
+    } while (pauseButton.isPressed() || upButton.isPressed() || downButton.isPressed());
+    readButtons();
+    adminMenu();
+    return;
+  }
+  
+  if (pauseButton.wasReleased()) {
       if (activeModifier != NULL)
         if (activeModifier->handlePause() == true)
           return;
-      if (ignorePauseButton == false)
-        if (isPlaying()) {
-          mp3.pause();
-          setstandbyTimer();
-        }
-        else if (knownCard) {
-          mp3.start();
-          disablestandbyTimer();
-        }
-      ignorePauseButton = false;
-    } else if (pauseButton.pressedFor(LONG_PRESS) &&
-               ignorePauseButton == false) {
+    if (ignorePauseButton == false)
+      if (isPlaying()) {
+        mp3.pause();
+        setstandbyTimer();
+      }
+      else if (knownCard) {
+        mp3.start();
+        disablestandbyTimer();
+      }
+    ignorePauseButton = false;
+  } else if (pauseButton.pressedFor(LONG_PRESS) &&
+             ignorePauseButton == false) {
       if (activeModifier != NULL)
         if (activeModifier->handlePause() == true)
           return;
-      if (isPlaying()) {
-        uint8_t advertTrack;
-        if (myFolder->mode == 3 || myFolder->mode == 9) {
-          advertTrack = (queue[currentTrack - 1]);
-        }
-        else {
-          advertTrack = currentTrack;
-        }
-        // Spezialmodus Von-Bis für Album und Party gibt die Dateinummer relativ zur Startposition wieder
-        if (myFolder->mode == 8 || myFolder->mode == 9) {
-          advertTrack = advertTrack - myFolder->special + 1;
-        }
-        mp3.playAdvertisement(advertTrack);
+    if (isPlaying()) {
+      uint8_t advertTrack;
+      if (myFolder->mode == Party || myFolder->mode == PartyRandom) {
+        advertTrack = (queue[currentTrack - 1]);
       }
       else {
-        playShortCut(0);
+        advertTrack = currentTrack;
       }
-      ignorePauseButton = true;
+      // Spezialmodus Von-Bis für Album und Party gibt die Dateinummer relativ zur Startposition wieder
+      if (myFolder->mode == SpezialVonBis || myFolder->mode == PartyRandom) {
+        advertTrack = advertTrack - myFolder->special + 1;
+      }
+      mp3.playAdvertisement(advertTrack);
     }
-
-    if (upButton.pressedFor(LONG_PRESS)) {
-#ifndef FIVEBUTTONS
-      if (isPlaying()) {
-        if (!mySettings.invertVolumeButtons) {
-          volumeUpButton();
-        }
-        else {
-          nextButton();
-        }
-      }
-      else {
-        playShortCut(1);
-      }
-      ignoreUpButton = true;
-#endif
-    } else if (upButton.wasReleased()) {
-      if (!ignoreUpButton)
-        if (!mySettings.invertVolumeButtons) {
-          nextButton();
-        }
-        else {
-          volumeUpButton();
-        }
-      ignoreUpButton = false;
+    else {
+      playShortCut(0);
     }
+    ignorePauseButton = true;
+  }
 
-    if (downButton.pressedFor(LONG_PRESS)) {
+  if (upButton.pressedFor(LONG_PRESS)) {
 #ifndef FIVEBUTTONS
-      if (isPlaying()) {
-        if (!mySettings.invertVolumeButtons) {
-          volumeDownButton();
-        }
-        else {
-          previousButton();
-        }
+    if (isPlaying()) {
+      if (!mySettings.invertVolumeButtons) {
+        volumeUpButton();
       }
       else {
-        playShortCut(2);
+        nextButton();
       }
-      ignoreDownButton = true;
+    }
+    else {
+      playShortCut(1);
+    }
+    ignoreUpButton = true;
 #endif
-    } else if (downButton.wasReleased()) {
-      if (!ignoreDownButton) {
-        if (!mySettings.invertVolumeButtons) {
-          previousButton();
-        }
-        else {
-          volumeDownButton();
-        }
+  } else if (upButton.wasReleased()) {
+    if (!ignoreUpButton)
+      if (!mySettings.invertVolumeButtons) {
+        nextButton();
       }
-      ignoreDownButton = false;
+      else {
+        volumeUpButton();
+      }
+    ignoreUpButton = false;
+  }
+  
+  if (downButton.pressedFor(LONG_PRESS)) {
+#ifndef FIVEBUTTONS
+    if (isPlaying()) {
+      if (!mySettings.invertVolumeButtons) {
+        volumeDownButton();
+      }
+      else {
+        previousButton();
+      }
+    }
+    else {
+      playShortCut(2);
+    }
+    ignoreDownButton = true;
+#endif
+  } else if (downButton.wasReleased()) {
+    if (!ignoreDownButton) {
+      if (!mySettings.invertVolumeButtons) {
+        previousButton();
+    }
+      else {
+        volumeDownButton();
+    }
+    }
+    ignoreDownButton = false;
     }
 #ifdef FIVEBUTTONS
     if (buttonFour.wasReleased()) {
@@ -1089,29 +1110,130 @@ void loop() {
       }
     }
 #endif
-    // Ende der Buttons
-  } while (!mfrc522.PICC_IsNewCardPresent());
-
-  // RFID Karte wurde aufgelegt
-
-  if (!mfrc522.PICC_ReadCardSerial())
-    return;
-
-  if (readCard(&myCard) == true) {
-    if (myCard.cookie == cardCookie && myCard.nfcFolderSettings.folder != 0 && myCard.nfcFolderSettings.mode != 0) {
-      playFolder();
+  // Ende der Buttons
+  
+  if (mfrc522.PICC_IsNewCardPresent())  // RFID Karte wurde aufgelegt
+  {
+    if (mfrc522.PICC_ReadCardSerial())
+    {
+      if (readCard(&myCard))
+      {
+        if (myCard.cookie == cardCookie && myCard.nfcFolderSettings.folder != 0 && 
+            myCard.nfcFolderSettings.mode != Uninitialized) {
+          playFolder();
+        }
+        else if (myCard.cookie != cardCookie) {
+		      // Neue Karte konfigurieren
+          knownCard = false;
+          setupCard();
+        }
+      }
+      mfrc522.PICC_HaltA();
+      mfrc522.PCD_StopCrypto1();
     }
+  }  
+}
 
-    // Neue Karte konfigurieren
-    else if (myCard.cookie != cardCookie) {
-      knownCard = false;
-      mp3.playMp3FolderTrack(300);
+void adminMenuCreateModifierCard()
+{
+  nfcTagObject tempCard;
+  tempCard.cookie = cardCookie;
+  tempCard.version = 1;
+  tempCard.nfcFolderSettings.folder = 0;
+  tempCard.nfcFolderSettings.special = 0;
+  tempCard.nfcFolderSettings.special2 = 0;
+  tempCard.nfcFolderSettings.mode = voiceMenu(6, 970, 970, false, false, 0, true);
+
+  if (tempCard.nfcFolderSettings.mode != 0) {
+    if (tempCard.nfcFolderSettings.mode == 1) {
+      switch (voiceMenu(4, 960, 960)) {
+        case 1: tempCard.nfcFolderSettings.special = 5; break;
+        case 2: tempCard.nfcFolderSettings.special = 15; break;
+        case 3: tempCard.nfcFolderSettings.special = 30; break;
+        case 4: tempCard.nfcFolderSettings.special = 60; break;
+      }
+    }
+    mp3.playMp3FolderTrack(800);
+    do {
+      readButtons();
+      if (upButton.wasReleased() || downButton.wasReleased()) {
+        Serial.println(F("Abgebrochen!"));
+        mp3.playMp3FolderTrack(802);
+        return;
+      }
+    } while (!mfrc522.PICC_IsNewCardPresent());
+
+    // RFID Karte wurde aufgelegt
+    if (mfrc522.PICC_ReadCardSerial()) {
+      Serial.println(F("schreibe Karte..."));
+      writeCard(tempCard);
+      delay(100);
+      mfrc522.PICC_HaltA();
+      mfrc522.PCD_StopCrypto1();
       waitForTrackToFinish();
-      setupCard();
+    }
+  }  
+}
+
+void adminMenuCreateCardsForFolder()
+{
+  // Ordner abfragen
+  nfcTagObject tempCard;
+  tempCard.cookie = cardCookie;
+  tempCard.version = 1;
+  tempCard.nfcFolderSettings.mode = 4;
+  tempCard.nfcFolderSettings.folder = voiceMenu(99, 301, 0, true);
+  uint8_t special = voiceMenu(mp3.getFolderTrackCount(tempCard.nfcFolderSettings.folder), 321, 0,
+                              true, tempCard.nfcFolderSettings.folder);
+  uint8_t special2 = voiceMenu(mp3.getFolderTrackCount(tempCard.nfcFolderSettings.folder), 322, 0,
+                               true, tempCard.nfcFolderSettings.folder, special);
+
+  mp3.playMp3FolderTrack(936);
+  waitForTrackToFinish();
+  for (uint8_t x = special; x <= special2; x++) {
+    mp3.playMp3FolderTrack(x);
+    tempCard.nfcFolderSettings.special = x;
+    Serial.print(x);
+    Serial.println(F(" Karte auflegen"));
+    do {
+      readButtons();
+      if (upButton.wasReleased() || downButton.wasReleased()) {
+        Serial.println(F("Abgebrochen!"));
+        mp3.playMp3FolderTrack(802);
+        return;
+      }
+    } while (!mfrc522.PICC_IsNewCardPresent());
+
+    // RFID Karte wurde aufgelegt
+    if (mfrc522.PICC_ReadCardSerial()) {
+      Serial.println(F("schreibe Karte..."));
+      writeCard(tempCard);
+      delay(100);
+      mfrc522.PICC_HaltA();
+      mfrc522.PCD_StopCrypto1();
+      waitForTrackToFinish();
     }
   }
-  mfrc522.PICC_HaltA();
-  mfrc522.PCD_StopCrypto1();
+}
+
+void adminMenuHandleLocking()
+{  
+  int temp = voiceMenu(4, 980, 980, false);
+  switch (temp)
+  {
+    case 1: mySettings.adminMenuLocked = 0; break;
+    case 2: mySettings.adminMenuLocked = 1; break;
+    case 3:
+      int8_t pin[4];
+      mp3.playMp3FolderTrack(991);
+      if (askCode(pin)) {
+        memcpy(mySettings.adminMenuPin, pin, 4);
+        mySettings.adminMenuLocked = 2;
+      }
+      break;
+      
+    case 4: mySettings.adminMenuLocked = 3; break;
+  }
 }
 
 void adminMenu(bool fromCard = false) {
@@ -1121,23 +1243,17 @@ void adminMenu(bool fromCard = false) {
   knownCard = false;
   if (fromCard == false) {
     // Admin menu has been locked - it still can be trigged via admin card
-    if (mySettings.adminMenuLocked == 1) {
-      return;
-    }
-    // Pin check
-    else if (mySettings.adminMenuLocked == 2) {
+    switch (mySettings.adminMenuLocked)
+    {
+    case 1: return;    
+    
+    case 2: // Pin check
       uint8_t pin[4];
       mp3.playMp3FolderTrack(991);
-      if (askCode(pin) == true) {
-        if (checkTwo(pin, mySettings.adminMenuPin) == false) {
-          return;
-        }
-      } else {
-        return;
-      }
-    }
-    // Match check
-    else if (mySettings.adminMenuLocked == 3) {
+      if (askCode(pin) && !checkTwo(pin, mySettings.adminMenuPin)) return;
+      break;
+    
+    case 3: // Match check
       uint8_t a = random(10, 20);
       uint8_t b = random(1, 10);
       uint8_t c;
@@ -1164,166 +1280,75 @@ void adminMenu(bool fromCard = false) {
       if (temp != c) {
         return;
       }
+      break;
     }
   }
-  int subMenu = voiceMenu(12, 900, 900, false, false, 0, true);
-  if (subMenu == 0)
-    return;
-  if (subMenu == 1) {
+  
+  // get submenu
+  switch (voiceMenu(12, 900, 900, false, false, 0, true))
+  {
+  case 0: return; // exit
+  
+  case 1:   // reset card
     resetCard();
     mfrc522.PICC_HaltA();
     mfrc522.PCD_StopCrypto1();
-  }
-  else if (subMenu == 2) {
-    // Maximum Volume
+    break;
+    
+  case 2:     // Maximum Volume
     mySettings.maxVolume = voiceMenu(30 - mySettings.minVolume, 930, mySettings.minVolume, false, false, mySettings.maxVolume - mySettings.minVolume) + mySettings.minVolume;
-  }
-  else if (subMenu == 3) {
-    // Minimum Volume
+    break;
+    
+  case 3:     // Minimum Volume
     mySettings.minVolume = voiceMenu(mySettings.maxVolume - 1, 931, 0, false, false, mySettings.minVolume);
-  }
-  else if (subMenu == 4) {
-    // Initial Volume
-    mySettings.initVolume = voiceMenu(mySettings.maxVolume - mySettings.minVolume + 1, 932, mySettings.minVolume - 1, false, false, mySettings.initVolume - mySettings.minVolume + 1) + mySettings.minVolume - 1;
-  }
-  else if (subMenu == 5) {
-    // EQ
+    break;
+    
+  case 4:    // Initial Volume
+    mySettings.initVolume = voiceMenu(mySettings.maxVolume - mySettings.minVolume + 1, 932, mySettings.minVolume - 1, false, false, 
+                                      mySettings.initVolume - mySettings.minVolume + 1) + mySettings.minVolume - 1;                                      
+    break;
+    
+  case 5:    // EQ
     mySettings.eq = voiceMenu(6, 920, 920, false, false, mySettings.eq);
     mp3.setEq(mySettings.eq - 1);
-  }
-  else if (subMenu == 6) {
-    // create modifier card
-    nfcTagObject tempCard;
-    tempCard.cookie = cardCookie;
-    tempCard.version = 1;
-    tempCard.nfcFolderSettings.folder = 0;
-    tempCard.nfcFolderSettings.special = 0;
-    tempCard.nfcFolderSettings.special2 = 0;
-    tempCard.nfcFolderSettings.mode = voiceMenu(6, 970, 970, false, false, 0, true);
-
-    if (tempCard.nfcFolderSettings.mode != 0) {
-      if (tempCard.nfcFolderSettings.mode == 1) {
-        switch (voiceMenu(4, 960, 960)) {
-          case 1: tempCard.nfcFolderSettings.special = 5; break;
-          case 2: tempCard.nfcFolderSettings.special = 15; break;
-          case 3: tempCard.nfcFolderSettings.special = 30; break;
-          case 4: tempCard.nfcFolderSettings.special = 60; break;
-        }
-      }
-      mp3.playMp3FolderTrack(800);
-      do {
-        readButtons();
-        if (upButton.wasReleased() || downButton.wasReleased()) {
-          Serial.println(F("Abgebrochen!"));
-          mp3.playMp3FolderTrack(802);
-          return;
-        }
-      } while (!mfrc522.PICC_IsNewCardPresent());
-
-      // RFID Karte wurde aufgelegt
-      if (mfrc522.PICC_ReadCardSerial()) {
-        Serial.println(F("schreibe Karte..."));
-        writeCard(tempCard);
-        delay(100);
-        mfrc522.PICC_HaltA();
-        mfrc522.PCD_StopCrypto1();
-        waitForTrackToFinish();
-      }
-    }
-  }
-  else if (subMenu == 7) {
+    break;
+    
+  case 6: // create modifier card
+    adminMenuCreateModifierCard();
+    break;
+  
+  case 7:
     uint8_t shortcut = voiceMenu(4, 940, 940);
     setupFolder(&mySettings.shortCuts[shortcut - 1]);
     mp3.playMp3FolderTrack(400);
-  }
-  else if (subMenu == 8) {
-    switch (voiceMenu(5, 960, 960)) {
-      case 1: mySettings.standbyTimer = 5; break;
-      case 2: mySettings.standbyTimer = 15; break;
-      case 3: mySettings.standbyTimer = 30; break;
-      case 4: mySettings.standbyTimer = 60; break;
-      case 5: mySettings.standbyTimer = 0; break;
-    }
-  }
-  else if (subMenu == 9) {
-    // Create Cards for Folder
-    // Ordner abfragen
-    nfcTagObject tempCard;
-    tempCard.cookie = cardCookie;
-    tempCard.version = 1;
-    tempCard.nfcFolderSettings.mode = 4;
-    tempCard.nfcFolderSettings.folder = voiceMenu(99, 301, 0, true);
-    uint8_t special = voiceMenu(mp3.getFolderTrackCount(tempCard.nfcFolderSettings.folder), 321, 0,
-                                true, tempCard.nfcFolderSettings.folder);
-    uint8_t special2 = voiceMenu(mp3.getFolderTrackCount(tempCard.nfcFolderSettings.folder), 322, 0,
-                                 true, tempCard.nfcFolderSettings.folder, special);
-
-    mp3.playMp3FolderTrack(936);
-    waitForTrackToFinish();
-    for (uint8_t x = special; x <= special2; x++) {
-      mp3.playMp3FolderTrack(x);
-      tempCard.nfcFolderSettings.special = x;
-      Serial.print(x);
-      Serial.println(F(" Karte auflegen"));
-      do {
-        readButtons();
-        if (upButton.wasReleased() || downButton.wasReleased()) {
-          Serial.println(F("Abgebrochen!"));
-          mp3.playMp3FolderTrack(802);
-          return;
-        }
-      } while (!mfrc522.PICC_IsNewCardPresent());
-
-      // RFID Karte wurde aufgelegt
-      if (mfrc522.PICC_ReadCardSerial()) {
-        Serial.println(F("schreibe Karte..."));
-        writeCard(tempCard);
-        delay(100);
-        mfrc522.PICC_HaltA();
-        mfrc522.PCD_StopCrypto1();
-        waitForTrackToFinish();
-      }
-    }
-  }
-  else if (subMenu == 10) {
-    // Invert Functions for Up/Down Buttons
+    break;
+  
+  case 8:
+    const byte aStandbyTimer[] = { 5, 15, 30, 60, 0};	// TODO: PROGMEM
+    mySettings.standbyTimer = aStandbyTimer[voiceMenu(5, 960, 960) - 1];
+    break;
+    
+  case 9: // Create Cards for Folder
+    adminMenuCreateCardsForFolder();
+    break;
+    
+  case 10: // Invert Functions for Up/Down Buttons
     int temp = voiceMenu(2, 933, 933, false);
-    if (temp == 2) {
-      mySettings.invertVolumeButtons = true;
-    }
-    else {
-      mySettings.invertVolumeButtons = false;
-    }
-  }
-  else if (subMenu == 11) {
+    mySettings.invertVolumeButtons = (temp == 2);
+    break;
+    
+  case 11:
     Serial.println(F("Reset -> EEPROM wird gelöscht"));
     for (int i = 0; i < EEPROM.length(); i++) {
       EEPROM.update(i, 0);
     }
     resetSettings();
     mp3.playMp3FolderTrack(999);
-  }
-  // lock admin menu
-  else if (subMenu == 12) {
-    int temp = voiceMenu(4, 980, 980, false);
-    if (temp == 1) {
-      mySettings.adminMenuLocked = 0;
-    }
-    else if (temp == 2) {
-      mySettings.adminMenuLocked = 1;
-    }
-    else if (temp == 3) {
-      int8_t pin[4];
-      mp3.playMp3FolderTrack(991);
-      if (askCode(pin)) {
-        memcpy(mySettings.adminMenuPin, pin, 4);
-        mySettings.adminMenuLocked = 2;
-      }
-    }
-    else if (temp == 4) {
-      mySettings.adminMenuLocked = 3;
-    }
-
+    break;
+ 
+  case 12:  // lock admin menu
+    adminMenuHandleLocking();
+    break;
   }
   writeSettingsToFlash();
   setstandbyTimer();
@@ -1441,7 +1466,7 @@ uint8_t voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
         }
       } else {
         ignoreDownButton = false;
-      }
+	}
     }
   } while (true);
 }
@@ -1479,22 +1504,29 @@ bool setupFolder(folderSettings * theFolder) {
   //  // Hörbuchmodus -> Fortschritt im EEPROM auf 1 setzen
   //  EEPROM.update(theFolder->folder, 1);
 
+  switch (theFolder->mode)
+  {
   // Einzelmodus -> Datei abfragen
-  if (theFolder->mode == 4)
+  case EinzelTitel:
     theFolder->special = voiceMenu(mp3.getFolderTrackCount(theFolder->folder), 320, 0,
                                    true, theFolder->folder);
+    break;
   // Admin Funktionen
-  if (theFolder->mode == 6) {
+  case Admin:
     //theFolder->special = voiceMenu(3, 320, 320);
     theFolder->folder = 0;
     theFolder->mode = 255;
-  }
+  break;
+
   // Spezialmodus Von-Bis
-  if (theFolder->mode == 7 || theFolder->mode == 8 || theFolder->mode == 9) {
-    theFolder->special = voiceMenu(mp3.getFolderTrackCount(theFolder->folder), 321, 0,
+  case HoerspielRandom:
+  case SpezialVonBis:
+  case PartyRandom:
+  theFolder->special = voiceMenu(mp3.getFolderTrackCount(theFolder->folder), 321, 0,
                                    true, theFolder->folder);
     theFolder->special2 = voiceMenu(mp3.getFolderTrackCount(theFolder->folder), 322, 0,
                                     true, theFolder->folder, theFolder->special);
+  break;
   }
   return true;
 }
@@ -1503,16 +1535,16 @@ void setupCard() {
   mp3.pause();
   Serial.println(F("=== setupCard()"));
   nfcTagObject newCard;
-  if (setupFolder(&newCard.nfcFolderSettings) == true)
+  if (setupFolder(&newCard.nfcFolderSettings))
   {
     // Karte ist konfiguriert -> speichern
     mp3.pause();
-    do {
-    } while (isPlaying());
+    while (isPlaying());
     writeCard(newCard);
   }
   delay(1000);
 }
+
 bool readCard(nfcTagObject * nfcTag) {
   nfcTagObject tempCard;
   // Show some details of the PICC (that is: the tag/card)
@@ -1522,24 +1554,21 @@ bool readCard(nfcTagObject * nfcTag) {
   Serial.print(F("PICC type: "));
   MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(mfrc522.uid.sak);
   Serial.println(mfrc522.PICC_GetTypeName(piccType));
+  const bool bIsMifareUL = piccType == MFRC522::PICC_TYPE_MIFARE_UL;
 
-  byte buffer[18];
-  byte size = sizeof(buffer);
+  byte buffer[18+12];   // add more room at the end so that UL read with offset of up to 12 bytes fits
+  byte size = 18;
 
   // Authenticate using key A
-  if ((piccType == MFRC522::PICC_TYPE_MIFARE_MINI ) ||
-      (piccType == MFRC522::PICC_TYPE_MIFARE_1K ) ||
-      (piccType == MFRC522::PICC_TYPE_MIFARE_4K ) )
+  if (!bIsMifareUL)
   {
     Serial.println(F("Authenticating Classic using key A..."));
     status = mfrc522.PCD_Authenticate(
                MFRC522::PICC_CMD_MF_AUTH_KEY_A, trailerBlock, &key, &(mfrc522.uid));
   }
-  else if (piccType == MFRC522::PICC_TYPE_MIFARE_UL )
+  else
   {
     byte pACK[] = {0, 0}; //16 bit PassWord ACK returned by the tempCard
-
-    // Authenticate using key A
     Serial.println(F("Authenticating MIFARE UL..."));
     status = mfrc522.PCD_NTAG216_AUTH(key.keyByte, pACK);
   }
@@ -1550,62 +1579,33 @@ bool readCard(nfcTagObject * nfcTag) {
     return false;
   }
 
-  // Show the whole sector as it currently is
-  // Serial.println(F("Current data in sector:"));
-  // mfrc522.PICC_DumpMifareClassicSectorToSerial(&(mfrc522.uid), &key, sector);
-  // Serial.println();
-
   // Read data from the block
-  if ((piccType == MFRC522::PICC_TYPE_MIFARE_MINI ) ||
-      (piccType == MFRC522::PICC_TYPE_MIFARE_1K ) ||
-      (piccType == MFRC522::PICC_TYPE_MIFARE_4K ) )
+  Serial.print(F("Reading data from block "));
+  Serial.print(blockAddr);
+  Serial.println(F(" ..."));
+  
+  if (!bIsMifareUL)
   {
-    Serial.print(F("Reading data from block "));
-    Serial.print(blockAddr);
-    Serial.println(F(" ..."));
-    status = (MFRC522::StatusCode)mfrc522.MIFARE_Read(blockAddr, buffer, &size);
+	// classic cards read 16 bytes at once
+    status = mfrc522.MIFARE_Read(blockAddr, buffer, &size);
     if (status != MFRC522::STATUS_OK) {
       Serial.print(F("MIFARE_Read() failed: "));
       Serial.println(mfrc522.GetStatusCodeName(status));
       return false;
     }
   }
-  else if (piccType == MFRC522::PICC_TYPE_MIFARE_UL )
+  else
   {
-    byte buffer2[18];
-    byte size2 = sizeof(buffer2);
-
-    status = (MFRC522::StatusCode)mfrc522.MIFARE_Read(8, buffer2, &size2);
-    if (status != MFRC522::STATUS_OK) {
-      Serial.print(F("MIFARE_Read_1() failed: "));
-      Serial.println(mfrc522.GetStatusCodeName(status));
-      return false;
+    // UL cards read 4 bytes at once -> 4 parts for 16 bytes
+    for (byte part = 0; part < 4; part++)
+    {
+      status = mfrc522.MIFARE_Read(8 + part, buffer + 4 * part, &size);
+      if (status != MFRC522::STATUS_OK) {
+        Serial.print(F("MIFARE_Read() failed: "));
+        Serial.println(mfrc522.GetStatusCodeName(status));
+        return false;
+      }
     }
-    memcpy(buffer, buffer2, 4);
-
-    status = (MFRC522::StatusCode)mfrc522.MIFARE_Read(9, buffer2, &size2);
-    if (status != MFRC522::STATUS_OK) {
-      Serial.print(F("MIFARE_Read_2() failed: "));
-      Serial.println(mfrc522.GetStatusCodeName(status));
-      return false;
-    }
-    memcpy(buffer + 4, buffer2, 4);
-
-    status = (MFRC522::StatusCode)mfrc522.MIFARE_Read(10, buffer2, &size2);
-    if (status != MFRC522::STATUS_OK) {
-      Serial.print(F("MIFARE_Read_3() failed: "));
-      Serial.println(mfrc522.GetStatusCodeName(status));
-      return false;
-    }
-    memcpy(buffer + 8, buffer2, 4);
-
-    status = (MFRC522::StatusCode)mfrc522.MIFARE_Read(11, buffer2, &size2);
-    if (status != MFRC522::STATUS_OK) {
-      Serial.print(F("MIFARE_Read_4() failed: "));
-      Serial.println(mfrc522.GetStatusCodeName(status));
-      return false;
-    }
-    memcpy(buffer + 12, buffer2, 4);
   }
 
   Serial.print(F("Data on Card "));
@@ -1696,8 +1696,7 @@ bool readCard(nfcTagObject * nfcTag) {
 }
 
 
-void writeCard(nfcTagObject nfcTag) {
-  MFRC522::PICC_Type mifareType;
+void writeCard(const nfcTagObject& nfcTag) {
   byte buffer[16] = {0x13, 0x37, 0xb3, 0x47, // 0x1337 0xb347 magic cookie to
                      // identify our nfc tags
                      0x02,                   // version 1
@@ -1710,7 +1709,7 @@ void writeCard(nfcTagObject nfcTag) {
 
   byte size = sizeof(buffer);
 
-  mifareType = mfrc522.PICC_GetType(mfrc522.uid.sak);
+  MFRC522::PICC_Type mifareType = mfrc522.PICC_GetType(mfrc522.uid.sak);
 
   // Authenticate using key B
   //authentificate with the card and set card specific parameters
@@ -1749,7 +1748,7 @@ void writeCard(nfcTagObject nfcTag) {
       (mifareType == MFRC522::PICC_TYPE_MIFARE_1K ) ||
       (mifareType == MFRC522::PICC_TYPE_MIFARE_4K ) )
   {
-    status = (MFRC522::StatusCode)mfrc522.MIFARE_Write(blockAddr, buffer, 16);
+    status = mfrc522.MIFARE_Write(blockAddr, buffer, 16);
   }
   else if (mifareType == MFRC522::PICC_TYPE_MIFARE_UL )
   {
@@ -1758,19 +1757,19 @@ void writeCard(nfcTagObject nfcTag) {
 
     memset(buffer2, 0, size2);
     memcpy(buffer2, buffer, 4);
-    status = (MFRC522::StatusCode)mfrc522.MIFARE_Write(8, buffer2, 16);
+    status = mfrc522.MIFARE_Write(8, buffer2, 16);
 
     memset(buffer2, 0, size2);
     memcpy(buffer2, buffer + 4, 4);
-    status = (MFRC522::StatusCode)mfrc522.MIFARE_Write(9, buffer2, 16);
+    status = mfrc522.MIFARE_Write(9, buffer2, 16);
 
     memset(buffer2, 0, size2);
     memcpy(buffer2, buffer + 8, 4);
-    status = (MFRC522::StatusCode)mfrc522.MIFARE_Write(10, buffer2, 16);
+    status = mfrc522.MIFARE_Write(10, buffer2, 16);
 
     memset(buffer2, 0, size2);
     memcpy(buffer2, buffer + 12, 4);
-    status = (MFRC522::StatusCode)mfrc522.MIFARE_Write(11, buffer2, 16);
+    status = mfrc522.MIFARE_Write(11, buffer2, 16);
   }
 
   if (status != MFRC522::STATUS_OK) {
