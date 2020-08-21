@@ -70,7 +70,7 @@ folderSettings *myFolder;
 unsigned long sleepAtMillis = 0;
 static uint16_t _lastTrackFinished;
 
-static void nextTrack(uint16_t track);
+static void nextTrack();
 uint8_t voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
                   bool preview = false, int previewFromFolder = 0, int defaultValue = 0, bool exitWithLongPress = false);
 bool isPlaying();
@@ -98,10 +98,16 @@ class Mp3Notify {
       Serial.println(action);
     }
     static void OnPlayFinished(DfMp3_PlaySources source, uint16_t track) {
-      //      Serial.print("Track beendet");
-      //      Serial.println(track);
+      Serial.print("Track beendet ");
+      Serial.println(track);
       //      delay(100);
-      nextTrack(track);
+      if (track == _lastTrackFinished) {
+        Serial.println(F("Ignoring duplicate OnPlayFinished event"));
+        return;
+      }
+
+      _lastTrackFinished = track;
+      nextTrack();
     }
     static void OnPlaySourceOnline(DfMp3_PlaySources source) {
       PrintlnSourceAction(source, "online");
@@ -511,16 +517,10 @@ class FeedbackModifier: public Modifier {
 };
 
 // Leider kann das Modul selbst keine Queue abspielen, daher müssen wir selbst die Queue verwalten
-static void nextTrack(uint16_t track) {
-  Serial.println(track);
+static void nextTrack() {
   if (activeModifier != NULL)
     if (activeModifier->handleNext() == true)
       return;
-
-  if (track == _lastTrackFinished) {
-    return;
-  }
-  _lastTrackFinished = track;
 
   if (knownCard == false)
     // Wenn eine neue Karte angelernt wird soll das Ende eines Tracks nicht
@@ -835,7 +835,7 @@ void nextButton() {
     if (activeModifier->handleNextButton() == true)
       return;
 
-  nextTrack(random(65536));
+  nextTrack();
   delay(1000);
 }
 
