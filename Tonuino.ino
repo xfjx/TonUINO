@@ -20,6 +20,9 @@
 // uncomment the below line to enable five button support
 //#define FIVEBUTTONS
 
+// uncomment the below line to enable a power led (by default at pin D5)
+//#define POWERLED
+
 static const uint32_t cardCookie = 322417479;
 
 // DFPlayer Mini
@@ -650,6 +653,10 @@ MFRC522::StatusCode status;
 #define buttonFivePin A4
 #endif
 
+#ifdef POWERLED
+#define powerLedPin 5
+#endif
+
 #define LONG_PRESS 1000
 
 Button pauseButton(buttonPause);
@@ -686,6 +693,9 @@ void disablestandbyTimer() {
 void checkStandbyAtMillis() {
   if (sleepAtMillis != 0 && millis() > sleepAtMillis) {
     Serial.println(F("=== power off!"));
+#ifdef POWERLED
+    digitalWrite(powerLedPin, LOW);
+#endif
     // enter sleep state
     digitalWrite(shutdownPin, HIGH);
     delay(500);
@@ -719,6 +729,10 @@ void waitForTrackToFinish() {
 }
 
 void setup() {
+#ifdef POWERLED
+  pinMode(powerLedPin, OUTPUT);
+  digitalWrite(powerLedPin, HIGH);
+#endif
 
   Serial.begin(115200); // Es gibt ein paar Debug Ausgaben über die serielle Schnittstelle
 
