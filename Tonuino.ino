@@ -753,9 +753,6 @@ void setup() {
   mp3.begin();
   // Zwei Sekunden warten bis der DFPlayer Mini initialisiert ist
   delay(2000);
-  volume = mySettings.initVolume;
-  mp3.setVolume(volume);
-  mp3.setEq(mySettings.eq - 1);
 
   // NFC Leser initialisieren
   SPI.begin();        // Init SPI bus
@@ -786,6 +783,10 @@ void setup() {
     loadSettingsFromFlash();
   }
 
+  // Set volume
+  volume = mySettings.initVolume;
+  mp3.setVolume(volume);
+  mp3.setEq(mySettings.eq - 1);
 
   // Start Shortcut "at Startup" - e.g. Welcome Sound
   playShortCut(3);
