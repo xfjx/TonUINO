@@ -788,8 +788,9 @@ void setup() {
   mp3.setVolume(volume);
   mp3.setEq(mySettings.eq - 1);
 
-  // Start Shortcut "at Startup" - e.g. Welcome Sound
-  playShortCut(3);
+  // Play welcome jingle
+  mp3.playMp3FolderTrack(913);
+  delay(1000);
 }
 
 void readButtons() {
