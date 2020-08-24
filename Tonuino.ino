@@ -756,8 +756,6 @@ void setup() {
   volume = mySettings.initVolume;
   mp3.setVolume(volume);
   mp3.setEq(mySettings.eq - 1);
-  // Fix für das Problem mit dem Timeout (ist jetzt in Upstream daher nicht mehr nötig!)
-  //mySoftwareSerial.setTimeout(10000);
 
   // NFC Leser initialisieren
   SPI.begin();        // Init SPI bus
@@ -1707,8 +1705,6 @@ void writeCard(nfcTagObject nfcTag) {
                      nfcTag.nfcFolderSettings.special2,
                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
                     };
-
-  byte size = sizeof(buffer);
 
   mifareType = mfrc522.PICC_GetType(mfrc522.uid.sak);
 
