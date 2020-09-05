@@ -247,6 +247,9 @@ void loadSettingsFromFlash() {
   Serial.print(mySettings.adminMenuPin[1]);
   Serial.print(mySettings.adminMenuPin[2]);
   Serial.println(mySettings.adminMenuPin[3]);
+
+  Serial.print(F("Stop when card away: "));
+  Serial.println(mySettings.stopWhenCardAway);
 }
 
 class Modifier {
