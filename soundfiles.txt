@@ -85,5 +85,5 @@ mp3/0999_reset_ok.mp3|Reset wurde durchgeführt!
 
 mp3/0913_stopWhenCardAway.mp3|Kartenverhalten festlegen.
 mp3/0937_stopWhenCardAway_intro.mp3|Soll die Wiedergabe pausiert werden, wenn Karte entfernt wird?
-mp3/0938_no.mp3
-mp3/0939_yes.mp3
+mp3/0938_no.mp3|Nein
+mp3/0939_yes.mp3|Ja
