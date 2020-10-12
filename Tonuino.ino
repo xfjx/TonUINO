@@ -4,7 +4,13 @@
 #include <MFRC522.h>
 #include <SPI.h>
 #include <SoftwareSerial.h>
+//#include <Wire.h>
+//#include <RTC.h>
+#include <DS3232RTC.h>
+//#include <DCF77.h>
+//#include <Time.h>
 #include <avr/sleep.h>
+#include <Streaming.h> 
 
 /*
    _____         _____ _____ _____ _____
@@ -59,7 +65,7 @@ struct adminSettings {
   bool locked;
   long standbyTimer;
   bool invertVolumeButtons;
-  folderSettings shortCuts[4];
+  folderSettings shortCuts[5];
   uint8_t adminMenuLocked;
   uint8_t adminMenuPin[4];
 };
@@ -88,13 +94,13 @@ class Mp3Notify {
     static void OnError(uint16_t errorCode) {
       // see DfMp3_Error for code meaning
       Serial.println();
-      Serial.print("Com Error ");
+      Serial.print(F("Com Error "));
       Serial.println(errorCode);
     }
     static void PrintlnSourceAction(DfMp3_PlaySources source, const char* action) {
-      if (source & DfMp3_PlaySources_Sd) Serial.print("SD Karte ");
-      if (source & DfMp3_PlaySources_Usb) Serial.print("USB ");
-      if (source & DfMp3_PlaySources_Flash) Serial.print("Flash ");
+      if (source & DfMp3_PlaySources_Sd) Serial.print(F("SD Karte "));
+      if (source & DfMp3_PlaySources_Usb) Serial.print(F("USB "));
+      if (source & DfMp3_PlaySources_Flash) Serial.print(F("Flash "));
       Serial.println(action);
     }
     static void OnPlayFinished(DfMp3_PlaySources source, uint16_t track) {
@@ -115,6 +121,15 @@ class Mp3Notify {
 };
 
 static DFMiniMp3<SoftwareSerial, Mp3Notify> mp3(mySoftwareSerial);
+
+void printfreeRam () {
+  extern int __heap_start, *__brkval;
+  int v;
+  int freeram = (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
+  Serial.print(F("Free RAM:"));
+  Serial.print(freeram);
+  Serial.println();
+}
 
 void shuffleQueue() {
   // Queue für die Zufallswiedergabe erstellen
@@ -158,6 +173,7 @@ void resetSettings() {
   mySettings.shortCuts[1].folder = 0;
   mySettings.shortCuts[2].folder = 0;
   mySettings.shortCuts[3].folder = 0;
+  mySettings.shortCuts[4].folder = 0; // Wecker Shortcut
   mySettings.adminMenuLocked = 0;
   mySettings.adminMenuPin[0] = 1;
   mySettings.adminMenuPin[1] = 1;
@@ -221,6 +237,14 @@ void loadSettingsFromFlash() {
   Serial.print(mySettings.adminMenuPin[1]);
   Serial.print(mySettings.adminMenuPin[2]);
   Serial.println(mySettings.adminMenuPin[3]);
+
+  Serial.print(F("Shortcuts: "));
+  Serial.print(mySettings.shortCuts[0].folder);
+  Serial.print(mySettings.shortCuts[1].folder);
+  Serial.print(mySettings.shortCuts[2].folder);
+  Serial.print(mySettings.shortCuts[3].folder);
+  Serial.println(mySettings.shortCuts[4].folder);
+  Serial.println(mySettings.shortCuts[4].mode);
 }
 
 class Modifier {
@@ -253,8 +277,13 @@ class Modifier {
     virtual uint8_t getActive() {
       return 0;
     }
+    virtual uint16_t getActivateSound() {
+      return 260;
+    }
+    virtual uint16_t getDeactivateSound() {
+      return 261;
+    }
     Modifier() {
-
     }
 };
 
@@ -476,7 +505,72 @@ class RepeatSingleModifier: public Modifier {
     }
 };
 
-// An modifier can also do somethings in addition to the modified action
+// A modifier that plays a song when RTC alarm1 fires
+class AlarmModifier: public Modifier {
+  public:
+    void loop() {
+      if (RTC.alarm(ALARM_1)) {   // check alarm flag, clear it if set
+//          Serial.println(F"=== Weckeralarm!!!");
+//          printDateTime(RTC.get());
+//          Serial << endl;
+          volume = mySettings.initVolume;
+          mp3.setVolume(volume);
+          if(mySettings.shortCuts[4].folder != 0) {
+            playShortCut(4);
+          } else {
+            mp3.playRandomTrackFromAll();          
+        }
+      }
+    } 
+    AlarmModifier(uint8_t hour, uint8_t minute) {
+      Serial.println(F("=== AlarmModifier()"));
+      Serial.print(F("Wecker Modifier erkannt - Stunde: "));
+      Serial.print(hour);
+      Serial.print(F(", Minute: "));
+      Serial.println(minute);
+      Serial.println("Aktuelle Zeit: ");
+      printDateTime(RTC.get());
+
+      bool wasPlaying = isPlaying();
+      if (!wasPlaying) {
+        mp3.start();
+      }
+      delay(100);
+      mp3.playAdvertisement(262);
+      mp3.loop(); delay(1000); mp3.loop(); delay(1000); mp3.loop();
+      mp3.playAdvertisement(hour);
+      mp3.loop(); delay(800); mp3.loop();
+      mp3.playAdvertisement(264);
+      mp3.loop(); delay(700); mp3.loop();
+      if(minute !=0) {
+        mp3.playAdvertisement(minute);
+        mp3.loop(); delay(1000); mp3.loop();
+      }
+      if (!wasPlaying) {
+        mp3.pause();
+      }
+
+      if(hour == 24) { hour = 0; }
+      // set Alarm 1 (Syntax : ALM1_MATCH_HOURS, S, M, H, DayofWeek)
+      RTC.setAlarm(ALM1_MATCH_HOURS, 0, minute, hour, 0);
+      //RTC.setAlarm(ALM1_MATCH_HOURS, 0, 48, 0, 0);    
+      // clear the alarm flags
+      RTC.alarm(ALARM_1);
+      printfreeRam();
+    }
+    uint8_t getActive() {
+      Serial.println(F("== AlarmModifier::getActive()"));
+      return 7;
+    }
+    uint16_t getActivateSound() {
+      return 0;
+    }
+    uint16_t getDeactivateSound() {
+      return 263;
+    }
+};
+
+// A modifier can also do somethings in addition to the modified action
 // by returning false (not handled) at the end
 // This simple FeedbackModifier will tell the volume before changing it and
 // give some feedback once a RFID card is detected.
@@ -627,6 +721,9 @@ static void previousTrack() {
   delay(1000);
 }
 
+// DCF77 Modul
+#define DCF_PIN 5
+
 // MFRC522
 #define RST_PIN 9                 // Configurable, see typical pin layout above
 #define SS_PIN 10                 // Configurable, see typical pin layout above
@@ -718,6 +815,134 @@ void waitForTrackToFinish() {
   } while (isPlaying());
 }
 
+// function to return the compile date and time as a time_t value
+time_t compileTime()
+{
+    const time_t FUDGE(10);    //fudge factor to allow for upload time, etc. (seconds, YMMV)
+    const char *compDate = __DATE__, *compTime = __TIME__, *months = "JanFebMarAprMayJunJulAugSepOctNovDec";
+    char compMon[3], *m;
+
+    strncpy(compMon, compDate, 3);
+    compMon[3] = '\0';
+    m = strstr(months, compMon);
+
+    tmElements_t tm;
+    tm.Month = ((m - months) / 3 + 1);
+    tm.Day = atoi(compDate + 4);
+    tm.Year = atoi(compDate + 7) - 1970;
+    tm.Hour = atoi(compTime);
+    tm.Minute = atoi(compTime + 3);
+    tm.Second = atoi(compTime + 6);
+
+    time_t t = makeTime(tm);
+    return t + FUDGE;        //add fudge factor to allow for compile time
+}
+
+time_t getDcfTime()
+{
+  int HIGH_Start = 0; int HIGH_Ende = 0; int HIGH_Zeit = 0;
+  int LOW_Start = 0; int LOW_Ende = 0; int LOW_Zeit = 0;
+  bool Signal = false;
+  bool neueMinute = false;
+  int BIT = -1;
+  int ZEIT[65] = {};
+  int ZEIT_STUNDE; int ZEIT_MINUTE; int ZEIT_TAG = 0; int ZEIT_MONAT; int ZEIT_JAHR; int ZEIT_WOCHENTAG;
+  int PAR_STUNDE; int PAR_MINUTE; int PAR_BEGINN;
+  
+  Serial.println("Enter DCF77 Sync loop.");
+
+  int DCF_SIGNAL = LOW;
+  int zeitbit = 0;
+
+  do {
+    if (BIT > 60) { neueMinute = false; }
+    DCF_SIGNAL = digitalRead(DCF_PIN);
+    //DCF_SIGNAL = digitalRead(5);
+    
+    if (DCF_SIGNAL == HIGH && Signal == false) {
+      Signal = true; 
+      HIGH_Start = millis(); 
+      LOW_Ende = HIGH_Start;  
+      LOW_Zeit = LOW_Ende - LOW_Start;
+      if (neueMinute == true) {
+        Serial.println(LOW_Zeit);
+        if (LOW_Zeit >= 851 && LOW_Zeit <= 950) { zeitbit = 0; } 
+        else if (LOW_Zeit >= 750 && LOW_Zeit <= 850) { zeitbit = 1; }
+        //Das ist das original: else if (LOW_Zeit <= 350) { BIT-=1; zeitbit = ""; }
+        //else if (LOW_Zeit <= 350) { BIT-=1; zeitbit = 0; }
+        ZEIT[BIT] = zeitbit;
+        Serial.println(ZEIT[BIT]);
+      } else {
+        Serial.print(".");
+      }
+    }
+
+    if (DCF_SIGNAL == LOW && Signal == true) {
+      Signal = false; 
+      HIGH_Ende = millis();  
+      LOW_Start = HIGH_Ende; 
+      HIGH_Zeit = HIGH_Ende - HIGH_Start; 
+      Serial.println(LOW_Zeit);
+      if (LOW_Zeit >= 1700) {
+        BIT = 0;
+        neueMinute = true;
+        ZEIT_STUNDE = ZEIT[29]*1+ZEIT[30]*2+ZEIT[31]*4+ZEIT[32]*8+ZEIT[33]*10+ZEIT[34]*20;
+        ZEIT_MINUTE = ZEIT[21]*1+ZEIT[22]*2+ZEIT[23]*4+ZEIT[24]*8+ZEIT[25]*10+ZEIT[26]*20+ZEIT[27]*40;
+        PAR_STUNDE = ZEIT[35];
+        PAR_MINUTE = ZEIT[28];
+        ZEIT_TAG = ZEIT[36]*1+ZEIT[37]*2+ZEIT[38]*4+ZEIT[39]*8+ZEIT[40]*10+ZEIT[41]*20;
+        ZEIT_MONAT = ZEIT[45]*1+ZEIT[46]*2+ZEIT[47]*4+ZEIT[48]*8+ZEIT[49]*10;
+        ZEIT_JAHR = 2000+ZEIT[50]*1+ZEIT[51]*2+ZEIT[52]*4+ZEIT[53]*8+ZEIT[54]*10+ZEIT[55]*20+ZEIT[56]*40+ZEIT[57]*80;
+        PAR_BEGINN = ZEIT[20];
+      } else { BIT++; } 
+      if (ZEIT_TAG !=0) { Serial.println("Uhrzeit erkannt!"); break; }
+    } 
+  } while (true);
+
+  Serial.println();
+  Serial.println("*****************************");
+  Serial.print ("Uhrzeit: ");
+  Serial.println();
+  Serial.print (ZEIT_STUNDE);
+  Serial.print (":");
+  Serial.print (ZEIT_MINUTE);
+  Serial.println();
+  Serial.println();
+  Serial.print ("Datum: ");
+  Serial.println();
+  Serial.print (ZEIT_TAG);
+  Serial.print (".");
+  Serial.print (ZEIT_MONAT);
+  Serial.print (".");
+  Serial.print (ZEIT_JAHR);
+  Serial.println();
+  Serial.println("*****************************");
+  Serial.println("Uhrzeit fertig.");
+
+  tmElements_t tm;
+  tm.Month = ZEIT_MONAT;
+  tm.Day = ZEIT_TAG;
+  tm.Year = ZEIT_JAHR - 1970;
+  tm.Hour = ZEIT_STUNDE;
+  tm.Minute = ZEIT_MINUTE;
+  tm.Second = 0;
+  return(makeTime(tm));
+}
+
+
+// function to print a time_t value to serial
+
+void printDateTime(time_t t)
+{
+    Serial << ((day(t)<10) ? "0" : "") << _DEC(day(t));
+    Serial << monthShortStr(month(t)) << _DEC(year(t)) << ' ';
+    Serial << ((hour(t)<10) ? "0" : "") << _DEC(hour(t)) << ':';
+    Serial << ((minute(t)<10) ? "0" : "") << _DEC(minute(t)) << ':';
+    Serial << ((second(t)<10) ? "0" : "") << _DEC(second(t));
+//    Serial.println(hour(t));
+//    Serial.println(minute(t));
+}
+
 void setup() {
 
   Serial.begin(115200); // Es gibt ein paar Debug Ausgaben über die serielle Schnittstelle
@@ -732,16 +957,18 @@ void setup() {
   randomSeed(ADCSeed); // Zufallsgenerator initialisieren
 
   // Dieser Hinweis darf nicht entfernt werden
-  Serial.println(F("\n _____         _____ _____ _____ _____"));
+  /*Serial.println(F("\n _____         _____ _____ _____ _____"));
   Serial.println(F("|_   _|___ ___|  |  |     |   | |     |"));
   Serial.println(F("  | | | . |   |  |  |-   -| | | |  |  |"));
   Serial.println(F("  |_| |___|_|_|_____|_____|_|___|_____|\n"));
   Serial.println(F("TonUINO Version 2.1"));
   Serial.println(F("created by Thorsten Voß and licensed under GNU/GPL."));
-  Serial.println(F("Information and contribution at https://tonuino.de.\n"));
+  Serial.println(F("Information and contribution at https://tonuino.de.\n"));*/
 
   // Busy Pin
   pinMode(busyPin, INPUT);
+  // DCF Module PIN
+  pinMode(DCF_PIN, INPUT);
 
   // load Settings from EEPROM
   loadSettingsFromFlash();
@@ -791,7 +1018,31 @@ void setup() {
 
 
   // Start Shortcut "at Startup" - e.g. Welcome Sound
-  playShortCut(3);
+  // 4 = Alarmsound for testing
+  // 0 = Welcome Sound
+  playShortCut(0);
+
+   // initialize the alarms to known values, clear the alarm flags, clear the alarm interrupt flags
+  RTC.setAlarm(ALM1_MATCH_DATE, 0, 0, 0, 1);
+  RTC.setAlarm(ALM2_MATCH_DATE, 0, 0, 0, 1);
+  RTC.alarm(ALARM_1);
+  RTC.alarm(ALARM_2);
+  RTC.alarmInterrupt(ALARM_1, false);
+  RTC.alarmInterrupt(ALARM_2, false);
+  RTC.squareWave(SQWAVE_NONE);
+
+  //RTC.set(getDcfTime());
+    // set Alarm 1 (ALM1_MATCH_HOURS, S, M, H, DayofWeek)
+  //RTC.setAlarm(ALM1_MATCH_HOURS, 0, 9, 22, 0);
+  // clear the alarm flags
+  RTC.alarm(ALARM_1);
+
+  //if(hour(RTC.get) != hour(compileTime()) {
+  //  RTC.set(compileTime());
+  //}
+  printDateTime(RTC.get());
+
+  //Serial << endl;
 }
 
 void readButtons() {
@@ -835,7 +1086,8 @@ void nextButton() {
     if (activeModifier->handleNextButton() == true)
       return;
 
-  nextTrack(random(65536));
+  nextTrack(random(65536)); // Seltsam hier
+  //nextTrack(currentTrack + 1);
   delay(1000);
 }
 
@@ -1199,7 +1451,8 @@ void adminMenu(bool fromCard = false) {
     tempCard.nfcFolderSettings.folder = 0;
     tempCard.nfcFolderSettings.special = 0;
     tempCard.nfcFolderSettings.special2 = 0;
-    tempCard.nfcFolderSettings.mode = voiceMenu(6, 970, 970, false, false, 0, true);
+//    tempCard.nfcFolderSettings.mode = voiceMenu(6, 970, 970, false, false, 0, true);
+    tempCard.nfcFolderSettings.mode = voiceMenu(7, 970, 970, false, false, 0, true);
 
     if (tempCard.nfcFolderSettings.mode != 0) {
       if (tempCard.nfcFolderSettings.mode == 1) {
@@ -1210,6 +1463,16 @@ void adminMenu(bool fromCard = false) {
           case 4: tempCard.nfcFolderSettings.special = 60; break;
         }
       }
+      else if (tempCard.nfcFolderSettings.mode == 7) {        /// Alarm mode
+        tempCard.nfcFolderSettings.special = voiceMenu(24, 1000, 0); // Select hour
+        switch (voiceMenu(4, 1001, 1001)) { // Select Minute 
+          case 1: tempCard.nfcFolderSettings.special2 = 0; break;
+          case 2: tempCard.nfcFolderSettings.special2 = 15; break;
+          case 3: tempCard.nfcFolderSettings.special2 = 30; break;
+          case 4: tempCard.nfcFolderSettings.special2 = 45; break;
+        }
+      }
+
       mp3.playMp3FolderTrack(800);
       do {
         readButtons();
@@ -1232,9 +1495,10 @@ void adminMenu(bool fromCard = false) {
     }
   }
   else if (subMenu == 7) {
-    uint8_t shortcut = voiceMenu(4, 940, 940);
+    uint8_t shortcut = voiceMenu(5, 940, 940);
     setupFolder(&mySettings.shortCuts[shortcut - 1]);
     mp3.playMp3FolderTrack(400);
+    waitForTrackToFinish();
   }
   else if (subMenu == 8) {
     switch (voiceMenu(5, 960, 960)) {
@@ -1346,8 +1610,9 @@ bool askCode(uint8_t *code) {
 }
 
 uint8_t voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
-                  bool preview = false, int previewFromFolder = 0, int defaultValue = 0, bool exitWithLongPress = false) {
+                  bool preview = false, int previewFromFolder = 0, int defaultValue = 0, bool exitWithLongPress = false) {                    
   uint8_t returnValue = defaultValue;
+  printfreeRam();
   if (startMessage != 0)
     mp3.playMp3FolderTrack(startMessage);
   Serial.print(F("=== voiceMenu() ("));
@@ -1513,6 +1778,7 @@ void setupCard() {
   }
   delay(1000);
 }
+
 bool readCard(nfcTagObject * nfcTag) {
   nfcTagObject tempCard;
   // Show some details of the PICC (that is: the tag/card)
@@ -1638,34 +1904,32 @@ bool readCard(nfcTagObject * nfcTag) {
     if (tempCard.nfcFolderSettings.folder == 0) {
       if (activeModifier != NULL) {
         if (activeModifier->getActive() == tempCard.nfcFolderSettings.mode) {
+          if(activeModifier->getDeactivateSound() != 0) {
+            bool wasPlaying = isPlaying();
+            if (!wasPlaying) {
+              mp3.start(); mp3.loop(); delay(500);
+              Serial.println("Spielt nicht, wird gestartet");
+            }
+            delay(100); mp3.loop();
+            mp3.playAdvertisement(activeModifier->getDeactivateSound());
+            mp3.loop(); delay(1000); mp3.loop(); delay(1000); 
+            if (!wasPlaying) {
+              mp3.pause(); mp3.loop();
+            }
+          }
+          delete activeModifier;
           activeModifier = NULL;
           Serial.println(F("modifier removed"));
-          if (isPlaying()) {
-            mp3.playAdvertisement(261);
-          }
-          else {
-            mp3.start();
-            delay(100);
-            mp3.playAdvertisement(261);
-            delay(100);
-            mp3.pause();
-          }
           delay(2000);
           return false;
         }
       }
-      if (tempCard.nfcFolderSettings.mode != 0 && tempCard.nfcFolderSettings.mode != 255) {
-        if (isPlaying()) {
-          mp3.playAdvertisement(260);
-        }
-        else {
-          mp3.start();
-          delay(100);
-          mp3.playAdvertisement(260);
-          delay(100);
-          mp3.pause();
-        }
+
+      if(tempCard.nfcFolderSettings.mode >=1 && tempCard.nfcFolderSettings.mode <=7 && activeModifier != NULL) {
+        delete activeModifier;
+        activeModifier = NULL;
       }
+      
       switch (tempCard.nfcFolderSettings.mode ) {
         case 0:
         case 255:
@@ -1676,8 +1940,27 @@ bool readCard(nfcTagObject * nfcTag) {
         case 4: activeModifier = new ToddlerMode(); break;
         case 5: activeModifier = new KindergardenMode(); break;
         case 6: activeModifier = new RepeatSingleModifier(); break;
-
+        case 7: activeModifier = new AlarmModifier(tempCard.nfcFolderSettings.special,tempCard.nfcFolderSettings.special2); break;
       }
+
+      if (activeModifier != NULL) {
+        if (isPlaying()) {
+          if(activeModifier->getActivateSound() != 0) {
+              mp3.playAdvertisement(activeModifier->getActivateSound());
+            }
+        }
+        else {
+          if(activeModifier->getActivateSound() != 0) {
+            Serial.println("Play Modifier Activate Sound.");
+            mp3.start();
+            delay(100);
+            mp3.playAdvertisement(activeModifier->getActivateSound());
+            delay(2000);
+            mp3.pause();
+          }
+        }
+      }
+
       delay(2000);
       return false;
     }
@@ -1694,7 +1977,6 @@ bool readCard(nfcTagObject * nfcTag) {
     return true;
   }
 }
-
 
 void writeCard(nfcTagObject nfcTag) {
   MFRC522::PICC_Type mifareType;
@@ -1783,8 +2065,6 @@ void writeCard(nfcTagObject nfcTag) {
   Serial.println();
   delay(2000);
 }
-
-
 
 /**
   Helper routine to dump a byte array as hex values to Serial.
