@@ -1,3 +1,6 @@
+advert/0262_alarm_activatet.mp3|Wecker aktiviert!
+advert/0263_alarm_deactivatet.mp3|Wecker deaktiviert!
+advert/0264_uhr.mp3|Uhr
 advert/0300_freeze_into.mp3|Wir spielen jetzt den Stopptanz. Wenn die Musik stoppt, bleibe stehen!
 advert/0301_freeze_freeze1.mp3|Und Stopp!
 advert/0301_freeze_freeze2.mp3|Nicht bewegen!
@@ -60,6 +63,7 @@ mp3/0941_pause.mp3|Pausetaste
 mp3/0942_up.mp3|Vor- bzw. Lautertaste
 mp3/0943_down.mp3|Zurück- bzw. Leisertaste
 mp3/0944_startup.mp3|Shortcut beim Start festlegen
+mp3/0945_shortcut_alarm.mp3|Weckmusik festlegen
 mp3/0960_timer_intro.mp3|Nach wievielen Minuten soll der TonUINO ausgeschaltet werden?
 mp3/0961_timer_5.mp3|5 Minuten.
 mp3/0962_timer_15.mp3|15 Minuten.
@@ -73,6 +77,7 @@ mp3/0973_modifier_Locked.mp3|TonUINO Sperren
 mp3/0974_modifier_Toddler.mp3|Krabbler-Modus - Alle Tasten vom TonUINO werden für die ganz Kleinen gesperrt. Karten funktionieren weiterhin.
 mp3/0975_modifier_KinderGarden.mp3|KiTa-Modus - Damit es keinen Streit mehr gibt werden neue Karten nicht sofort gespielt sondern erst nachdem das aktuelle Lied vorbei ist. Die Vor- und Zurücktasten sind gesperrt.
 mp3/0976_modifier_repeat1.mp3|Titel wiederholen - den aktuellen Titel endlos wiederholen.
+mp3/0977_modifier_alarm.mp3|Wecker. Spielt zu einer vorgegebenen Uhrzeit Musik.
 mp3/0980_admin_lock_intro.mp3|Wähle bitte aus ob und wie das Adminmenü geschützt werden soll.
 mp3/0981_admin_lock_disabled.mp3|Kein Schutz - das Adminmenü kann jederzeit durch drücken von allen drei Tasten aktiviert werden.
 mp3/0982_admin_lock_card.mp3|Nur Adminkarte - das Adminmenü kann nur mit einer Adminkarte geöffnet werden. Eine neue Adminkarte kann jederzeit angelernt werden.
@@ -83,3 +88,10 @@ mp3/0992_admin_calc.mp3|Wieviel ist
 mp3/0993_admin_calc.mp3|plus
 mp3/0994_admin_calc.mp3|minus
 mp3/0999_reset_ok.mp3|Reset wurde durchgeführt!
+mp3/1000_wecker_stunde.mp3|Zu welcher Stunde soll der Wecker auslösen?
+mp3/1001_wecker_minute.mp3|Zu welcher Minute soll der Wecker auslösen?
+mp3/1002_wecker_minute_00.mp3|Zur vollen Stunde
+mp3/1003_wecker_minute_15.mp3|15 Minuten nach
+mp3/1004_wecker_minute_30.mp3|30 Minuten nach
+mp3/1005_wecker_minute_45.mp3|45 Minuten nach
+
