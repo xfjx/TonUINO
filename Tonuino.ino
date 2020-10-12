@@ -4,11 +4,7 @@
 #include <MFRC522.h>
 #include <SPI.h>
 #include <SoftwareSerial.h>
-//#include <Wire.h>
-//#include <RTC.h>
 #include <DS3232RTC.h>
-//#include <DCF77.h>
-//#include <Time.h>
 #include <avr/sleep.h>
 #include <Streaming.h> 
 
@@ -957,13 +953,13 @@ void setup() {
   randomSeed(ADCSeed); // Zufallsgenerator initialisieren
 
   // Dieser Hinweis darf nicht entfernt werden
-  /*Serial.println(F("\n _____         _____ _____ _____ _____"));
+  Serial.println(F("\n _____         _____ _____ _____ _____"));
   Serial.println(F("|_   _|___ ___|  |  |     |   | |     |"));
   Serial.println(F("  | | | . |   |  |  |-   -| | | |  |  |"));
   Serial.println(F("  |_| |___|_|_|_____|_____|_|___|_____|\n"));
   Serial.println(F("TonUINO Version 2.1"));
   Serial.println(F("created by Thorsten Voß and licensed under GNU/GPL."));
-  Serial.println(F("Information and contribution at https://tonuino.de.\n"));*/
+  Serial.println(F("Information and contribution at https://tonuino.de.\n"));
 
   // Busy Pin
   pinMode(busyPin, INPUT);
@@ -1086,8 +1082,7 @@ void nextButton() {
     if (activeModifier->handleNextButton() == true)
       return;
 
-  nextTrack(random(65536)); // Seltsam hier
-  //nextTrack(currentTrack + 1);
+  nextTrack(random(65536));
   delay(1000);
 }
 
