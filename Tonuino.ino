@@ -223,6 +223,8 @@ void loadSettingsFromFlash() {
   Serial.println(mySettings.adminMenuPin[3]);
 }
 
+
+
 class Modifier {
   public:
     virtual void loop() {}
@@ -259,6 +261,16 @@ class Modifier {
 };
 
 Modifier *activeModifier = NULL;
+
+// Methoden deklarieren damit der Compiler nicht jammern muss...
+void setstandbyTimer();
+void playFolder();
+bool setupFolder(folderSettings * theFolder);
+void playShortCut(uint8_t shortCut);
+void setupCard();
+void resetCard();
+bool askCode(uint8_t *code);
+bool readCard(nfcTagObject * nfcTag);
 
 class SleepTimer: public Modifier {
   private:
