@@ -1,4 +1,19 @@
-# inspired by https://github.com/SpenceKonde/ATTinyCore/blob/master/makefile.md
+# How-To:
+# Arduino-Makefile auschecken
+# git clone git@github.com:sudar/Arduino-Makefile.git@github
+#
+# Makefile erstellen, folgende Variablen setzen
+# ARDUINO_DIR – Arduino-IDE  Ordner
+# ARDMK_DIR – Order in dem Arduino-Makefile ausgecheckt wurde
+# entweder direkt im Makefile oder alse Umgebungsvariable (mittles export z.B.)
+#
+# bauen und hochladen:
+# make upload
+#
+# Debuggen:
+# make monitor
+#
+# Beispiel:
 
 ARDUINO_DIR = ${HOME}/devel/ext/arduino-1.8.12
 
