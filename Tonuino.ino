@@ -266,7 +266,7 @@ class SleepTimer: public Modifier {
 
   public:
     void loop() {
-      if (this->sleepAtMillis != 0 && millis() > this->sleepAtMillis) {
+      if (this->sleepAtMillis != 0 && (int)(millis() - this->sleepAtMillis) >= 0) {
         Serial.println(F("=== SleepTimer::loop() -> SLEEP!"));
         mp3.pause();
         setstandbyTimer();
@@ -304,7 +304,7 @@ class FreezeDance: public Modifier {
 
   public:
     void loop() {
-      if (this->nextStopAtMillis != 0 && millis() > this->nextStopAtMillis) {
+      if (this->nextStopAtMillis != 0 && (int)(millis() - this->nextStopAtMillis) >= 0 ) {
         Serial.println(F("== FreezeDance::loop() -> FREEZE!"));
         if (isPlaying()) {
           mp3.playAdvertisement(301);
@@ -684,7 +684,7 @@ void disablestandbyTimer() {
 }
 
 void checkStandbyAtMillis() {
-  if (sleepAtMillis != 0 && millis() > sleepAtMillis) {
+  if (sleepAtMillis != 0 && (int)(millis() - sleepAtMillis) >= 0) {
     Serial.println(F("=== power off!"));
     // enter sleep state
     digitalWrite(shutdownPin, HIGH);
