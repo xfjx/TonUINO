@@ -266,7 +266,7 @@ class SleepTimer: public Modifier {
 
   public:
     void loop() {
-      if (this->sleepAtMillis != 0 && (int)(millis() - this->sleepAtMillis) >= 0) {
+      if (this->sleepAtMillis != 0 && (long)(millis() - this->sleepAtMillis) >= 0) {
         Serial.println(F("=== SleepTimer::loop() -> SLEEP!"));
         mp3.pause();
         setstandbyTimer();
@@ -684,17 +684,17 @@ void disablestandbyTimer() {
 }
 
 void checkStandbyAtMillis() {
-  if (sleepAtMillis != 0 && (int)(millis() - sleepAtMillis) >= 0) {
+  if (sleepAtMillis != 0 && (long)(millis() - sleepAtMillis) >= 0) {
     Serial.println(F("=== power off!"));
-    // enter sleep state
-    digitalWrite(shutdownPin, HIGH);
-    delay(500);
-
     // http://discourse.voss.earth/t/intenso-s10000-powerbank-automatische-abschaltung-software-only/805
     // powerdown to 27mA (powerbank switches off after 30-60s)
     mfrc522.PCD_AntennaOff();
     mfrc522.PCD_SoftPowerDown();
     mp3.sleep();
+
+    // enter sleep state
+    delay(500);
+    digitalWrite(shutdownPin, HIGH);
 
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);
     cli();  // Disable interrupts
@@ -711,7 +711,7 @@ void waitForTrackToFinish() {
 #define TIMEOUT 1000
   do {
     mp3.loop();
-  } while (!isPlaying() && millis() < currentTime + TIMEOUT);
+  } while (!isPlaying() && (int)(millis() - currentTime) >= TIMEOUT);
   delay(1000);
   do {
     mp3.loop();
@@ -742,6 +742,10 @@ void setup() {
 
   // Busy Pin
   pinMode(busyPin, INPUT);
+
+  // activate Vcc for DFPlayer and NFC reader
+  pinMode(shutdownPin, OUTPUT);
+  digitalWrite(shutdownPin, LOW);
 
   // load Settings from EEPROM
   loadSettingsFromFlash();
@@ -775,9 +779,6 @@ void setup() {
   pinMode(buttonFourPin, INPUT_PULLUP);
   pinMode(buttonFivePin, INPUT_PULLUP);
 #endif
-  pinMode(shutdownPin, OUTPUT);
-  digitalWrite(shutdownPin, LOW);
-
 
   // RESET --- ALLE DREI KNÖPFE BEIM STARTEN GEDRÜCKT HALTEN -> alle EINSTELLUNGEN werden gelöscht
   if (digitalRead(buttonPause) == LOW && digitalRead(buttonUp) == LOW &&
