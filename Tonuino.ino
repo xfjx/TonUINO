@@ -64,6 +64,42 @@ struct adminSettings {
   uint8_t adminMenuPin[4];
 };
 
+// internal prototypes
+void setupCard();
+bool setupFolder(folderSettings * theFolder);
+void setstandbyTimer();
+//
+void writeCard(nfcTagObject nfcTag);
+void dump_byte_array(byte * buffer, byte bufferSize);
+void shuffleQueue();
+void writeSettingsToFlash();
+void resetSettings();
+void migrateSettings(int oldVersion);
+void loadSettingsFromFlash();
+void setstandbyTimer();
+void disablestandbyTimer();
+void checkStandbyAtMillis();
+void waitForTrackToFinish();
+void wakeUpMp3(void);
+void wakeUpNFC(void);
+void setup();
+void readButtons();
+void volumeUpButton();
+void volumeDownButton();
+void nextButton();
+void previousButton();
+void playFolder();
+void playShortCut(uint8_t shortCut);
+void loop();
+void adminMenu(bool fromCard);
+bool askCode(uint8_t *code);
+void resetCard();
+void setupCard();
+bool readCard(nfcTagObject * nfcTag);
+void writeCard(nfcTagObject nfcTag);
+void dump_byte_array(byte * buffer, byte bufferSize);
+//
+
 adminSettings mySettings;
 nfcTagObject myCard;
 folderSettings *myFolder;
@@ -650,6 +686,8 @@ MFRC522::StatusCode status;
 #define buttonFivePin A4
 #endif
 
+#define buttonPower 2
+
 #define LONG_PRESS 1000
 
 Button pauseButton(buttonPause);
@@ -698,7 +736,20 @@ void checkStandbyAtMillis() {
 
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);
     cli();  // Disable interrupts
-    sleep_mode();
+    sleep_enable();
+    sleep_bod_disable();	// for additional power savings
+    sei();
+    sleep_cpu();
+    // now the CPU is sleeping.
+
+    // continuation after wakeup:
+    sleep_disable();
+    // activate Vcc for DFPlayer and NFC reader
+    digitalWrite(shutdownPin, LOW);
+    Serial.println(F("=== waking up again!"));
+    wakeUpMp3();
+    wakeUpNFC();
+    setstandbyTimer();
   }
 }
 
@@ -717,6 +768,28 @@ void waitForTrackToFinish() {
     mp3.loop();
   } while (isPlaying());
 }
+
+void wakeUpMp3(void) {
+  // DFPlayer Mini initialisieren
+  mp3.begin();
+  // Zwei Sekunden warten bis der DFPlayer Mini initialisiert ist
+  delay(2000);
+  volume = mySettings.initVolume;
+  mp3.setVolume(volume);
+  mp3.setEq(mySettings.eq - 1);
+}
+
+void wakeUpNFC(void) {
+  // NFC Leser initialisieren
+  SPI.begin();        // Init SPI bus
+  mfrc522.PCD_Init(); // Init MFRC522
+}
+
+#ifdef buttonPower
+void onPowerButtonPressed(void) {
+  // an empty function as ISR is enough to wake up the CPU
+}
+#endif
 
 void setup() {
 
@@ -754,20 +827,13 @@ void setup() {
   setstandbyTimer();
 
   // DFPlayer Mini initialisieren
-  mp3.begin();
-  // Zwei Sekunden warten bis der DFPlayer Mini initialisiert ist
-  delay(2000);
-  volume = mySettings.initVolume;
-  mp3.setVolume(volume);
-  mp3.setEq(mySettings.eq - 1);
+  wakeUpMp3();
   // Fix für das Problem mit dem Timeout (ist jetzt in Upstream daher nicht mehr nötig!)
   //mySoftwareSerial.setTimeout(10000);
 
   // NFC Leser initialisieren
-  SPI.begin();        // Init SPI bus
-  mfrc522.PCD_Init(); // Init MFRC522
-  mfrc522
-  .PCD_DumpVersionToSerial(); // Show details of PCD - MFRC522 Card Reader
+  wakeUpNFC();
+  mfrc522.PCD_DumpVersionToSerial(); // Show details of PCD - MFRC522 Card Reader
   for (byte i = 0; i < 6; i++) {
     key.keyByte[i] = 0xFF;
   }
@@ -778,6 +844,10 @@ void setup() {
 #ifdef FIVEBUTTONS
   pinMode(buttonFourPin, INPUT_PULLUP);
   pinMode(buttonFivePin, INPUT_PULLUP);
+#endif
+#ifdef buttonPower
+  pinMode(buttonPower, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(buttonPower), onPowerButtonPressed, FALLING);
 #endif
 
   // RESET --- ALLE DREI KNÖPFE BEIM STARTEN GEDRÜCKT HALTEN -> alle EINSTELLUNGEN werden gelöscht
