@@ -5,6 +5,7 @@ Die DIY Musikbox (nicht nur) für Kinder
 # Change Log
 
 ## Version 2.1 (xx.xx.xxxx) noch WIP
+- das Board kann durch einen Powerbutton wieder aus dem Schlaf geweckt werden
 - Partymodus hat nun eine Queue -> jedes Lied kommt nur genau 1x vorkommt
 - Neue Wiedergabe-Modi "Spezialmodus Von-Bis" - Hörspiel, Album und Party -> erlaubt z.B. verschiedene Alben in einem Ordner zu haben und je mit einer Karte zu verknüpfen
 - Admin-Menü
