@@ -1,6 +1,24 @@
 # TonUINO
+
 Die DIY Musikbox (nicht nur) für Kinder
 
+# Abhängigkeiten installieren
+
+Um den `Tonuino.ino` Sketch kompilieren zu können brauchst du folgende externe Bibliotheken:
+
+- [DFPlayer Mini mp3 by Makuna](https://github.com/Makuna/DFMiniMp3/tree/master):
+  beinhalted Funktionalität um den DFPlayer Mini zu verwenden (`DFMiniMp3.h`).
+- [JC\_Button](https://github.com/JChristensen/JC_Button):
+  wird verwendet um Signale von Druckknöpfen zu verarbeiten (`JC_Button.h`).
+- [MFRC522](https://github.com/miguelbalboa/rfid):
+  für die Verwendung des NFC-Readers (`MFRC522.h`).
+
+Alle drei Bibliotheken können direkt in der _Arduino IDE_ installiert werden:
+1. Öffne dazu die Bibliotheksverwaltung
+   im Menü _Sketch_ > _Include Library_ > _Manage Libraries ..._
+   oder mit der Tastenkombination <kbd>Strg</kbd> + <kbd>⇧ Umschalt</kbd> + <kbd>I</kbd>.
+2. Suche die drei Bibliotheken indem du nach ihrem Namen filterst.
+3. Klicke rechts unter der Beschreibung auf den _Install_ Knopf.
 
 # Change Log
 
