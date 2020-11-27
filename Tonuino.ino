@@ -1124,6 +1124,7 @@ void adminMenu(bool fromCard = false) {
     if (mySettings.adminMenuLocked == 1) {
       knownCard = true;
       mp3.start();
+      Serial.println(F("Menu locked - use a card"));
       return;
     }
     // Pin check
