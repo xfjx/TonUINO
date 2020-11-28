@@ -1122,6 +1122,9 @@ void adminMenu(bool fromCard = false) {
   if (fromCard == false) {
     // Admin menu has been locked - it still can be trigged via admin card
     if (mySettings.adminMenuLocked == 1) {
+      knownCard = true;
+      mp3.start();
+      Serial.println(F("Menu locked - use a card"));
       return;
     }
     // Pin check
