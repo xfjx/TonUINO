@@ -22,7 +22,10 @@
 // uncomment the below line to enable five button support
 //#define FIVEBUTTONS
 
-static const uint32_t cardCookie = 322417479;
+/**
+ * Cookie to identify our cards.
+ */
+static const byte cardCookie[4] = {0x13, 0x37, 0xb3, 0x47};
 
 /*
  * Player modes.
@@ -67,14 +70,14 @@ struct folderSettings {
 
 // this object stores nfc tag data
 struct nfcTagObject {
-  uint32_t cookie;
+  byte cookie[sizeof(cardCookie)];
   uint8_t version;
   folderSettings nfcFolderSettings;
 };
 
 // admin settings stored in eeprom
 struct adminSettings {
-  uint32_t cookie;
+  byte cookie[sizeof(cardCookie)];
   byte version;
   uint8_t maxVolume;
   uint8_t minVolume;
@@ -166,7 +169,7 @@ void writeSettingsToFlash() {
 
 void resetSettings() {
   DEBUG_PRINTLN(F("=== resetSettings()"));
-  mySettings.cookie = cardCookie;
+  memcpy(&mySettings.cookie[0], &cardCookie[0], sizeof(cardCookie));
   mySettings.version = 2;
   mySettings.maxVolume = 25;
   mySettings.minVolume = 5;
@@ -192,7 +195,7 @@ void loadSettingsFromFlash() {
   DEBUG_PRINTLN(F("=== loadSettingsFromFlash()"));
   int address = sizeof(myFolder->folder) * 100;
   EEPROM.get(address, mySettings);
-  if (mySettings.cookie != cardCookie)
+  if (memcmp(&mySettings.cookie[0], &cardCookie[0], sizeof(cardCookie)) != 0) {
     resetSettings();
   migrateSettings(mySettings.version);
   }
@@ -1054,12 +1057,12 @@ void loop() {
     return;
 
   if (readCard(&myCard) == true) {
-    if (myCard.cookie == cardCookie && myCard.nfcFolderSettings.folder != 0 && myCard.nfcFolderSettings.mode != 0) {
-      playFolder();
-    }
-
-    // Neue Karte konfigurieren
-    else if (myCard.cookie != cardCookie) {
+    if (memcmp(&myCard.cookie[0], &cardCookie[0], sizeof(cardCookie)) == 0) {
+      if ((myCard.nfcFolderSettings.folder != 0) && (myCard.nfcFolderSettings.mode != MODE_INVALID)) {
+        playFolder();
+      }
+      // ignore card otherwise
+    } else { // configure new card
       knownCard = false;
       mp3.playMp3FolderTrack(300);
       waitForTrackToFinish();
@@ -1163,7 +1166,7 @@ void adminMenu(bool fromCard = false) {
   else if (subMenu == 6) {
     // create modifier card
     nfcTagObject tempCard;
-    tempCard.cookie = cardCookie;
+    memcpy(&tempCard.cookie[0], &cardCookie[0], sizeof(cardCookie));
     tempCard.version = 1;
     tempCard.nfcFolderSettings.folder = 0;
     tempCard.nfcFolderSettings.special = 0;
@@ -1218,7 +1221,7 @@ void adminMenu(bool fromCard = false) {
     // Create Cards for Folder
     // Ordner abfragen
     nfcTagObject tempCard;
-    tempCard.cookie = cardCookie;
+    memcpy(&tempCard.cookie[0], &cardCookie[0], sizeof(cardCookie));
     tempCard.version = 1;
     tempCard.nfcFolderSettings.mode = MODE_SINGLE_TRACK;
     tempCard.nfcFolderSettings.folder = voiceMenu(99, 301, 0, true);
@@ -1566,20 +1569,14 @@ bool readCard(nfcTagObject * nfcTag) {
   DEBUG_PRINTLN();
   DEBUG_PRINTLN();
 
-  uint32_t tempCookie;
-  tempCookie = (uint32_t)buffer[0] << 24;
-  tempCookie += (uint32_t)buffer[1] << 16;
-  tempCookie += (uint32_t)buffer[2] << 8;
-  tempCookie += (uint32_t)buffer[3];
-
-  tempCard.cookie = tempCookie;
+  memcpy(&tempCard.cookie[0], &buffer[0], sizeof(cardCookie));
   tempCard.version = buffer[4];
   tempCard.nfcFolderSettings.folder = buffer[5];
   tempCard.nfcFolderSettings.mode = buffer[6];
   tempCard.nfcFolderSettings.special = buffer[7];
   tempCard.nfcFolderSettings.special2 = buffer[8];
 
-  if (tempCard.cookie == cardCookie) {
+  if (memcmp(&tempCard.cookie[0], &cardCookie[0], sizeof(cardCookie)) == 0) {
 
     if (activeModifier != NULL && tempCard.nfcFolderSettings.folder != 0) {
       if (activeModifier->handleRFID(&tempCard) == true) {
@@ -1649,10 +1646,9 @@ bool readCard(nfcTagObject * nfcTag) {
 
 void writeCard(nfcTagObject nfcTag) {
   MFRC522::PICC_Type mifareType;
-  byte buffer[16] = {0x13, 0x37, 0xb3, 0x47, // 0x1337 0xb347 magic cookie to
-                     // identify our nfc tags
-                     0x02,                   // version 1
-                     nfcTag.nfcFolderSettings.folder,          // the folder picked by the user
+  byte buffer[16] = {cardCookie[0], cardCookie[1], cardCookie[2], cardCookie[3], // magic cookie
+                     0x02,                             // version 1
+                     nfcTag.nfcFolderSettings.folder,  // the folder picked by the user
                      nfcTag.nfcFolderSettings.mode,    // the playback mode picked by the user
                      nfcTag.nfcFolderSettings.special, // track or function for admin cards
                      nfcTag.nfcFolderSettings.special2,
