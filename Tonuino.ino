@@ -197,7 +197,6 @@ void loadSettingsFromFlash() {
   EEPROM.get(address, mySettings);
   if (memcmp(&mySettings.cookie[0], &cardCookie[0], sizeof(cardCookie)) != 0) {
     resetSettings();
-  migrateSettings(mySettings.version);
   }
 
   DEBUG_PRINT(F("Version: "));
