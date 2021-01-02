@@ -1350,7 +1350,7 @@ uint8_t voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
         Serial.println(F(" Options)"));
 
         unsigned long AdmTimeOut = 0;
-        unsigned long SollAdmTimeOut = 5*60000;           // Vorgabe der AdmTimeOut Zeit in millisekunden , Die 5 ist dieZeit in Minuten
+        unsigned long SollAdmTimeOut = 1*60000;           // Vorgabe der AdmTimeOut Zeit in millisekunden , Die 5 ist dieZeit in Minuten
         AdmTimeOut = millis();
         Serial.print(F("AdmTimeOut :"));
         Serial.println(SollAdmTimeOut);
