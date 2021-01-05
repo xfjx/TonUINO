@@ -762,6 +762,7 @@ void setup() {
   // NFC Leser initialisieren
   SPI.begin();        // Init SPI bus
   mfrc522.PCD_Init(); // Init MFRC522
+  mfrc522.PCD_SetAntennaGain(0x07 << 4);
   mfrc522
   .PCD_DumpVersionToSerial(); // Show details of PCD - MFRC522 Card Reader
   for (byte i = 0; i < 6; i++) {
