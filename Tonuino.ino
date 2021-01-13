@@ -68,7 +68,7 @@ adminSettings mySettings;
 nfcTagObject myCard;
 folderSettings *myFolder;
 unsigned long sleepAtMillis = 0;
-unsigned long toogleLoadAtMillis = 0;
+unsigned long toggleLoadAtMillis = 0;
 static uint16_t _lastTrackFinished;
 
 static void nextTrack(uint16_t track);
@@ -713,28 +713,28 @@ void checkStandbyAtMillis() {
 void setLoadTimer() {
   Serial.println(F("=== setLoadTimer()"));
   if (LOAD_ON > 0 && LOAD_OFF > 0) {
-      toogleLoadAtMillis = millis() + LOAD_ON;
+      toggleLoadAtMillis = millis() + LOAD_ON;
   }
   if (LOAD_ON > 0) {
       digitalWrite(loadPin, HIGH);
   }
-  Serial.println(toogleLoadAtMillis);
+  Serial.println(toggleLoadAtMillis);
 }
 
 void disableLoadTimer() {
   Serial.println(F("=== disableLoadTimer()"));
-  toogleLoadAtMillis = 0;
+  toggleLoadAtMillis = 0;
   digitalWrite(loadPin, LOW);
 }
 
 void checkLoadTimer() {
-  if (toogleLoadAtMillis != 0 && millis() > toogleLoadAtMillis) {
+  if (toggleLoadAtMillis != 0 && millis() > toggleLoadAtMillis) {
       if (digitalRead(loadPin) == HIGH) {
-	  toogleLoadAtMillis = millis() + LOAD_OFF;
+	  toggleLoadAtMillis = millis() + LOAD_OFF;
 	  digitalWrite(loadPin, LOW);
       }
       else {
-	  toogleLoadAtMillis = millis() + LOAD_ON;
+	  toggleLoadAtMillis = millis() + LOAD_ON;
 	  digitalWrite(loadPin, HIGH);
       }
   }
