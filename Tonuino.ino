@@ -655,6 +655,7 @@ MFRC522::StatusCode status;
 
 #define LONG_PRESS 1000
 
+// Set both to 0 to disable, set only LOAD_OFF to 0 for permanent ON
 #define LOAD_ON 150
 #define LOAD_OFF 4800
 
@@ -711,8 +712,12 @@ void checkStandbyAtMillis() {
 
 void setLoadTimer() {
   Serial.println(F("=== setLoadTimer()"));
-  toogleLoadAtMillis = millis() + LOAD_ON;
-  digitalWrite(loadPin, HIGH);
+  if (LOAD_ON > 0 && LOAD_OFF > 0) {
+      toogleLoadAtMillis = millis() + LOAD_ON;
+  }
+  if (LOAD_ON > 0) {
+      digitalWrite(loadPin, HIGH);
+  }
   Serial.println(toogleLoadAtMillis);
 }
 
