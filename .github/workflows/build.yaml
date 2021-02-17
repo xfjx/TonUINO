@@ -47,7 +47,7 @@ jobs:
       # We use the `arduino/setup-arduino-cli` action to install and
       # configure the Arduino CLI on the system.
       - name: Setup Arduino CLI
-        uses: arduino/setup-arduino-cli@v1.0.0
+        uses: arduino/setup-arduino-cli@v1.1.1
 
       - name: Install Python
         uses: actions/setup-python@v1
