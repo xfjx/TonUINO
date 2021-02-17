@@ -124,8 +124,8 @@ Kurzanleitung zum Aufspielen der Firmware für Benutzer (auf das Video klicken):
 Darüber hinaus muss noch die SD-Karte vorbereitet werden:
 
 1. Die Karte am besten mit dem [SD Memory Card Formatter](https://www.sdcard.org/downloads/formatter/) mit FAT32 formatieren.
-2. Wurde das Online-Update genutzt müssen noch die Dateien für die SD-Karte [heruntergeladen](https://www.tonuino.de/sdcard_de.zip) und entpackt werden. Die Ordner `mp3` und `advert` aus dem Ordner `sd-card` müssen auf die SD-Karte kopiert werden. Skripte wie `create-soundfiles.sh` brauchen gar nicht ausgeführt werden.
-3. Auf der SD-Karte müssen die Ordner für die Musik erstellt werden (ohne Lücken beginnend mit `01`, dann ggf. `02`, ...) und die MP3-Dateien der Lieder müssen ohne Lücken nummeriert werden (mit `001`, dann ggf. `002`, ...).
+2. Wurde das Online-Update genutzt, müssen noch die Dateien für die SD-Karte [heruntergeladen](https://www.tonuino.de/sdcard_de.zip) und entpackt werden. Die Ordner `mp3` und `advert` aus dem Ordner `sd-card` müssen auf die SD-Karte kopiert werden. Skripte wie `create-soundfiles.sh` brauchen gar nicht ausgeführt werden.
+3. Auf der SD-Karte müssen die Ordner für die Musik erstellt werden (ohne Lücken beginnend mit `01`, dann ggf. `02`, ...) und die MP3-Dateien der Lieder müssen ohne Lücken nummeriert werden (mit `001`, dann ggf. `002`, ...). Am leichtesten ist es eines der [Tools von der Community](https://discourse.voss.earth/t/uebersicht-der-tools-fuer-den-tonuino/5972) zu verwenden. 
 4. Die Codierung der NFC-Karten und des Admin-Menüs wird durch [die Videos](https://www.youtube.com/channel/UCeXF2J1Pz8b1plIne-jQy1A) deutlich und sind weitestgehend selbsterklärend.
 
 #### Für Entwickler
