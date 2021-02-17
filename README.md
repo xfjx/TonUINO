@@ -34,7 +34,7 @@ Es ist wichtig zu wissen, dass die Kunst ein TonUINO zu bauen grundsätzlich als
 
 ### Mikrocontroller-Hardware
 
-Es muss gelötet werden. Wir gehen davon aus, dass Lötkolben, Lötzinn und Löterfahrung vorhanden sind. Eine sehr gute Anleitung gibt es bei [YouTube](https://www.youtube.com/watch?v=RmE09dsY-l0) und einen Schaltplan auf der [offiziellen Webseite](https://www.voss.earth/tonuino/). Da hier jedoch die genaue Orientierung der Pins nicht ersichtlich ist, hilft auch noch ein alternativer Schaltplan von [dieser Webseite](https://smarthomeyourself.de/anleitung-zum-selber-bauen/unabhaengige-projekte/tonuino-der-kinderfreundliche-rfid-audio-player/), um die richtigen Pins zu identifizieren. Auf Basis eines [Forum-Beitrages](http://discourse.voss.earth/t/einfacher-schaltplan/5021) im Folgenden eine tabellarische Übersicht:
+Es muss gelötet werden. Wir gehen davon aus, dass Lötkolben, Lötzinn und Löterfahrung vorhanden sind. Eine sehr gute Anleitung gibt es bei [YouTube](https://www.youtube.com/watch?v=RmE09dsY-l0) und einen Schaltplan auf der [offiziellen Webseite](https://www.voss.earth/tonuino/). Da hier jedoch die genaue Orientierung der Pins nicht ersichtlich ist, hilft auch noch ein alternativer Schaltplan von [dieser Webseite](https://smarthomeyourself.de/anleitung-zum-selber-bauen/unabhaengige-projekte/arduino-und-esp-projekte/tonuino-der-kinderfreundliche-rfid-audio-player/), um die richtigen Pins zu identifizieren. Auf Basis eines [Forum-Beitrages](http://discourse.voss.earth/t/einfacher-schaltplan/5021) im Folgenden eine tabellarische Übersicht:
 
 | Text | Pin | Gerät | Ardunio: Pin | Ardunio: Text | Ardunio: Text | Ardunio: Pin | Gerät | Pin | Test |
 | ---  | --- | ---   | ---          | ---           | ---           |          --- |   --- | --- | ---  |
@@ -67,10 +67,10 @@ Die notwendigen Komponenten können über Reichelt, Conrad, Amazon, E-Bay oder A
 | 1 | [TonUINO Set](https://amzn.to/2pHTJQ3) | Die Hauptkomponenten | Sollte das Set ausverkauft sein, im Folgenden die vier Komponenten | ca. xx EUR / Stück |
 | (1)| [Arduino Nano](https://amzn.to/2mQNHaY) | Zum Ansteuern | Es können auch andere Arduino-Varianten gekauft werden | ca. 4 - 8 EUR / Stück |
 | (1) | [DFPlayer Mini](https://amzn.to/2K2JavA) | Zum Abspielen der Musik | Dieser Player ist recht empfindlich was die genaue Bespielung der SD-Karte angeht | ca. 3-6 EUR / Stück |
-| (1) | [Mini-USB-Kabel](https://amzn.to/2J2qv4E) | Zur Stromversorgung |  | ca. 2-4 EUR / Stück |
-| (1) | [USB-Netzteil](https://amzn.to/3b9zUnb) | Zur Stromversorgung |  | ca. 5 EUR / Stück |
 | (1) | [RFID Kit RC522](http://amzn.to/2FnyHJj) | Zum Lesen und Beschreiben der NFC-Karten |  | ca. 2-6 EUR / Stück |
-| (4) | [RFID-Karten](https://amzn.to/2NXZQuL) | Zur Auswahl der Musik | müssen im 13,56 MHz Band funken | ca. 0,40 - 0,80 EUR / Stück |
+| (10) | [RFID-Karten](https://amzn.to/2NXZQuL) | Zur Auswahl der Musik | müssen im 13,56 MHz Band funken | ca. 0,40 - 0,80 EUR / Stück |
+| 1 | [Mini-USB-Kabel](https://amzn.to/2J2qv4E) | Wenn nicht vorhanden, Zum Aufspielen der Software und optional zur Stromversorgung | muss Datenübertragung unterstützen | ca. 2-4 EUR / Stück |
+| (1) | [USB-Netzteil](https://amzn.to/3b9zUnb) | Optional zur Stromversorgung |  | ca. 5 EUR / Stück |
 | 1 | [Passiver Lautsprecher](https://amzn.to/396S73b) | Zum Anhören der Musik | z.B. ein Regallautsprecher oder etwas kleineres | ca. 2-50 EUR / Stück |
 | 1 | [MicroSD-Karte](http://amzn.to/2oXOxDw) | Zum Speichern der Musik | Maximal 32 GB | ca. 4-6 EUR / Stück |
 | 3 | [Knöpfe](https://amzn.to/3bdiKoR) | Zum starten/stoppen, lauter/leiser stellen, ... | Es gibt auch Varianten mit 5 Knöpfen. Knöpfe mit eingebauter LED haben weitere Vorteile. | ca. 0,50 EUR / Stück |
@@ -81,8 +81,8 @@ Die notwendigen Komponenten können über Reichelt, Conrad, Amazon, E-Bay oder A
 
 | Anzahl | Produkt | Beschreibung | Hinweis | Kosten |
 | --- | --- | ---  | --- | --- |
-| 1 | [TonUINO-Platine](http://discourse.voss.earth/t/neue-platine-version-1-51/63) | Für weniger Kabelsalat. Enthält auch die o.g. Kabel und den Resistor. Wird auch in der o.g. YouTube-Anleitung genutzt. | Kann von Thorsten [per E-Mail](TonUINO@voss.earth) bestellt werden | ca. 10 EUR / Stück
-| 1 | [Köpfhörer-Platine](http://discourse.voss.earth/t/kopfhoererbuchsenplatine/2463) | Zum Anschluss von Kopfhörern |Kann von Thorsten [per E-Mail](TonUINO@voss.earth) bestellt werden. Alternativ [der klassische Weg](https://discourse.voss.earth/t/kopfhoereranschluss-moeglich/96/84). | ca. 7,50 EUR / Stück
+| 1 | [TonUINO-Classic-Platine](https://www.leiterkartenpiraten.de/produkt/tonuino-classic-platine/) | Für weniger Kabelsalat. Enthält auch schon den benötigten Widerstand. Wird auch in der o.g. YouTube-Anleitung genutzt. |  | ca. 10 EUR / Stück
+| 1 | [Köpfhörer-Platine](https://www.leiterkartenpiraten.de/produkt/tonuino-classic-platine/) | Zum Anschluss von Kopfhörern | derzeit im Set der Classicplatine enthalten. Alternativ [der klassische Weg](https://discourse.voss.earth/t/kopfhoereranschluss-moeglich/96/84). | ca. X EUR / Stück
 | 1 | [Akku](https://amzn.to/33w0BQz) | Zum Kabellosen Betrieb | Dazu gibt es einige [Diskussionen](http://discourse.voss.earth/c/stromversorgung/5) und Alternativen (z.B. Wemos Battery Shield). Gute Erfahrungen gibt es mit dem Hersteller RAVPower. Wichtige Eigenschaften: power pass trough, automatische Abschaltung. | ca. 15 EUR / Stück |
 | 1 | [Micro-SD-Verlängerung](https://amzn.to/2J0qZsk) | Zum Austausch der SD-Karte von außen | Je nachdem wie das Gehäuse gebaut ist. Auch könnte eine externe USB-Buchse genutzt werden, [um MP3-Dateien aufzuspielen](http://discourse.voss.earth/t/daten-auf-sd-kopieren-ueber-usb-anschluss/2185/8). Das Kabel kann allerdings unter Umständen die [Autoabschaltung verhindern](https://discourse.voss.earth/t/sd-verlaengerungskabel-verhindert-poweroff/1780/4). | ca. 3 EUR / Stück |
 | 1 | [USB-Buchse](https://amzn.to/2QvkPEJ) | Zum Aufladen bei Akkubetrieb | [Kein einfaches Thema](http://discourse.voss.earth/t/micro-usb-buchse-fuer-das-gehaeuse/3280/14) und kann sowohl zum Aufladen als auch für ein [Firmware-Upgrade](http://discourse.voss.earth/t/benoetige-hilfe-bei-der-trennung-von-daten-und-strom-des-usb-kabels/975) oder zum [MP3-Aktualisieren](http://discourse.voss.earth/t/daten-auf-sd-kopieren-ueber-usb-anschluss/2185/8) gleichzeitig genutzt werden. | ca. 4-20 EUR / Stück |
@@ -94,13 +94,15 @@ Es gibt zahllose weitere Ergänzungen, wie [LED-Stripes](http://discourse.voss.e
 
 ### Systemnahe Programmierung
 
-Es muss nicht unbedingt programmiert werden. Die Installation der Firmware auf den Arduino ist sehr einfach. Die Anleitung auf der [offiziellen Webseite](https://www.voss.earth/tonuino/) ist gut. Wenn jedoch mehr Knöpfe angesprochen werden sollen (siehe oben), muss die Software auch geringfügig angepasst werden.
+Es muss nicht unbedingt programmiert werden. Die Installation der Firmware auf den Arduino ist sehr einfach. Ganz einfach geht es mit dem Online-Update. Alternativ kann die Anleitung auf der [offiziellen Webseite](https://www.voss.earth/tonuino/) genutzt werden. Wenn jedoch mehr Knöpfe angesprochen werden sollen (siehe oben), muss die Software dann noch geringfügig angepasst werden.
 
 Es gibt zwar, wie bei jeder Software, ein paar kleine Software-Fehler, die jedoch in [unterschiedlichen Branches](https://github.com/xfjx/TonUINO/network) gefixt wurden. Ziel ist es, diese Änderungen in so wenigen Branches wie möglich pflegen zu müssen.
 
 #### Für Benutzer
 
-Als einfacher Benutzer sollte die Programmierung so einfach gestaltet sein wie möglich. Im Folgenden die notwendigen Schritte. Eine [Community Software FAQ](https://discourse.voss.earth/t/faq-kategorie-software/924) gibt weitere Hilfestellungen. Unten gibt es einen Ablauf als Video.
+Als einfacher Benutzer sollte die Programmierung so einfach gestaltet sein wie möglich. Deshalb gibt es das [Online-Update](https://www.tonuino.de/classic_update.html). Ist der Upload erfolgreich abgeschlossen, kannst du direkt mit befüllen der SD-Karte weitermachen.
+
+Alternativ im Folgenden die notwendigen Schritte, wenn das Online-Update nicht verwendet wird. Eine [Community Software FAQ](https://discourse.voss.earth/t/faq-kategorie-software/924) gibt weitere Hilfestellungen. Unten gibt es einen Ablauf als Video.
 
 1. Download [der aktuellen Firmware](https://github.com/AlexanderWillner/TonUINO/releases/latest/download/TonUINO.zip).
 2. Die Datei `TonUINO.zip` landet dann im `Download`-Verzeichnis und muss mit einem Doppelklick entpackt werden. Es sollte dann ein Verzeichnis `TonUINO` existieren, in der sich die Datei `Tonuino.ino` befindet.
@@ -121,9 +123,9 @@ Kurzanleitung zum Aufspielen der Firmware für Benutzer (auf das Video klicken):
 
 Darüber hinaus muss noch die SD-Karte vorbereitet werden:
 
-1. Die Karte mit FAT32 formatieren.
-2. Die Ordner `mp3` und `advert` aus dem Ordner `sd-card` müssen auf die SD-Karte kopiert werden. Skripte wie `create-soundfiles.sh` brauchen gar nicht ausgeführt werden.
-3. Auf der SD-Karte müssen die Ordner für die Musik erstellt werden (ohne Lücken beginnend mit `01`, dann ggf. `02`, ...) und die MP3-Dateien der Lieder müssen ohne Lücken nummeriert werden (mit `001`, dann ggf. `002`, ...).
+1. Die Karte am besten mit dem [SD Memory Card Formatter](https://www.sdcard.org/downloads/formatter/) mit FAT32 formatieren.
+2. Wurde das Online-Update genutzt, müssen noch die Dateien für die SD-Karte [heruntergeladen](https://www.tonuino.de/sdcard_de.zip) und entpackt werden. Die Ordner `mp3` und `advert` aus dem Ordner `sd-card` müssen auf die SD-Karte kopiert werden. Skripte wie `create-soundfiles.sh` brauchen gar nicht ausgeführt werden.
+3. Auf der SD-Karte müssen die Ordner für die Musik erstellt werden (ohne Lücken beginnend mit `01`, dann ggf. `02`, ...) und die MP3-Dateien der Lieder müssen ohne Lücken nummeriert werden (mit `001`, dann ggf. `002`, ...). Am leichtesten ist es eines der [Tools von der Community](https://discourse.voss.earth/t/uebersicht-der-tools-fuer-den-tonuino/5972) zu verwenden. 
 4. Die Codierung der NFC-Karten und des Admin-Menüs wird durch [die Videos](https://www.youtube.com/channel/UCeXF2J1Pz8b1plIne-jQy1A) deutlich und sind weitestgehend selbsterklärend.
 
 #### Für Entwickler
