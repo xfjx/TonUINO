@@ -20,6 +20,12 @@
 // uncomment the below line to enable five button support
 //#define FIVEBUTTONS
 
+// uncomment the below line to stop playback when card is removed
+//#define PAUSEONCARDREMOVAL
+
+// delay for volume buttons
+#define LONG_PRESS_DELAY 300
+
 static const uint32_t cardCookie = 322417479;
 
 // DFPlayer Mini
@@ -48,6 +54,9 @@ struct nfcTagObject {
   //  uint8_t special2;
 };
 
+bool card_present = false;
+bool card_present_prev = false;
+
 // admin settings stored in eeprom
 struct adminSettings {
   uint32_t cookie;
@@ -75,6 +84,7 @@ uint8_t voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
                   bool preview = false, int previewFromFolder = 0, int defaultValue = 0, bool exitWithLongPress = false);
 bool isPlaying();
 bool checkTwo ( uint8_t a[], uint8_t b[] );
+bool readCard(nfcTagObject *nfcTag);
 void writeCard(nfcTagObject nfcTag);
 void dump_byte_array(byte * buffer, byte bufferSize);
 void adminMenu(bool fromCard = false);
@@ -153,7 +163,7 @@ void resetSettings() {
   mySettings.eq = 1;
   mySettings.locked = false;
   mySettings.standbyTimer = 0;
-  mySettings.invertVolumeButtons = true;
+  mySettings.invertVolumeButtons = false;
   mySettings.shortCuts[0].folder = 0;
   mySettings.shortCuts[1].folder = 0;
   mySettings.shortCuts[2].folder = 0;
@@ -287,6 +297,8 @@ class SleepTimer: public Modifier {
       Serial.println(F("== SleepTimer::getActive()"));
       return 1;
     }
+
+    virtual ~SleepTimer() {}
 };
 
 class FreezeDance: public Modifier {
@@ -707,7 +719,7 @@ bool isPlaying() {
 }
 
 void waitForTrackToFinish() {
-  long currentTime = millis();
+  unsigned long currentTime = millis();
 #define TIMEOUT 1000
   do {
     mp3.loop();
@@ -755,7 +767,7 @@ void setup() {
   delay(2000);
   volume = mySettings.initVolume;
   mp3.setVolume(volume);
-  mp3.setEq(mySettings.eq - 1);
+  mp3.setEq(DfMp3_Eq(mySettings.eq - 1));
   // Fix für das Problem mit dem Timeout (ist jetzt in Upstream daher nicht mehr nötig!)
   //mySoftwareSerial.setTimeout(10000);
 
@@ -783,7 +795,7 @@ void setup() {
   if (digitalRead(buttonPause) == LOW && digitalRead(buttonUp) == LOW &&
       digitalRead(buttonDown) == LOW) {
     Serial.println(F("Reset -> EEPROM wird gelöscht"));
-    for (int i = 0; i < EEPROM.length(); i++) {
+    for (unsigned int i = 0; i < EEPROM.length(); i++) {
       EEPROM.update(i, 0);
     }
     loadSettingsFromFlash();
@@ -813,6 +825,7 @@ void volumeUpButton() {
   if (volume < mySettings.maxVolume) {
     mp3.increaseVolume();
     volume++;
+    delay(LONG_PRESS_DELAY);
   }
   Serial.println(volume);
 }
@@ -826,6 +839,7 @@ void volumeDownButton() {
   if (volume > mySettings.minVolume) {
     mp3.decreaseVolume();
     volume--;
+    delay(LONG_PRESS_DELAY);
   }
   Serial.println(volume);
 }
@@ -946,7 +960,28 @@ void playShortCut(uint8_t shortCut) {
 }
 
 void loop() {
+  int _rfid_error_counter = 0;
+  
   do {
+
+#ifdef PAUSEONCARDREMOVAL
+    // auf Lesefehler des RFID Moduls prüfen
+    _rfid_error_counter += 1;
+    if(_rfid_error_counter > 2){
+      card_present = false;
+    }
+
+    // Ist eine Karte aufgelegt?
+    byte bufferATQA[2];
+    byte bufferSize = sizeof(bufferATQA);
+    MFRC522::StatusCode result = mfrc522.PICC_RequestA(bufferATQA, &bufferSize);
+  
+    if(result == mfrc522.STATUS_OK){
+      _rfid_error_counter = 0;
+      card_present = true;
+    }
+#endif
+
     checkStandbyAtMillis();
     mp3.loop();
 
@@ -974,7 +1009,7 @@ void loop() {
       if (activeModifier != NULL)
         if (activeModifier->handlePause() == true)
           return;
-      if (ignorePauseButton == false)
+      if (ignorePauseButton == false) {
         if (isPlaying()) {
           mp3.pause();
           setstandbyTimer();
@@ -983,6 +1018,7 @@ void loop() {
           mp3.start();
           disablestandbyTimer();
         }
+      }
       ignorePauseButton = false;
     } else if (pauseButton.pressedFor(LONG_PRESS) &&
                ignorePauseButton == false) {
@@ -1025,13 +1061,14 @@ void loop() {
       ignoreUpButton = true;
 #endif
     } else if (upButton.wasReleased()) {
-      if (!ignoreUpButton)
+      if (!ignoreUpButton) {
         if (!mySettings.invertVolumeButtons) {
           nextButton();
         }
         else {
           volumeUpButton();
         }
+      }
       ignoreUpButton = false;
     }
 
@@ -1090,10 +1127,11 @@ void loop() {
     }
 #endif
     // Ende der Buttons
+
+#ifndef PAUSEONCARDREMOVAL
   } while (!mfrc522.PICC_IsNewCardPresent());
-
+  
   // RFID Karte wurde aufgelegt
-
   if (!mfrc522.PICC_ReadCardSerial())
     return;
 
@@ -1101,7 +1139,7 @@ void loop() {
     if (myCard.cookie == cardCookie && myCard.nfcFolderSettings.folder != 0 && myCard.nfcFolderSettings.mode != 0) {
       playFolder();
     }
-
+  
     // Neue Karte konfigurieren
     else if (myCard.cookie != cardCookie) {
       knownCard = false;
@@ -1109,12 +1147,61 @@ void loop() {
       waitForTrackToFinish();
       setupCard();
     }
+   }
+   mfrc522.PICC_HaltA();
+   mfrc522.PCD_StopCrypto1();
+
+#endif
+#ifdef PAUSEONCARDREMOVAL
+  // solange keine Karte aufgelegt oder heruntergenommen wird
+  } while ( !(!card_present && card_present_prev) && !(card_present && !card_present_prev) );
+  
+  // RFID Karte wurde entfernt
+  if (!card_present && card_present_prev){
+    card_present_prev = card_present;
+      // pausiere
+      if (activeModifier != NULL)
+        if (activeModifier->handlePause() == true)
+          return;
+      if (ignorePauseButton == false)
+        if (isPlaying()) {
+          mp3.pause();
+          setstandbyTimer();
+        }
+        else if (knownCard) {
+          mp3.start();
+          disablestandbyTimer();
+        }
+      ignorePauseButton = false;
+      return;
   }
-  mfrc522.PICC_HaltA();
-  mfrc522.PCD_StopCrypto1();
+
+  // RFID Karte wurde aufgelegt
+  if (card_present && !card_present_prev){
+    card_present_prev = card_present;
+
+    if (!mfrc522.PICC_ReadCardSerial())
+      return;
+
+    if (readCard(&myCard) == true) {
+      if (myCard.cookie == cardCookie && myCard.nfcFolderSettings.folder != 0 && myCard.nfcFolderSettings.mode != 0) {
+        playFolder();
+      }
+  
+      // Neue Karte konfigurieren
+      else if (myCard.cookie != cardCookie) {
+        knownCard = false;
+        mp3.playMp3FolderTrack(300);
+        waitForTrackToFinish();
+        setupCard();
+      }
+    }
+    mfrc522.PCD_StopCrypto1();
+  }
+#endif
 }
 
-void adminMenu(bool fromCard = false) {
+void adminMenu(bool fromCard) {
   disablestandbyTimer();
   mp3.pause();
   Serial.println(F("=== adminMenu()"));
@@ -1189,7 +1276,7 @@ void adminMenu(bool fromCard = false) {
   else if (subMenu == 5) {
     // EQ
     mySettings.eq = voiceMenu(6, 920, 920, false, false, mySettings.eq);
-    mp3.setEq(mySettings.eq - 1);
+    mp3.setEq(DfMp3_Eq(mySettings.eq - 1));
   }
   else if (subMenu == 6) {
     // create modifier card
@@ -1297,7 +1384,7 @@ void adminMenu(bool fromCard = false) {
   }
   else if (subMenu == 11) {
     Serial.println(F("Reset -> EEPROM wird gelöscht"));
-    for (int i = 0; i < EEPROM.length(); i++) {
+    for (unsigned int i = 0; i < EEPROM.length(); i++) {
       EEPROM.update(i, 0);
     }
     resetSettings();
@@ -1313,7 +1400,7 @@ void adminMenu(bool fromCard = false) {
       mySettings.adminMenuLocked = 1;
     }
     else if (temp == 3) {
-      int8_t pin[4];
+      uint8_t pin[4];
       mp3.playMp3FolderTrack(991);
       if (askCode(pin)) {
         memcpy(mySettings.adminMenuPin, pin, 4);
@@ -1346,7 +1433,7 @@ bool askCode(uint8_t *code) {
 }
 
 uint8_t voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
-                  bool preview = false, int previewFromFolder = 0, int defaultValue = 0, bool exitWithLongPress = false) {
+                  bool preview, int previewFromFolder, int defaultValue, bool exitWithLongPress) {
   uint8_t returnValue = defaultValue;
   if (startMessage != 0)
     mp3.playMp3FolderTrack(startMessage);
@@ -1707,8 +1794,6 @@ void writeCard(nfcTagObject nfcTag) {
                      nfcTag.nfcFolderSettings.special2,
                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
                     };
-
-  byte size = sizeof(buffer);
 
   mifareType = mfrc522.PICC_GetType(mfrc522.uid.sak);
 
