@@ -470,7 +470,12 @@ class RepeatSingleModifier: public Modifier {
       Serial.println(F("== RepeatSingleModifier::handleNext() -> REPEAT CURRENT TRACK"));
       delay(50);
       if (isPlaying()) return true;
-      mp3.playFolderTrack(myFolder->folder, currentTrack);
+      if (myFolder->mode == 3 || myFolder->mode == 9){
+        mp3.playFolderTrack(myFolder->folder, queue[currentTrack - 1]);
+      }
+      else{
+        mp3.playFolderTrack(myFolder->folder, currentTrack);
+      }
       _lastTrackFinished = 0;
       return true;
     }
@@ -1446,6 +1451,7 @@ uint8_t voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
     if (pauseButton.pressedFor(LONG_PRESS)) {
       mp3.playMp3FolderTrack(802);
       ignorePauseButton = true;
+      checkStandbyAtMillis();
       return defaultValue;
     }
     if (pauseButton.wasReleased()) {
