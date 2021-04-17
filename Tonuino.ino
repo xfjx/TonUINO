@@ -916,7 +916,8 @@ void playFolder() {
     Serial.print(F(" bis "));
     Serial.println(myFolder->special2);
     numTracksInFolder = myFolder->special2;
-    currentTrack = myFolder->special;
+    firstTrack = myFolder->special;
+    currentTrack = firstTrack;
     mp3.playFolderTrack(myFolder->folder, currentTrack);
   }
 
