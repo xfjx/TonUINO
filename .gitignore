@@ -27,5 +27,9 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
+# Platform.io and Visual Studio Code folders
+.pio/
+.vscode/
+
 # TonUINO
 /tools/*.pyc
