@@ -701,6 +701,7 @@ void Tonuino::adminMenu() {
            break;
   }
   settings.writeSettingsToFlash();
+  mp3.playMp3FolderTrack(mp3Tracks::t_262_pling);
   setStandbyTimer();
 }
 
