@@ -29,3 +29,12 @@ Temporary Items
 
 # TonUINO
 /tools/*.pyc
+/Release/
+/sc-card_priv/
+/sloeber.ino.cpp
+/spec.d
+/.cproject
+/.project
+/.pydevproject
+/.sproject
+/.settings
