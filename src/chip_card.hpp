@@ -20,12 +20,12 @@ enum class mode_t: uint8_t {
 	party_vb      =   9,
 
 	// modifier modes
-  sleep_timer   = 0x80 | 1,
-  freeze_dance  = 0x80 | 2,
-  locked        = 0x80 | 3,
-  toddler       = 0x80 | 4,
-  kindergarden  = 0x80 | 5,
-  repeat_single = 0x80 | 6,
+  sleep_timer   =   1,
+  freeze_dance  =   2,
+  locked        =   3,
+  toddler       =   4,
+  kindergarden  =   5,
+  repeat_single =   6,
 
 	admin_card    = 0xff,
 };
@@ -44,17 +44,17 @@ struct nfcTagObject {
   folderSettings nfcFolderSettings;
 };
 
-class MFRC522; // forward declaration
+class MFRC522; // forward declaration to not have to include it here
 
 class Chip_card {
 public:
   Chip_card();
 
-  bool readCard(nfcTagObject &nfcTag);
+  bool readCard (      nfcTagObject &nfcTag);
   bool writeCard(const nfcTagObject &nfcTag);
   void sleepCard();
-  void initCard();
-  void stopCard();
+  void initCard ();
+  void stopCard ();
   bool newCardPresent();
 
 private:

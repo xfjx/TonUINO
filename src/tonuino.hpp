@@ -11,19 +11,20 @@ public:
   Tonuino() {}
 
   void setup         ();
+  void loop          ();
   void handleButtons ();
   void handleChipCard();
 
   void playFolder      ();
   void playShortCut    (uint8_t shortCut);
-  void playCurrentTrack() { mp3.playFolderTrack(myFolder->folder, getCurrentTrack()); }
+  void playCurrentTrack() { if (knownCard) mp3.playFolderTrack(myFolder->folder, getCurrentTrack()); }
 
   void     nextTrack();
   void previousTrack();
 
   void resetActiveModifier() { activeModifier = &noneModifier; }
 
-  void setStandbyTimer     ();
+  void setStandbyTimer();
 
   void setCard  (const nfcTagObject   &newCard  ) { myCard = newCard; setFolder(&myCard.nfcFolderSettings); }
   void setFolder(const folderSettings *newFolder) { myFolder = newFolder; }
@@ -40,7 +41,7 @@ private:
   void nextButton      ();
   void previousButton  ();
 
-  bool setupFolder(folderSettings * theFolder);
+  bool setupFolder(folderSettings& theFolder);
 
   void resetCard  ();
   void setupCard  ();
@@ -50,7 +51,7 @@ private:
   bool adminMenuAllowed();
   void adminMenu       ();
 
-  void voiceMenuNextOption( uint8_t   returnValue
+  void voiceMenuPlayOption( uint8_t   returnValue
                           , mp3Tracks messageOffset
                           , bool      preview
                           , int       previewFromFolder);

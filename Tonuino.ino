@@ -50,6 +50,5 @@ void setup() {
 
 void loop() {
 
-  tonuino.handleButtons();
-  tonuino.handleChipCard();
+  tonuino.loop();
 }

@@ -113,6 +113,7 @@ public:
   static void OnPlaySourceOnline  (DfMp3_PlaySources source);
   static void OnPlaySourceInserted(DfMp3_PlaySources source);
   static void OnPlaySourceRemoved (DfMp3_PlaySources source);
+
   static void ResetLastTrackFinished() { lastTrackFinished = 0; }
 private:
   static void PrintlnSourceAction (DfMp3_PlaySources source, const __FlashStringHelper* action);

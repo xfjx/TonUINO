@@ -33,7 +33,7 @@ Buttons::Buttons(const Settings& settings)
 #endif
 }
 
-button Buttons::get_button() {
+button Buttons::getButton() {
   button ret = button::none;
   readButtons();
   if ((  pauseButton.pressedFor(LONG_PRESS)
@@ -48,7 +48,8 @@ button Buttons::get_button() {
   else if (pauseButton.wasReleased()) {
     if (not ignorePauseButton)
       ret = button::pause;
-    ignorePauseButton = false;
+    else
+      ignorePauseButton = false;
   }
 
   else if (pauseButton.pressedFor(LONG_PRESS) && not ignorePauseButton) {
@@ -63,10 +64,11 @@ button Buttons::get_button() {
       else
         ret = button::volume_up;
     }
-    ignoreUpButton = false;
+    else
+      ignoreUpButton = false;
   }
 
-  else if (upButton.pressedFor(LONG_PRESS)) {
+  else if (upButton.pressedFor(LONG_PRESS) && not ignoreUpButton) {
 #ifndef FIVEBUTTONS
     if (!settings.invertVolumeButtons)
       ret = button::volume_up;
@@ -83,10 +85,11 @@ button Buttons::get_button() {
       else
         ret = button::volume_down;
     }
-    ignoreDownButton = false;
+    else
+      ignoreDownButton = false;
   }
 
-  else if (downButton.pressedFor(LONG_PRESS)) {
+  else if (downButton.pressedFor(LONG_PRESS) && not ignoreDownButton) {
 #ifndef FIVEBUTTONS
     if (!settings.invertVolumeButtons)
       ret = button::volume_down;
@@ -118,7 +121,7 @@ button Buttons::get_button() {
   return ret;
 }
 
-void Buttons::wait_for_no_button() {
+void Buttons::waitForNoButton() {
   do {
     readButtons();
   } while (  pauseButton.isPressed()
@@ -129,15 +132,18 @@ void Buttons::wait_for_no_button() {
           || buttonFive .isPressed()
 #endif
           );
+  ignorePauseButton = false;
+  ignoreUpButton    = false;
+  ignoreDownButton  = false;
 }
 
-bool Buttons::is_reset() {
+bool Buttons::isReset() {
   return (digitalRead(buttonPause) == LOW &&
           digitalRead(buttonUp)    == LOW &&
           digitalRead(buttonDown)  == LOW );
 }
 
-bool Buttons::is_break() {
+bool Buttons::isBreak() {
   readButtons();
   if (upButton.wasReleased() || downButton.wasReleased()) {
     Serial.print(F("Abgebrochen!"));

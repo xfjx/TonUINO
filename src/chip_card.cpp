@@ -133,7 +133,7 @@ bool Chip_card::readCard(nfcTagObject &nfcTag) {
   nfcTag.cookie                     = tempCookie;
   nfcTag.version                    = buffer[4];
   nfcTag.nfcFolderSettings.folder   = buffer[5];
-  nfcTag.nfcFolderSettings.mode     = static_cast<mode_t>(buffer[5] ? buffer[6] : 0x80 | buffer[6]);
+  nfcTag.nfcFolderSettings.mode     = static_cast<mode_t>(buffer[6]);
   nfcTag.nfcFolderSettings.special  = buffer[7];
   nfcTag.nfcFolderSettings.special2 = buffer[8];
 

@@ -11,6 +11,9 @@ struct Settings {
   typedef array<folderSettings, 4> shortCuts_t;
   typedef array<uint8_t       , 4> pin_t;
 
+  void    writeByteToFlash (uint16_t address, uint8_t value);
+  uint8_t readByteFromFlash(uint16_t address);
+
   void clearEEPROM();
 
   void writeSettingsToFlash();
@@ -18,7 +21,7 @@ struct Settings {
   void migrateSettings(int oldVersion);
   void loadSettingsFromFlash();
 
-  void writeFolderSettingToFlash(uint8_t folder, uint16_t track);
+  void     writeFolderSettingToFlash (uint8_t folder, uint16_t track);
   uint16_t readFolderSettingFromFlash(uint8_t folder);
 
   uint32_t    cookie;

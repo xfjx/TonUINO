@@ -24,10 +24,10 @@ class Buttons {
 public:
   Buttons(const Settings& settings);
 
-  button get_button();
-  void wait_for_no_button();
-  bool is_reset();
-  bool is_break();
+  button getButton();
+  void waitForNoButton();
+  bool isReset();
+  bool isBreak();
   bool askCode(Settings::pin_t &code);
 
 private:
@@ -44,10 +44,6 @@ private:
   bool ignorePauseButton = false;
   bool ignoreUpButton    = false;
   bool ignoreDownButton  = false;
-  #ifdef FIVEBUTTONS
-  bool ignoreButtonFour  = false;
-  bool ignoreButtonFive  = false;
-  #endif
 
   const Settings& settings;
 };

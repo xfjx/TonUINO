@@ -10,6 +10,7 @@ const uint8_t        busyPin       = 4;
 }
 
 uint16_t Mp3Notify::lastTrackFinished = 0;
+
 void Mp3Notify::OnError(uint16_t errorCode) {
   // see DfMp3_Error for code meaning
   Serial.println();
