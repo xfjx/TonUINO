@@ -40,8 +40,6 @@ void FreezeDance::setNextStopAtMillis() {
 
 bool KindergardenMode::handleNext() {
   Serial.println(F("== KindergardenMode::handleNext() -> NEXT"));
-  //if (nextCard.cookie == cardCookie && nextCard.nfcFolderSettings.folder != 0 && nextCard.nfcFolderSettings.mode != 0) {
-  //myFolder = &nextCard.nfcFolderSettings;
   if (cardQueued) {
     cardQueued = false;
 

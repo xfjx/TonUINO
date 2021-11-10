@@ -199,7 +199,8 @@ void Tonuino::playFolder() {
     break;
 
   case mode_t::hoerbuch:
-    // Hörbuch Modus: kompletten Ordner spielen und Fortschritt merken
+  case mode_t::hoerbuch_1:
+    // Hörbuch Modus: kompletten Ordner spielen und Fortschritt merken (oder nur eine Datei)
     Serial.println(F("Hörbuch Modus -> kompletten Ordner spielen und Fortschritt merken"));
     currentTrack = settings.readFolderSettingFromFlash(myFolder->folder);
     if (currentTrack == 0 || currentTrack > numTracksInFolder) {
@@ -335,6 +336,20 @@ void Tonuino::nextTrack() {
       setStandbyTimer();
     }
     break;
+  case mode_t::hoerbuch_1:
+    if (currentTrack != numTracksInFolder)
+      ++currentTrack;
+    else
+      currentTrack = 1;
+
+    Serial.print(F("Hörbuch Modus single ist aktiv -> Fortschritt speichern und beenden"));
+    Serial.println(currentTrack);
+    // Fortschritt im EEPROM abspeichern
+    settings.writeFolderSettingToFlash(myFolder->folder, currentTrack);
+    //mp3.sleep();  // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
+    knownCard = false;
+    setStandbyTimer();
+    break;
     default:
     break;
   }
@@ -379,6 +394,7 @@ void Tonuino::previousTrack() {
     break;
 
   case mode_t::hoerbuch:
+  case mode_t::hoerbuch_1:
     Serial.println(F("Hörbuch Modus ist aktiv -> vorheriger Track und Fortschritt speichern"));
     if (currentTrack != 1) {
       --currentTrack;
@@ -469,7 +485,7 @@ bool Tonuino::setupFolder(folderSettings& theFolder) {
   if (theFolder.folder == 0) return false;
 
   // Wiedergabemodus abfragen
-  theFolder.mode = static_cast<mode_t>(voiceMenu(9, mp3Tracks::t_310_select_mode, mp3Tracks::t_310_select_mode, false, 0, 0, true));
+  theFolder.mode = static_cast<mode_t>(voiceMenu(10, mp3Tracks::t_310_select_mode, mp3Tracks::t_310_select_mode, false, 0, 0, true));
   if (theFolder.mode == mode_t::none) return false;
 
   //// Hörbuchmodus -> Fortschritt im EEPROM auf 1 setzen
@@ -479,7 +495,7 @@ bool Tonuino::setupFolder(folderSettings& theFolder) {
 
   // Einzelmodus -> Datei abfragen
   case mode_t::einzel:
-    theFolder.special = voiceMenu(mp3.getFolderTrackCount(theFolder.folder), mp3Tracks::t_320_select_file, mp3Tracks::t_0,
+    theFolder.special = voiceMenu(mp3.getFolderTrackCount(theFolder.folder), mp3Tracks::t_327_select_file, mp3Tracks::t_0,
                                   true, theFolder.folder);
     break;
 
@@ -493,9 +509,9 @@ bool Tonuino::setupFolder(folderSettings& theFolder) {
   case mode_t::hoerspiel_vb:
   case mode_t::album_vb:
   case mode_t::party_vb:
-    theFolder.special  = voiceMenu(mp3.getFolderTrackCount(theFolder.folder), mp3Tracks::t_321_select_first_file, mp3Tracks::t_0,
+    theFolder.special  = voiceMenu(mp3.getFolderTrackCount(theFolder.folder), mp3Tracks::t_328_select_first_file, mp3Tracks::t_0,
                                    true, theFolder.folder);
-    theFolder.special2 = voiceMenu(mp3.getFolderTrackCount(theFolder.folder), mp3Tracks::t_322_select_last_file, mp3Tracks::t_0,
+    theFolder.special2 = voiceMenu(mp3.getFolderTrackCount(theFolder.folder), mp3Tracks::t_329_select_last_file, mp3Tracks::t_0,
                                    true, theFolder.folder, theFolder.special);
     break;
 
@@ -836,9 +852,9 @@ void Tonuino::createCardsForFolder() {
   tempCard.version = 1;
   tempCard.nfcFolderSettings.mode = mode_t::einzel;
   tempCard.nfcFolderSettings.folder = voiceMenu(99, mp3Tracks::t_301_select_folder, mp3Tracks::t_0, true);
-  uint8_t special = voiceMenu(mp3.getFolderTrackCount(tempCard.nfcFolderSettings.folder), mp3Tracks::t_321_select_first_file, mp3Tracks::t_0,
+  uint8_t special = voiceMenu(mp3.getFolderTrackCount(tempCard.nfcFolderSettings.folder), mp3Tracks::t_328_select_first_file, mp3Tracks::t_0,
                               true, tempCard.nfcFolderSettings.folder);
-  uint8_t special2 = voiceMenu(mp3.getFolderTrackCount(tempCard.nfcFolderSettings.folder), mp3Tracks::t_322_select_last_file, mp3Tracks::t_0,
+  uint8_t special2 = voiceMenu(mp3.getFolderTrackCount(tempCard.nfcFolderSettings.folder), mp3Tracks::t_329_select_last_file, mp3Tracks::t_0,
                                true, tempCard.nfcFolderSettings.folder, special);
 
   mp3.playMp3FolderTrack(mp3Tracks::t_936_batch_cards_intro);
