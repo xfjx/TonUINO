@@ -35,6 +35,12 @@ struct folderSettings {
   mode_t  mode;
   uint8_t special;
   uint8_t special2;
+  bool operator==(const folderSettings& rhs) {
+    return folder   == rhs.folder  &&
+           mode     == rhs.mode    &&
+           special  == rhs.special &&
+           special2 == rhs.special2;
+  }
 };
 
 // this object stores nfc tag data
@@ -42,6 +48,11 @@ struct nfcTagObject {
   uint32_t       cookie;
   uint8_t        version;
   folderSettings nfcFolderSettings;
+  bool operator==(const nfcTagObject& rhs) {
+    return cookie            == rhs.cookie           &&
+           version           == rhs.version          &&
+           nfcFolderSettings == rhs.nfcFolderSettings;
+  }
 };
 
 class MFRC522; // forward declaration to not have to include it here

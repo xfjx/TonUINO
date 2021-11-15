@@ -165,6 +165,16 @@ void Tonuino::handleChipCard() {
   // RFID Karte wurde aufgelegt
   nfcTagObject tempCard;
   if (chip_card.readCard(tempCard) && !specialCard(tempCard) && !activeModifier->handleRFID(tempCard)) {
+
+    if (pauseOnRemoveCard && knownCard && myCard == tempCard) {
+      if (not mp3.isPlaying()) {
+        mp3.start();
+        disableStandbyTimer();
+      }
+      chip_card.stopCrypto1();
+      return;
+    }
+
     setCard(tempCard);
     Serial.println(myCard.nfcFolderSettings.folder);
 
