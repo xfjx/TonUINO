@@ -46,6 +46,20 @@ struct nfcTagObject {
 
 class MFRC522; // forward declaration to not have to include it here
 
+class delayedSwitchOn {
+public:
+  delayedSwitchOn(unsigned int delay)
+  : delay(delay)
+  {}
+  delayedSwitchOn& operator++() { if (counter < delay) ++counter; return *this; }
+  void reset() { counter = 0; }
+  bool on()    { return counter == delay; }
+
+private:
+  const unsigned int delay;
+  unsigned int counter = 0;
+};
+
 class Chip_card {
 public:
   Chip_card();
@@ -55,10 +69,14 @@ public:
   void sleepCard();
   void initCard ();
   void stopCard ();
+  void stopCrypto1();
   bool newCardPresent();
+  bool cardRemoved();
 
 private:
   MFRC522             &mfrc522;
+
+  delayedSwitchOn     cardRemovedSwitch;
 };
 
 

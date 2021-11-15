@@ -10,7 +10,8 @@ Tonuino tonuino;
 
 namespace {
 
-const uint8_t shutdownPin   =  7;
+const uint8_t shutdownPin       = 7;
+const bool    pauseOnRemoveCard = false; // Set to true, if you want this feature
 
 }
 
@@ -55,7 +56,6 @@ void Tonuino::loop() {
 
   handleButtons();
   handleChipCard();
-
 }
 
 void Tonuino::handleButtons() {
@@ -132,7 +132,34 @@ void Tonuino::handleButtons() {
 }
 
 void Tonuino::handleChipCard() {
-  if (!chip_card.newCardPresent())
+
+  const bool newCardPresent = chip_card.newCardPresent();
+
+  if (chip_card.cardRemoved()) {
+    if (not cardRemoved) {
+      Serial.println(F("Card Removed"));
+      cardRemoved = true;
+      chip_card.stopCard();
+      if (pauseOnRemoveCard) {
+        if (not activeModifier->handlePause() && mp3.isPlaying()) {
+          mp3.pause();
+          setStandbyTimer();
+        }
+      }
+    }
+    return;
+  }
+  else {
+    if (cardRemoved) {
+      Serial.println(F("Card in"));
+      cardRemoved = false;
+    }
+    else {
+      return;
+    }
+  }
+
+  if (!newCardPresent)
     return;
 
   // RFID Karte wurde aufgelegt
@@ -156,7 +183,7 @@ void Tonuino::handleChipCard() {
       setupCard();
     }
   }
-  chip_card.stopCard();
+  chip_card.stopCrypto1();
 }
 
 void Tonuino::playFolder() {

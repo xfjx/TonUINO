@@ -20,10 +20,13 @@ const byte SS_PIN  = 10;          // Configurable, see typical pin layout above
 MFRC522::MIFARE_Key key{ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 const byte sector       = 1;
 const byte trailerBlock = 7;
+
+const unsigned int removeDelay = 3;
 } // namespace
 
 Chip_card::Chip_card()
 : mfrc522(*(new MFRC522(SS_PIN, RST_PIN)))
+, cardRemovedSwitch(removeDelay)
 {}
 
 bool Chip_card::readCard(nfcTagObject &nfcTag) {
@@ -234,11 +237,27 @@ void Chip_card::initCard() {
 	mfrc522.PCD_DumpVersionToSerial(); // Show details of PCD - MFRC522 Card Reader
 }
 
-bool Chip_card::newCardPresent() {
-	return mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial();
+void Chip_card::stopCard() {
+  mfrc522.PICC_HaltA();
 }
 
-void Chip_card::stopCard() {
-	mfrc522.PICC_HaltA();
-	mfrc522.PCD_StopCrypto1();
+void Chip_card::stopCrypto1() {
+  mfrc522.PCD_StopCrypto1();
+}
+
+bool Chip_card::newCardPresent() {
+  byte bufferATQA[2];
+  byte bufferSize = sizeof(bufferATQA);
+  MFRC522::StatusCode result = mfrc522.PICC_RequestA(bufferATQA, &bufferSize);
+
+  if(result != mfrc522.STATUS_OK)
+    ++cardRemovedSwitch;
+  else
+    cardRemovedSwitch.reset();
+
+	return result == mfrc522.STATUS_OK && mfrc522.PICC_ReadCardSerial();
+}
+
+bool Chip_card::cardRemoved() {
+  return cardRemovedSwitch.on();
 }
