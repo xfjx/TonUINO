@@ -45,6 +45,7 @@ enum class mp3Tracks: uint16_t {
   t_910_switch_volume          = 910,
   t_911_reset                  = 911,
   t_912_admin_lock             = 912,
+  t_913_pause_on_card_removed  = 913,
   t_920_eq_intro               = 920,
   t_921_normal                 = 921,
   t_922_pop                    = 922,
@@ -126,6 +127,7 @@ public:
 
   bool isPlaying() const;
   void waitForTrackToFinish();
+  void waitForTrackToStart();
   void playMp3FolderTrack(uint16_t track);
   void playMp3FolderTrack(mp3Tracks track);
   void playAdvertisement(uint16_t     track, bool olnyIfIsPlaying = true);
