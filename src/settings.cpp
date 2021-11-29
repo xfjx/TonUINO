@@ -48,6 +48,7 @@ void Settings::resetSettings() {
   adminMenuPin[1]     =  1;
   adminMenuPin[2]     =  1;
   adminMenuPin[3]     =  1;
+  pauseWhenCardRemoved= false;
 
   writeSettingsToFlash();
 }
@@ -62,6 +63,7 @@ void Settings::migrateSettings(int oldVersion) {
     adminMenuPin[1] = 1;
     adminMenuPin[2] = 1;
     adminMenuPin[3] = 1;
+    pauseWhenCardRemoved = false;
     writeSettingsToFlash();
   }
 }
@@ -105,6 +107,9 @@ void Settings::loadSettingsFromFlash() {
   Serial.print  (adminMenuPin[1]);
   Serial.print  (adminMenuPin[2]);
   Serial.println(adminMenuPin[3]);
+
+  Serial.print(F("Pause when card removed: "));
+  Serial.println(pauseWhenCardRemoved);
 }
 
 void Settings::writeFolderSettingToFlash(uint8_t folder, uint16_t track) {

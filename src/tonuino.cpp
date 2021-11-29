@@ -10,7 +10,7 @@ Tonuino tonuino;
 
 namespace {
 
-const uint8_t shutdownPin   =  7;
+const uint8_t shutdownPin       = 7;
 
 }
 
@@ -55,7 +55,6 @@ void Tonuino::loop() {
 
   handleButtons();
   handleChipCard();
-
 }
 
 void Tonuino::handleButtons() {
@@ -132,12 +131,49 @@ void Tonuino::handleButtons() {
 }
 
 void Tonuino::handleChipCard() {
-  if (!chip_card.newCardPresent())
+
+  const bool newCardPresent = chip_card.newCardPresent();
+
+  if (chip_card.cardRemoved()) {
+    if (not cardRemoved) {
+      Serial.println(F("Card Removed"));
+      cardRemoved = true;
+      chip_card.stopCard();
+      if (settings.pauseWhenCardRemoved) {
+        if (not activeModifier->handlePause() && mp3.isPlaying()) {
+          mp3.pause();
+          setStandbyTimer();
+        }
+      }
+    }
+    return;
+  }
+  else {
+    if (cardRemoved) {
+      Serial.println(F("Card in"));
+      cardRemoved = false;
+    }
+    else {
+      return;
+    }
+  }
+
+  if (!newCardPresent)
     return;
 
   // RFID Karte wurde aufgelegt
   nfcTagObject tempCard;
   if (chip_card.readCard(tempCard) && !specialCard(tempCard) && !activeModifier->handleRFID(tempCard)) {
+
+    if (settings.pauseWhenCardRemoved && knownCard && myCard == tempCard) {
+      if (not mp3.isPlaying()) {
+        mp3.start();
+        disableStandbyTimer();
+      }
+      chip_card.stopCrypto1();
+      return;
+    }
+
     setCard(tempCard);
     Serial.println(myCard.nfcFolderSettings.folder);
 
@@ -156,7 +192,7 @@ void Tonuino::handleChipCard() {
       setupCard();
     }
   }
-  chip_card.stopCard();
+  chip_card.stopCrypto1();
 }
 
 void Tonuino::playFolder() {
@@ -244,6 +280,8 @@ void Tonuino::playFolder() {
     return;
   }
   playCurrentTrack();
+  if (knownCard && settings.pauseWhenCardRemoved)
+    mp3.waitForTrackToStart();
 }
 
 void Tonuino::playShortCut(uint8_t shortCut) {
@@ -633,7 +671,7 @@ void Tonuino::adminMenu() {
   Serial.println(F("=== adminMenu()"));
   knownCard = false;
 
-  const int subMenu = voiceMenu(12, mp3Tracks::t_900_admin, mp3Tracks::t_900_admin, false, false, 0, true);
+  const int subMenu = voiceMenu(13, mp3Tracks::t_900_admin, mp3Tracks::t_900_admin, false, false, 0, true);
 
   switch (subMenu) {
   case 0:  setStandbyTimer();
@@ -704,6 +742,14 @@ void Tonuino::adminMenu() {
                    break;
            }
            break;
+  case 13: // Pause, wenn Karte entfernt wird
+          if (voiceMenu(2, mp3Tracks::t_913_pause_on_card_removed, mp3Tracks::t_933_switch_volume_intro, false) == 2) {
+            settings.pauseWhenCardRemoved = true;
+          }
+          else {
+            settings.pauseWhenCardRemoved = false;
+          }
+          break;
   }
   settings.writeSettingsToFlash();
   mp3.playMp3FolderTrack(mp3Tracks::t_262_pling);

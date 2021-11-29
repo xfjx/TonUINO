@@ -51,6 +51,18 @@ bool Mp3::isPlaying() const {
 }
 
 void Mp3::waitForTrackToFinish() {
+
+  // wait until track is started
+  waitForTrackToStart();
+  delay(1000);
+
+  // wait until track is finished
+  do {
+    loop();
+  } while (isPlaying());
+}
+
+void Mp3::waitForTrackToStart() {
   unsigned long currentTime = millis();
   const unsigned long maxStartTime = 1000;
 
@@ -58,12 +70,6 @@ void Mp3::waitForTrackToFinish() {
   do {
     loop();
   } while (!isPlaying() && millis() < currentTime + maxStartTime);
-  delay(1000);
-
-  // wait until track is finished
-  do {
-    loop();
-  } while (isPlaying());
 }
 
 void Mp3::playMp3FolderTrack(uint16_t track) {

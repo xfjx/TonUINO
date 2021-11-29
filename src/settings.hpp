@@ -36,6 +36,7 @@ struct Settings {
   shortCuts_t shortCuts;
   uint8_t     adminMenuLocked;
   pin_t       adminMenuPin;
+  bool        pauseWhenCardRemoved;
 };
 
 #endif /* SRC_SETTINGS_HPP_ */

@@ -94,6 +94,7 @@ private:
   unsigned long standbyAtMillis   = 0;
 
   bool          knownCard         = false;
+  bool          cardRemoved       = true;
 
   nfcTagObject          myCard;
   const folderSettings *myFolder  = &myCard.nfcFolderSettings;
