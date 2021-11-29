@@ -6,20 +6,21 @@
 const uint32_t cardCookie = 322417479;
 
 enum class mode_t: uint8_t {
-	none          =   0,
+  none          =   0,
 
-	// folder modes
-	hoerspiel     =   1,
-	album         =   2,
-	party         =   3,
-	einzel        =   4,
-	hoerbuch      =   5,
-	admin         =   6,
-	hoerspiel_vb  =   7,
-	album_vb      =   8,
-	party_vb      =   9,
+  // folder modes
+  hoerspiel     =   1,
+  album         =   2,
+  party         =   3,
+  einzel        =   4,
+  hoerbuch      =   5,
+  admin         =   6,
+  hoerspiel_vb  =   7,
+  album_vb      =   8,
+  party_vb      =   9,
+  hoerbuch_1    =  10,
 
-	// modifier modes
+  // modifier modes
   sleep_timer   =   1,
   freeze_dance  =   2,
   locked        =   3,
@@ -27,7 +28,7 @@ enum class mode_t: uint8_t {
   kindergarden  =   5,
   repeat_single =   6,
 
-	admin_card    = 0xff,
+  admin_card    = 0xff,
 };
 
 struct folderSettings {
