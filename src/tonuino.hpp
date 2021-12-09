@@ -12,8 +12,6 @@ public:
 
   void setup         ();
   void loop          ();
-  void handleButtons ();
-  void handleChipCard();
 
   void playFolder      ();
   void playShortCut    (uint8_t shortCut);
@@ -32,6 +30,11 @@ public:
 private:
 
   uint8_t getCurrentTrack() const;
+
+  void handleButtons ();
+  void handleChipCard(bool no_action = false);
+  void waitForCardRemoved();
+  void writeCard(const nfcTagObject &nfcTag);
 
   void checkStandbyAtMillis();
   void disableStandbyTimer ();

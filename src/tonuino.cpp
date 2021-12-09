@@ -130,7 +130,7 @@ void Tonuino::handleButtons() {
   }
 }
 
-void Tonuino::handleChipCard() {
+void Tonuino::handleChipCard(bool no_action) {
 
   const bool newCardPresent = chip_card.newCardPresent();
 
@@ -158,7 +158,7 @@ void Tonuino::handleChipCard() {
     }
   }
 
-  if (!newCardPresent)
+  if (no_action || !newCardPresent)
     return;
 
   // RFID Karte wurde aufgelegt
@@ -193,6 +193,34 @@ void Tonuino::handleChipCard() {
     }
   }
   chip_card.stopCrypto1();
+}
+
+void Tonuino::waitForCardRemoved() {
+  chip_card.stopCrypto1();
+  while (!cardRemoved) {
+    handleChipCard(true);
+  }
+}
+
+void Tonuino::writeCard(const nfcTagObject &nfcTag) {
+
+  mp3.playMp3FolderTrack(mp3Tracks::t_800_waiting_for_card);
+  do {
+    if (buttons.isBreak()) {
+      mp3.playMp3FolderTrack(mp3Tracks::t_802_reset_aborted);
+      return;
+    }
+    handleChipCard(true);
+  } while (cardRemoved);
+
+  Serial.println(F("schreibe Karte..."));
+  if (chip_card.writeCard(nfcTag))
+    mp3.playMp3FolderTrack(mp3Tracks::t_400_ok);
+  else
+    mp3.playMp3FolderTrack(mp3Tracks::t_401_error);
+  mp3.waitForTrackToFinish();
+
+  waitForCardRemoved();
 }
 
 void Tonuino::playFolder() {
@@ -560,14 +588,6 @@ bool Tonuino::setupFolder(folderSettings& theFolder) {
 }
 
 void Tonuino::resetCard() {
-  mp3.playMp3FolderTrack(mp3Tracks::t_800_waiting_for_card);
-  do {
-    if (buttons.isBreak()) {
-      mp3.playMp3FolderTrack(mp3Tracks::t_802_reset_aborted);
-      return;
-    }
-  } while (!chip_card.newCardPresent());
-
   Serial.print(F("Karte wird neu konfiguriert!"));
   setupCard();
 }
@@ -582,11 +602,8 @@ void Tonuino::setupCard() {
     mp3.pause();
     do {
     } while (mp3.isPlaying());
-    if (chip_card.writeCard(newCard))
-      mp3.playMp3FolderTrack(mp3Tracks::t_400_ok);
-    else
-      mp3.playMp3FolderTrack(mp3Tracks::t_401_error);
-    mp3.waitForTrackToFinish();
+
+    writeCard(newCard);
   }
 }
 
@@ -682,6 +699,8 @@ bool Tonuino::adminMenuAllowed() {
 }
 
 void Tonuino::adminMenu() {
+  waitForCardRemoved();
+
   disableStandbyTimer();
   mp3.pause();
   Serial.println(F("=== adminMenu()"));
@@ -872,22 +891,8 @@ void Tonuino::createModifierCard() {
         case 4: tempCard.nfcFolderSettings.special = 60; break;
       }
     }
-    mp3.playMp3FolderTrack(mp3Tracks::t_800_waiting_for_card);
-    do {
-      if (buttons.isBreak()) {
-        mp3.playMp3FolderTrack(mp3Tracks::t_802_reset_aborted);
-        return;
-      }
-    } while (!chip_card.newCardPresent());
 
-    // RFID Karte wurde aufgelegt
-    Serial.println(F("schreibe Karte..."));
-    if (chip_card.writeCard(tempCard))
-      mp3.playMp3FolderTrack(mp3Tracks::t_400_ok);
-    else
-      mp3.playMp3FolderTrack(mp3Tracks::t_401_error);
-    mp3.waitForTrackToFinish();
-    chip_card.stopCard();
+    writeCard(tempCard);
   }
 }
 
@@ -910,22 +915,8 @@ void Tonuino::createCardsForFolder() {
     tempCard.nfcFolderSettings.special = x;
     Serial.print(x);
     Serial.println(F(" Karte auflegen"));
-    do {
-      if (buttons.isBreak()) {
-        mp3.playMp3FolderTrack(mp3Tracks::t_802_reset_aborted);
-        return;
-      }
-    } while (!chip_card.newCardPresent());
 
-    // RFID Karte wurde aufgelegt
-    Serial.println(F("schreibe Karte..."));
-    if (chip_card.writeCard(tempCard))
-      mp3.playMp3FolderTrack(mp3Tracks::t_400_ok);
-    else
-      mp3.playMp3FolderTrack(mp3Tracks::t_401_error);
-    mp3.waitForTrackToFinish();
-    chip_card.stopCard();
-    mp3.waitForTrackToFinish();
+    writeCard(tempCard);
   }
 }
 
