@@ -1,63 +1,57 @@
 #include "buttons.hpp"
 
+#include "constants.hpp"
+#include "logger.hpp"
+
 namespace {
-
-const uint32_t LONG_PRESS = 1000;
-const uint8_t buttonPause   = A0;
-const uint8_t buttonUp      = A1;
-const uint8_t buttonDown    = A2;
-
-#ifdef FIVEBUTTONS
-const uint8_t buttonFourPin = A3;
-const uint8_t buttonFivePin = A4;
-#endif
-
+const bool buttonPinIsActiveLow = (buttonPinType == levelType::activeLow);
 }
 
 Buttons::Buttons(const Settings& settings)
-: pauseButton(buttonPause  )
-,    upButton(buttonUp     )
-,  downButton(buttonDown   )
+//            pin             dbTime        puEnable              invert
+: buttonPause(buttonPausePin, buttonDbTime, buttonPinIsActiveLow, buttonPinIsActiveLow)
+, buttonUp   (buttonUpPin   , buttonDbTime, buttonPinIsActiveLow, buttonPinIsActiveLow)
+, buttonDown (buttonDownPin , buttonDbTime, buttonPinIsActiveLow, buttonPinIsActiveLow)
 #ifdef FIVEBUTTONS
-, buttonFour (buttonFourPin);
-, buttonFive (buttonFivePin);
+, buttonFour (buttonFourPin , buttonDbTime, buttonPinIsActiveLow, buttonPinIsActiveLow)
+, buttonFive (buttonFivePin , buttonDbTime, buttonPinIsActiveLow, buttonPinIsActiveLow)
 #endif
 , settings(settings)
 {
-  pinMode(buttonPause  , INPUT_PULLUP);
-  pinMode(buttonUp     , INPUT_PULLUP);
-  pinMode(buttonDown   , INPUT_PULLUP);
+  buttonPause.begin();
+  buttonUp   .begin();
+  buttonDown .begin();
 #ifdef FIVEBUTTONS
-  pinMode(buttonFourPin, INPUT_PULLUP);
-  pinMode(buttonFivePin, INPUT_PULLUP);
+  buttonFour .begin();
+  buttonFive .begin();
 #endif
 }
 
 button Buttons::getButton() {
   button ret = button::none;
   readButtons();
-  if ((  pauseButton.pressedFor(LONG_PRESS)
-      || upButton   .pressedFor(LONG_PRESS)
-      || downButton .pressedFor(LONG_PRESS)
+  if ((  buttonPause.pressedFor(buttonLongPress)
+      || buttonUp   .pressedFor(buttonLongPress)
+      || buttonDown .pressedFor(buttonLongPress)
       )
-     && pauseButton.isPressed()
-     && upButton   .isPressed()
-     && downButton .isPressed())
+     && buttonPause.isPressed()
+     && buttonUp   .isPressed()
+     && buttonDown .isPressed())
     ret = button::admin;
 
-  else if (pauseButton.wasReleased()) {
+  else if (buttonPause.wasReleased()) {
     if (not ignorePauseButton)
       ret = button::pause;
     else
       ignorePauseButton = false;
   }
 
-  else if (pauseButton.pressedFor(LONG_PRESS) && not ignorePauseButton) {
+  else if (buttonPause.pressedFor(buttonLongPress) && not ignorePauseButton) {
     ret = button::track;
     ignorePauseButton = true;
   }
 
-  else if (upButton.wasReleased()) {
+  else if (buttonUp.wasReleased()) {
     if (!ignoreUpButton) {
       if (!settings.invertVolumeButtons)
         ret = button::next;
@@ -68,7 +62,7 @@ button Buttons::getButton() {
       ignoreUpButton = false;
   }
 
-  else if (upButton.pressedFor(LONG_PRESS) && not ignoreUpButton) {
+  else if (buttonUp.pressedFor(buttonLongPress) && not ignoreUpButton) {
 #ifndef FIVEBUTTONS
     if (!settings.invertVolumeButtons)
       ret = button::volume_up;
@@ -78,7 +72,7 @@ button Buttons::getButton() {
 #endif
   }
 
-  else if (downButton.wasReleased()) {
+  else if (buttonDown.wasReleased()) {
     if (!ignoreDownButton) {
       if (!settings.invertVolumeButtons)
         ret = button::previous;
@@ -89,7 +83,7 @@ button Buttons::getButton() {
       ignoreDownButton = false;
   }
 
-  else if (downButton.pressedFor(LONG_PRESS) && not ignoreDownButton) {
+  else if (buttonDown.pressedFor(buttonLongPress) && not ignoreDownButton) {
 #ifndef FIVEBUTTONS
     if (!settings.invertVolumeButtons)
       ret = button::volume_down;
@@ -115,18 +109,18 @@ button Buttons::getButton() {
   }
 #endif
 
-//  if (ret != button::none) {
-//    Serial.print(F("Button: ")); Serial.println(static_cast<uint8_t>(ret));
-//  }
+  if (ret != button::none) {
+    LOG(button_log, s_debug, F("Button: "), static_cast<uint8_t>(ret));
+  }
   return ret;
 }
 
 void Buttons::waitForNoButton() {
   do {
     readButtons();
-  } while (  pauseButton.isPressed()
-          || upButton   .isPressed()
-          || downButton .isPressed()
+  } while (  buttonPause.isPressed()
+          || buttonUp   .isPressed()
+          || buttonDown .isPressed()
 #ifdef FIVEBUTTONS
           || buttonFour .isPressed()
           || buttonFive .isPressed()
@@ -138,15 +132,16 @@ void Buttons::waitForNoButton() {
 }
 
 bool Buttons::isReset() {
-  return (digitalRead(buttonPause) == LOW &&
-          digitalRead(buttonUp)    == LOW &&
-          digitalRead(buttonDown)  == LOW );
+  const int buttonActiveLevel = getLevel(buttonPinType, level::active);
+  return (digitalRead(buttonPausePin) == buttonActiveLevel &&
+          digitalRead(buttonUpPin   ) == buttonActiveLevel &&
+          digitalRead(buttonDownPin ) == buttonActiveLevel );
 }
 
 bool Buttons::isBreak() {
   readButtons();
-  if (upButton.wasReleased() || downButton.wasReleased()) {
-    Serial.print(F("Abgebrochen!"));
+  if (buttonUp.wasReleased() || buttonDown.wasReleased()) {
+    LOG(button_log, s_info, F("Abgebrochen!"));
     return true;
   }
   return false;
@@ -156,22 +151,22 @@ bool Buttons::askCode(Settings::pin_t &code) {
   uint8_t x = 0;
   while (x < 4) {
     readButtons();
-    if (pauseButton.pressedFor(LONG_PRESS))
+    if (buttonPause.pressedFor(buttonLongPress))
       return false;
-    if (pauseButton.wasReleased())
+    if (buttonPause.wasReleased())
       code[x++] = 1;
-    if (upButton.wasReleased())
+    if (buttonUp.wasReleased())
       code[x++] = 2;
-    if (downButton.wasReleased())
+    if (buttonDown.wasReleased())
       code[x++] = 3;
   }
   return true;
 }
 
 void Buttons::readButtons() {
-  pauseButton.read();
-  upButton   .read();
-  downButton .read();
+  buttonPause.read();
+  buttonUp   .read();
+  buttonDown .read();
 #ifdef FIVEBUTTONS
   buttonFour .read();
   buttonFive .read();

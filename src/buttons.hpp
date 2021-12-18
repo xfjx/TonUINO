@@ -5,9 +5,7 @@
 #include <JC_Button.h>
 
 #include "settings.hpp"
-
-// uncomment the below line to enable five button support
-//#define FIVEBUTTONS
+#include "constants.hpp"
 
 enum class button {
   none,
@@ -34,9 +32,9 @@ private:
 
   void readButtons();
 
-  Button pauseButton;
-  Button    upButton;
-  Button  downButton;
+  Button buttonPause;
+  Button buttonUp   ;
+  Button buttonDown ;
   #ifdef FIVEBUTTONS
   Button  buttonFour;
   Button  buttonFive;

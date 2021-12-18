@@ -3,6 +3,8 @@
 #include "src/settings.hpp"
 #include "src/mp3.hpp"
 #include "src/buttons.hpp"
+#include "src/logger.hpp"
+#include "src/constants.hpp"
 
 
 /*
@@ -15,13 +17,6 @@
     created by Thorsten Voß and licensed under GNU/GPL.
     Information and contribution at https://tonuino.de.
 */
-
-namespace {
-
-const uint8_t openAnalogPin = A7;
-
-}
-
 
 void setup() {
 
@@ -37,13 +32,13 @@ void setup() {
   randomSeed(ADCSeed); // Zufallsgenerator initialisieren
 
   // Dieser Hinweis darf nicht entfernt werden
-  Serial.println(F("\n _____         _____ _____ _____ _____"));
-  Serial.println(F("|_   _|___ ___|  |  |     |   | |     |"));
-  Serial.println(F("  | | | . |   |  |  |-   -| | | |  |  |"));
-  Serial.println(F("  |_| |___|_|_|_____|_____|_|___|_____|\n"));
-  Serial.println(F("TonUINO Version 2.1"));
-  Serial.println(F("created by Thorsten Voß and licensed under GNU/GPL."));
-  Serial.println(F("Information and contribution at https://tonuino.de.\n"));
+  LOG(init_log, s_debug, F(" _____         _____ _____ _____ _____"));
+  LOG(init_log, s_debug, F("|_   _|___ ___|  |  |     |   | |     |"));
+  LOG(init_log, s_debug, F("  | | | . |   |  |  |-   -| | | |  |  |"));
+  LOG(init_log, s_debug, F("  |_| |___|_|_|_____|_____|_|___|_____|\n"));
+  LOG(init_log, s_debug, F("TonUINO Version 2.1"));
+  LOG(init_log, s_debug, F("created by Thorsten Voß and licensed under GNU/GPL."));
+  LOG(init_log, s_debug, F("Information and contribution at https://tonuino.de.\n"));
 
   tonuino.setup();
 }

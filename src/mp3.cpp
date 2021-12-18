@@ -1,35 +1,25 @@
 #include "mp3.hpp"
 
 #include "tonuino.hpp"
-
-namespace {
-
-const uint8_t        receivePin    = 2;
-const uint8_t        transmitPin   = 3;
-const uint8_t        busyPin       = 4;
-}
+#include "constants.hpp"
 
 uint16_t Mp3Notify::lastTrackFinished = 0;
 
 void Mp3Notify::OnError(uint16_t errorCode) {
   // see DfMp3_Error for code meaning
-  Serial.println();
-  Serial.print(F("Com Error "));
-  Serial.println(errorCode);
+  LOG(mp3_log, s_error, F("Com Error: "), errorCode);
 }
 void Mp3Notify::OnPlaySourceOnline  (DfMp3_PlaySources source) { PrintlnSourceAction(source, F("online"  )); }
 void Mp3Notify::OnPlaySourceInserted(DfMp3_PlaySources source) { PrintlnSourceAction(source, F("bereit"  )); }
 void Mp3Notify::OnPlaySourceRemoved (DfMp3_PlaySources source) { PrintlnSourceAction(source, F("entfernt")); }
 void Mp3Notify::PrintlnSourceAction(DfMp3_PlaySources source, const __FlashStringHelper* action) {
-  if (source & DfMp3_PlaySources_Sd   ) Serial.print(F("SD Karte "));
-  if (source & DfMp3_PlaySources_Usb  ) Serial.print(F("USB "     ));
-  if (source & DfMp3_PlaySources_Flash) Serial.print(F("Flash "   ));
-  Serial.println(action);
+  if (source & DfMp3_PlaySources_Sd   ) LOG(mp3_log, s_info, F("SD Karte "), action);
+  if (source & DfMp3_PlaySources_Usb  ) LOG(mp3_log, s_info, F("USB "     ), action);
+  if (source & DfMp3_PlaySources_Flash) LOG(mp3_log, s_info, F("Flash "   ), action);
 }
 
 void Mp3Notify::OnPlayFinished(DfMp3_PlaySources /*source*/, uint16_t track) {
-//  Serial.print(F("Track beendet"));
-//  Serial.println(track);
+  LOG(mp3_log, s_debug, F("Track beendet, Track: "), track);
   if (track == lastTrackFinished)
     return;
   else
@@ -39,15 +29,15 @@ void Mp3Notify::OnPlayFinished(DfMp3_PlaySources /*source*/, uint16_t track) {
 
 Mp3::Mp3(const Settings& settings)
 : DFMiniMp3<SoftwareSerial, Mp3Notify>{softwareSerial}
-, softwareSerial{receivePin, transmitPin}
+, softwareSerial{dfPlayer_receivePin, dfPlayer_transmitPin}
 , settings{settings}
 {
   // Busy Pin
-  pinMode(busyPin, INPUT);
+  pinMode(dfPlayer_busyPin, dfPlayer_busyPinType == levelType::activeHigh ? INPUT : INPUT_PULLUP);
 }
 
 bool Mp3::isPlaying() const {
-  return !digitalRead(busyPin);
+  return !digitalRead(dfPlayer_busyPin);
 }
 
 void Mp3::waitForTrackToFinish() {
@@ -99,21 +89,20 @@ void Mp3::playAdvertisement(advertTracks track, bool olnyIfIsPlaying) {
 
 void Mp3::increaseVolume() {
   if (volume < settings.maxVolume) {
-    DFMiniMp3<SoftwareSerial, Mp3Notify>::increaseVolume();
-    ++volume;
+    DFMiniMp3<SoftwareSerial, Mp3Notify>::setVolume(++volume);
   }
-  Serial.println(volume);
+  LOG(mp3_log, s_info, F("Volume: "), volume);
 }
 
 void Mp3::decreaseVolume() {
   if (volume > settings.minVolume) {
-    DFMiniMp3<SoftwareSerial, Mp3Notify>::decreaseVolume();
-    --volume;
+    DFMiniMp3<SoftwareSerial, Mp3Notify>::setVolume(--volume);
   }
-  Serial.println(volume);
+  LOG(mp3_log, s_info, F("Volume: "), volume);
 }
 
 void Mp3::setVolume() {
   volume = settings.initVolume;
   DFMiniMp3<SoftwareSerial, Mp3Notify>::setVolume(volume);
+  LOG(mp3_log, s_info, F("Volume: "), volume);
 }

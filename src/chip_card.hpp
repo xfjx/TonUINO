@@ -3,8 +3,6 @@
 
 #include <stdint.h>
 
-const uint32_t cardCookie = 322417479;
-
 enum class mode_t: uint8_t {
   none          =   0,
 
