@@ -54,7 +54,15 @@ struct nfcTagObject {
   }
 };
 
+enum class cardEvent {
+  none,
+  removed,
+  inserted,
+};
+
 class MFRC522; // forward declaration to not have to include it here
+class Mp3;
+class Buttons;
 
 class delayedSwitchOn {
 public:
@@ -72,7 +80,7 @@ private:
 
 class Chip_card {
 public:
-  Chip_card();
+  Chip_card(Mp3 &mp3, Buttons &buttons);
 
   bool readCard (      nfcTagObject &nfcTag);
   bool writeCard(const nfcTagObject &nfcTag);
@@ -80,13 +88,17 @@ public:
   void initCard ();
   void stopCard ();
   void stopCrypto1();
-  bool newCardPresent();
-  bool cardRemoved();
+  cardEvent getCardEvent();
+  void waitForCardRemoved();
+  void waitForCardInserted();
 
 private:
   MFRC522             &mfrc522;
+  Mp3                 &mp3;
+  Buttons             &buttons;
 
   delayedSwitchOn     cardRemovedSwitch;
+  bool                cardRemoved = true;
 };
 
 

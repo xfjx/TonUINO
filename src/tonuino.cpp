@@ -133,35 +133,18 @@ void Tonuino::handleButtons() {
   }
 }
 
-void Tonuino::handleChipCard(bool no_action) {
+void Tonuino::handleChipCard() {
 
-  const bool newCardPresent = chip_card.newCardPresent();
+  const cardEvent ce = chip_card.getCardEvent();
 
-  if (chip_card.cardRemoved()) {
-    if (not cardRemoved) {
-      LOG(card_log, s_info, F("Card Removed"));
-      cardRemoved = true;
-      chip_card.stopCard();
-      if (settings.pauseWhenCardRemoved) {
-        if (not activeModifier->handlePause() && mp3.isPlaying()) {
-          mp3.pause();
-          setStandbyTimer();
-        }
-      }
-    }
-    return;
-  }
-  else {
-    if (cardRemoved) {
-      LOG(card_log, s_info, F("Card in"));
-      cardRemoved = false;
-    }
-    else {
-      return;
+  if (settings.pauseWhenCardRemoved && (ce == cardEvent::removed)) {
+    if (not activeModifier->handlePause() && mp3.isPlaying()) {
+      mp3.pause();
+      setStandbyTimer();
     }
   }
 
-  if (no_action || !newCardPresent)
+  if (ce != cardEvent::inserted)
     return;
 
   // RFID Karte wurde aufgelegt
@@ -198,23 +181,8 @@ void Tonuino::handleChipCard(bool no_action) {
   chip_card.stopCrypto1();
 }
 
-void Tonuino::waitForCardRemoved() {
-  chip_card.stopCrypto1();
-  while (!cardRemoved) {
-    handleChipCard(true);
-  }
-}
-
 void Tonuino::writeCard(const nfcTagObject &nfcTag) {
-
-  mp3.playMp3FolderTrack(mp3Tracks::t_800_waiting_for_card);
-  do {
-    if (buttons.isBreak()) {
-      mp3.playMp3FolderTrack(mp3Tracks::t_802_reset_aborted);
-      return;
-    }
-    handleChipCard(true);
-  } while (cardRemoved);
+  chip_card.waitForCardInserted();
 
   LOG(card_log, s_info, F("schreibe Karte..."));
   if (chip_card.writeCard(nfcTag))
@@ -223,7 +191,7 @@ void Tonuino::writeCard(const nfcTagObject &nfcTag) {
     mp3.playMp3FolderTrack(mp3Tracks::t_401_error);
   mp3.waitForTrackToFinish();
 
-  waitForCardRemoved();
+  chip_card.waitForCardRemoved();
 }
 
 void Tonuino::playFolder() {
@@ -701,7 +669,7 @@ bool Tonuino::adminMenuAllowed() {
 void Tonuino::adminMenu() {
   LOG(admin_log, s_info, F("=== adminMenu()"));
 
-  waitForCardRemoved();
+  chip_card.waitForCardRemoved();
 
   disableStandbyTimer();
   mp3.pause();

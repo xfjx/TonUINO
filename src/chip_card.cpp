@@ -4,6 +4,8 @@
 #include <MFRC522.h>
 #include <SPI.h>
 
+#include "mp3.hpp"
+#include "buttons.hpp"
 #include "constants.hpp"
 #include "logger.hpp"
 
@@ -26,8 +28,10 @@ const byte trailerBlock = 7;
 const unsigned int removeDelay = 3;
 } // namespace
 
-Chip_card::Chip_card()
+Chip_card::Chip_card(Mp3 &mp3, Buttons &buttons)
 : mfrc522(*(new MFRC522(mfrc522_SSPin, mfrc522_RSTPin)))
+, mp3(mp3)
+, buttons(buttons)
 , cardRemovedSwitch(removeDelay)
 {}
 
@@ -232,19 +236,53 @@ void Chip_card::stopCrypto1() {
   mfrc522.PCD_StopCrypto1();
 }
 
-bool Chip_card::newCardPresent() {
+cardEvent Chip_card::getCardEvent() {
   byte bufferATQA[2];
   byte bufferSize = sizeof(bufferATQA);
   MFRC522::StatusCode result = mfrc522.PICC_RequestA(bufferATQA, &bufferSize);
 
-  if(result != mfrc522.STATUS_OK)
+  if(result != mfrc522.STATUS_OK) {
     ++cardRemovedSwitch;
-  else
+  } else {
     cardRemovedSwitch.reset();
+    mfrc522.PICC_ReadCardSerial();
+  }
 
-	return result == mfrc522.STATUS_OK && mfrc522.PICC_ReadCardSerial();
+  if (cardRemovedSwitch.on()) {
+    if (not cardRemoved) {
+      LOG(card_log, s_info, F("Card Removed"));
+      cardRemoved = true;
+      stopCard();
+      return cardEvent::removed;
+    }
+  }
+  else {
+    if (cardRemoved) {
+      LOG(card_log, s_info, F("Card in"));
+      cardRemoved = false;
+      return cardEvent::inserted;
+    }
+  }
+  return cardEvent::none;
 }
 
-bool Chip_card::cardRemoved() {
-  return cardRemovedSwitch.on();
+void Chip_card::waitForCardRemoved() {
+  stopCrypto1();
+  while (!cardRemoved) {
+    getCardEvent();
+  }
 }
+
+void Chip_card::waitForCardInserted() {
+  mp3.playMp3FolderTrack(mp3Tracks::t_800_waiting_for_card);
+  do {
+    if (buttons.isBreak()) {
+      mp3.playMp3FolderTrack(mp3Tracks::t_802_reset_aborted);
+      return;
+    }
+    getCardEvent();
+  } while (cardRemoved);
+
+}
+
+

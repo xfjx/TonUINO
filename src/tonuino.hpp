@@ -32,8 +32,7 @@ private:
   uint8_t getCurrentTrack() const;
 
   void handleButtons ();
-  void handleChipCard(bool no_action = false);
-  void waitForCardRemoved();
+  void handleChipCard();
   void writeCard(const nfcTagObject &nfcTag);
 
   void checkStandbyAtMillis();
@@ -75,7 +74,7 @@ private:
   Settings             settings            {};
   Mp3                  mp3                 {settings};
   Buttons              buttons             {settings};
-  Chip_card            chip_card           {};
+  Chip_card            chip_card           {mp3, buttons};
 
 
   Modifier             noneModifier        {*this, mp3, settings};
@@ -97,7 +96,6 @@ private:
   unsigned long standbyAtMillis   = 0;
 
   bool          knownCard         = false;
-  bool          cardRemoved       = true;
 
   nfcTagObject          myCard;
   const folderSettings *myFolder  = &myCard.nfcFolderSettings;
