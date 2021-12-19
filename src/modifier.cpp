@@ -7,7 +7,7 @@
 
 void SleepTimer::loop() {
   if (sleepAtMillis != 0 && millis() > sleepAtMillis) {
-    LOG(modifier_log, s_info, F("=== SleepTimer::loop() -> SLEEP!"));
+    LOG(modifier_log, s_info, F("= SleepTimer::loop() -> SLEEP!"));
     mp3.pause();
     tonuino.setStandbyTimer();
     tonuino.resetActiveModifier();
@@ -15,14 +15,14 @@ void SleepTimer::loop() {
 }
 
 void SleepTimer::start(uint8_t minutes) {
-  LOG(modifier_log, s_info, F("=== SleepTimer(), minutes: "), minutes);
+  LOG(modifier_log, s_info, F("= SleepTimer(), minutes: "), minutes);
   sleepAtMillis = millis() + minutes * 60000;
   //playAdvertisement(302);
 }
 
 void FreezeDance::loop() {
   if (nextStopAtMillis != 0 && millis() > nextStopAtMillis) {
-    LOG(modifier_log, s_info, F("== FreezeDance::loop() -> FREEZE!"));
+    LOG(modifier_log, s_info, F("= FreezeDance::loop() -> FREEZE!"));
     if (mp3.isPlaying()) {
       mp3.playAdvertisement(301);
     }
@@ -32,13 +32,13 @@ void FreezeDance::loop() {
 
 void FreezeDance::setNextStopAtMillis() {
   const uint16_t seconds = random(minSecondsBetweenStops, maxSecondsBetweenStops + 1);
-  LOG(modifier_log, s_info, F("=== FreezeDance::setNextStopAtMillis(), seconds: "), seconds);
+  LOG(modifier_log, s_info, F("= FreezeDance::setNextStopAtMillis(), seconds: "), seconds);
   nextStopAtMillis = millis() + seconds * 1000;
 }
 
 bool KindergardenMode::handleNext() {
-  LOG(modifier_log, s_info, F("== KindergardenMode::handleNext() -> NEXT"));
   if (cardQueued) {
+    LOG(modifier_log, s_info, F("= KindergardenMode::handleNext() -> NEXT"));
     cardQueued = false;
 
     tonuino.setCard(nextCard);
@@ -48,8 +48,8 @@ bool KindergardenMode::handleNext() {
   }
   return false;
 }
-bool KindergardenMode::handleRFID(const nfcTagObject &newCard) { // lot of work to do!
-  LOG(modifier_log, s_info, F("== KindergardenMode::handleRFID() -> queued!"));
+bool KindergardenMode::handleRFID(const nfcTagObject &newCard) {
+  LOG(modifier_log, s_info, F("= KindergardenMode::handleRFID() -> queued!"));
   nextCard = newCard;
   cardQueued = true;
   if (!mp3.isPlaying()) {
@@ -59,14 +59,13 @@ bool KindergardenMode::handleRFID(const nfcTagObject &newCard) { // lot of work 
 }
 
 bool RepeatSingleModifier::handleNext() {
-  LOG(modifier_log, s_info, F("== RepeatSingleModifier::handleNext() -> REPEAT CURRENT TRACK"));
+  LOG(modifier_log, s_debug, F("= RepeatSingleModifier::handleNext() -> REPEAT CURRENT TRACK"));
   delay(50);
   if (!mp3.isPlaying()) {
     mp3.loop(); // this will call Mp3Notify::OnPlayFinished() but will be blocked by lastTrackFinished
     Mp3Notify::ResetLastTrackFinished();
     tonuino.playCurrentTrack();
   }
-
   return true;
 }
 
@@ -76,7 +75,7 @@ bool RepeatSingleModifier::handleNext() {
 //  } else {
 //    playAdvertisement(volume, false);
 //  }
-//  LOG(modifier_log, s_info, F("== FeedbackModifier::handleVolumeDown()!"));
+//  LOG(modifier_log, s_info, F("= FeedbackModifier::handleVolumeDown()!"));
 //  return false;
 //}
 //bool FeedbackModifier::handleVolumeUp() {
@@ -85,11 +84,11 @@ bool RepeatSingleModifier::handleNext() {
 //  } else {
 //    playAdvertisement(volume, false);
 //  }
-//  LOG(modifier_log, s_info, F("== FeedbackModifier::handleVolumeUp()!"));
+//  LOG(modifier_log, s_info, F("= FeedbackModifier::handleVolumeUp()!"));
 //  return false;
 //}
 //bool FeedbackModifier::handleRFID(const nfcTagObject &/*newCard*/) {
-//  LOG(modifier_log, s_info, F("== FeedbackModifier::handleRFID()"));
+//  LOG(modifier_log, s_info, F("= FeedbackModifier::handleRFID()"));
 //  return false;
 //}
 

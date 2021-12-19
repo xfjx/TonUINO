@@ -45,7 +45,6 @@ private:
 
   bool setupFolder(folderSettings& theFolder);
 
-  void resetCard  ();
   void setupCard  ();
   bool specialCard(const nfcTagObject &nfcTag);
 

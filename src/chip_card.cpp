@@ -13,12 +13,14 @@ namespace {
 /**
   Helper routine to dump a byte array as hex values to Serial.
 */
-void dump_byte_array(byte * buffer, byte bufferSize) {
+String dump_byte_array(byte * buffer, byte bufferSize) {
+  String res((char *)0);
+  res.reserve(3*bufferSize);
   for (byte i = 0; i < bufferSize; i++) {
-    Serial.print(buffer[i] < 0x10 ? " 0" : " ");
-    Serial.print(buffer[i], HEX);
+    res += String(buffer[i] < 0x10 ? " 0" : " ");
+    res += String(buffer[i], HEX);
   }
-  Serial.println();
+  return res;
 }
 
 MFRC522::MIFARE_Key key{ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
@@ -37,8 +39,7 @@ Chip_card::Chip_card(Mp3 &mp3, Buttons &buttons)
 
 bool Chip_card::readCard(nfcTagObject &nfcTag) {
   // Show some details of the PICC (that is: the tag/card)
-  LOG(card_log, s_info, F("Card UID:"));
-  dump_byte_array(mfrc522.uid.uidByte, mfrc522.uid.size);
+  LOG(card_log, s_info, F("Card UID: "), dump_byte_array(mfrc522.uid.uidByte, mfrc522.uid.size));
   MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(mfrc522.uid.sak);
   LOG(card_log, s_info, F("PICC type: "), mfrc522.PICC_GetTypeName(piccType));
 
@@ -50,7 +51,7 @@ bool Chip_card::readCard(nfcTagObject &nfcTag) {
       (piccType == MFRC522::PICC_TYPE_MIFARE_1K  ) ||
       (piccType == MFRC522::PICC_TYPE_MIFARE_4K  ) )
   {
-    LOG(card_log, s_info, F("Authenticating Classic using key A..."));
+    LOG(card_log, s_info, F("Auth Classic using key A..."));
     status = mfrc522.PCD_Authenticate(
                MFRC522::PICC_CMD_MF_AUTH_KEY_A, trailerBlock, &key, &(mfrc522.uid));
   }
@@ -59,12 +60,12 @@ bool Chip_card::readCard(nfcTagObject &nfcTag) {
     byte pACK[] = {0, 0}; //16 bit PassWord ACK returned by the tempCard
 
     // Authenticate using key A
-    LOG(card_log, s_info, F("Authenticating MIFARE UL..."));
+    LOG(card_log, s_info, F("Auth MIFARE UL..."));
     status = mfrc522.PCD_NTAG216_AUTH(key.keyByte, pACK);
   }
 
   if (status != MFRC522::STATUS_OK) {
-    LOG(card_log, s_error, F("PCD_Authenticate() failed: "), mfrc522.GetStatusCodeName(status));
+    LOG(card_log, s_error, F("PCD_Auth() failed: "), mfrc522.GetStatusCodeName(status));
     return false;
   }
 
@@ -119,8 +120,7 @@ bool Chip_card::readCard(nfcTagObject &nfcTag) {
     memcpy(buffer + 12, buffer2, 4);
   }
 
-  LOG(card_log, s_info, F("Data on Card: "));
-  dump_byte_array(buffer, 16);
+  LOG(card_log, s_info, F("Data on Card: "), dump_byte_array(buffer, 16));
 
   uint32_t tempCookie;
   tempCookie  = (uint32_t)buffer[0] << 24;
@@ -160,7 +160,7 @@ bool Chip_card::writeCard(const nfcTagObject &nfcTag) {
       (mifareType == MFRC522::PICC_TYPE_MIFARE_1K ) ||
       (mifareType == MFRC522::PICC_TYPE_MIFARE_4K ) )
   {
-    LOG(card_log, s_info, F("Authenticating again using key A..."));
+    LOG(card_log, s_info, F("Auth again using key A..."));
     status = mfrc522.PCD_Authenticate(
                MFRC522::PICC_CMD_MF_AUTH_KEY_A, trailerBlock, &key, &(mfrc522.uid));
   }
@@ -169,18 +169,17 @@ bool Chip_card::writeCard(const nfcTagObject &nfcTag) {
     byte pACK[] = {0, 0}; //16 bit PassWord ACK returned by the NFCtag
 
     // Authenticate using key A
-    LOG(card_log, s_info, F("Authenticating UL..."));
+    LOG(card_log, s_info, F("Auth UL..."));
     status = mfrc522.PCD_NTAG216_AUTH(key.keyByte, pACK);
   }
 
   if (status != MFRC522::STATUS_OK) {
-    LOG(card_log, s_error, F("PCD_Authenticate() failed: "), mfrc522.GetStatusCodeName(status));
+    LOG(card_log, s_error, F("PCD_Auth() failed: "), mfrc522.GetStatusCodeName(status));
     return false;
   }
 
   // Write data to the block
-  LOG(card_log, s_info, F("Writing data ..."));
-  dump_byte_array(buffer, 16);
+  LOG(card_log, s_info, F("Writing data: "), dump_byte_array(buffer, 16));
 
   if ((mifareType == MFRC522::PICC_TYPE_MIFARE_MINI ) ||
       (mifareType == MFRC522::PICC_TYPE_MIFARE_1K ) ||
@@ -258,7 +257,7 @@ cardEvent Chip_card::getCardEvent() {
   }
   else {
     if (cardRemoved) {
-      LOG(card_log, s_info, F("Card in"));
+      LOG(card_log, s_info, F("Card Inserted"));
       cardRemoved = false;
       return cardEvent::inserted;
     }

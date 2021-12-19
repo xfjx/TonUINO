@@ -62,13 +62,13 @@ private:
 class Locked: public Modifier {
 public:
   Locked(Tonuino &tonuino, Mp3 &mp3, const Settings &settings): Modifier(tonuino, mp3, settings) {}
-  bool handlePause         () final { LOG(modifier_log, s_info, F("== Locked::handlePause() -> LOCKED!"))         ; return true; }
-  bool handleNextButton    () final { LOG(modifier_log, s_info, F("== Locked::handleNextButton() -> LOCKED!"))    ; return true; }
-  bool handlePreviousButton() final { LOG(modifier_log, s_info, F("== Locked::handlePreviousButton() -> LOCKED!")); return true; }
-  bool handleVolumeUp      () final { LOG(modifier_log, s_info, F("== Locked::handleVolumeUp() -> LOCKED!"))      ; return true; }
-  bool handleVolumeDown    () final { LOG(modifier_log, s_info, F("== Locked::handleVolumeDown() -> LOCKED!"))    ; return true; }
+  bool handlePause         () final { LOG(modifier_log, s_debug, F("= Locked::handlePause() -> LOCKED!"))         ; return true; }
+  bool handleNextButton    () final { LOG(modifier_log, s_debug, F("= Locked::handleNextButton() -> LOCKED!"))    ; return true; }
+  bool handlePreviousButton() final { LOG(modifier_log, s_debug, F("= Locked::handlePreviousButton() -> LOCKED!")); return true; }
+  bool handleVolumeUp      () final { LOG(modifier_log, s_debug, F("= Locked::handleVolumeUp() -> LOCKED!"))      ; return true; }
+  bool handleVolumeDown    () final { LOG(modifier_log, s_debug, F("= Locked::handleVolumeDown() -> LOCKED!"))    ; return true; }
   bool handleRFID(const nfcTagObject&)
-                              final { LOG(modifier_log, s_info, F("== Locked::handleRFID() -> LOCKED!"))          ; return true; }
+                              final { LOG(modifier_log, s_debug, F("= Locked::handleRFID() -> LOCKED!"))          ; return true; }
 
   mode_t getActive() final { return mode_t::locked; }
 };
@@ -76,11 +76,11 @@ public:
 class ToddlerMode: public Modifier {
 public:
   ToddlerMode(Tonuino &tonuino, Mp3 &mp3, const Settings &settings): Modifier(tonuino, mp3, settings) {}
-  bool handlePause         () final { LOG(modifier_log, s_info, F("== ToddlerMode::handlePause() -> LOCKED!"))         ; return true; }
-  bool handleNextButton    () final { LOG(modifier_log, s_info, F("== ToddlerMode::handleNextButton() -> LOCKED!"))    ; return true; }
-  bool handlePreviousButton() final { LOG(modifier_log, s_info, F("== ToddlerMode::handlePreviousButton() -> LOCKED!")); return true; }
-  bool handleVolumeUp      () final { LOG(modifier_log, s_info, F("== ToddlerMode::handleVolumeUp() -> LOCKED!"))      ; return true; }
-  bool handleVolumeDown    () final { LOG(modifier_log, s_info, F("== ToddlerMode::handleVolumeDown() -> LOCKED!"))    ; return true; }
+  bool handlePause         () final { LOG(modifier_log, s_debug, F("= ToddlerMode::handlePause() -> LOCKED!"))         ; return true; }
+  bool handleNextButton    () final { LOG(modifier_log, s_debug, F("= ToddlerMode::handleNextButton() -> LOCKED!"))    ; return true; }
+  bool handlePreviousButton() final { LOG(modifier_log, s_debug, F("= ToddlerMode::handlePreviousButton() -> LOCKED!")); return true; }
+  bool handleVolumeUp      () final { LOG(modifier_log, s_debug, F("= ToddlerMode::handleVolumeUp() -> LOCKED!"))      ; return true; }
+  bool handleVolumeDown    () final { LOG(modifier_log, s_debug, F("= ToddlerMode::handleVolumeDown() -> LOCKED!"))    ; return true; }
 
   mode_t getActive() final { return mode_t::toddler; }
 };
@@ -90,9 +90,9 @@ public:
   KindergardenMode(Tonuino &tonuino, Mp3 &mp3, const Settings &settings): Modifier(tonuino, mp3, settings) {}
   bool handleNext() final;
 
-//bool handlePause         () final { LOG(modifier_log, s_info, F("== KindergardenMode::handlePause() -> LOCKED!"))         ; return true; }
-  bool handleNextButton    () final { LOG(modifier_log, s_info, F("== KindergardenMode::handleNextButton() -> LOCKED!"))    ; return true; }
-  bool handlePreviousButton() final { LOG(modifier_log, s_info, F("== KindergardenMode::handlePreviousButton() -> LOCKED!")); return true; }
+//bool handlePause         () final { LOG(modifier_log, s_debug, F("= KindergardenMode::handlePause() -> LOCKED!"))         ; return true; }
+  bool handleNextButton    () final { LOG(modifier_log, s_debug, F("= KindergardenMode::handleNextButton() -> LOCKED!"))    ; return true; }
+  bool handlePreviousButton() final { LOG(modifier_log, s_debug, F("= KindergardenMode::handlePreviousButton() -> LOCKED!")); return true; }
 
   bool   handleRFID(const nfcTagObject &newCard) final;
   mode_t getActive () final { return mode_t::kindergarden; }

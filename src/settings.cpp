@@ -27,12 +27,12 @@ void Settings::clearEEPROM() {
 }
 
 void Settings::writeSettingsToFlash() {
-  LOG(settings_log, s_info, F("=== writeSettingsToFlash()"));
+  LOG(settings_log, s_debug, F("=== writeSettingsToFlash()"));
   EEPROM.put(startAddressAdminSettings, *this);
 }
 
 void Settings::resetSettings() {
-  LOG(settings_log, s_info, F("=== resetSettings()"));
+  LOG(settings_log, s_debug, F("=== resetSettings()"));
   cookie              = cardCookie;
   version             =  2;
   maxVolume           = 25;
@@ -71,7 +71,7 @@ void Settings::migrateSettings(int oldVersion) {
 }
 
 void Settings::loadSettingsFromFlash() {
-  LOG(settings_log, s_info, F("=== loadSettingsFromFlash()"));
+  LOG(settings_log, s_debug, F("=== loadSettingsFromFlash()"));
   EEPROM.get(startAddressAdminSettings, *this);
   if (cookie != cardCookie)
     resetSettings();
