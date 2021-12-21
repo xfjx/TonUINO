@@ -8,7 +8,7 @@
   { static __FlashStringHelper const* name() {return F(#Logger_);} }
 
 #define LOG(Logger_, Severity_, Expression_...)                                  \
-  if constexpr ( Logger_::will_forward<Severity_>::result )                      \
+  if constexpr ( Logger_::will_log(Severity_) )                                  \
     Logger_::template log< Severity_ >(Logger_::name(), Expression_)
 
 enum severity {
@@ -31,10 +31,9 @@ template<typename T>               struct is_same_type<T,T> : bool_<true > {};
 
 class logger {
 public:
-  template<severity Severity>
-  struct will_forward {
-    static const bool result = true;
-  };
+  constexpr static bool will_log(severity) {
+    return true;
+  }
 
   static void log() {
     Serial.println();
@@ -61,11 +60,9 @@ class logger_base {
 public:
   typedef typename if_<is_same_type<FwdLogger, void>::result, logger, FwdLogger>::result_type forward_logger_type;
 
-  template<severity Severity>
-  struct will_forward {
-    static const bool result = Severity >= MinSeverity
-        && forward_logger_type::template will_forward<Severity>::result;
-  };
+  static constexpr bool will_log(severity s) {
+    return (s >= MinSeverity) && forward_logger_type::will_log(s);
+  }
 
   template<severity Severity, typename ... Types>
   static void log(const __FlashStringHelper* logname, Types ... types) {

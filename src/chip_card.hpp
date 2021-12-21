@@ -98,7 +98,7 @@ private:
   Buttons             &buttons;
 
   delayedSwitchOn     cardRemovedSwitch;
-  bool                cardRemoved = true;
+  bool                cardRemoved = false;
 };
 
 
