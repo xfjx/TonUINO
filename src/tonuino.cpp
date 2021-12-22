@@ -71,9 +71,9 @@ void Tonuino::loop() {
 
 void Tonuino::handleButtons() {
 
-  switch (buttons.getButton()) {
+  switch (buttons.getButtonCmd()) {
 
-  case button::admin:
+  case buttonCmd::admin:
     mp3.pause();
     buttons.waitForNoButton();
     if (not adminMenuAllowed()) {
@@ -83,7 +83,7 @@ void Tonuino::handleButtons() {
     adminMenu();
     break;
 
-  case button::pause:
+  case buttonCmd::pause:
     if (activeModifier->handlePause())
       break;
     if (mp3.isPlaying()) {
@@ -95,7 +95,7 @@ void Tonuino::handleButtons() {
     }
     break;
 
-  case button::track:
+  case buttonCmd::track:
     if (activeModifier->handlePause())
       break;
     if (mp3.isPlaying()) {
@@ -110,28 +110,28 @@ void Tonuino::handleButtons() {
     }
     break;
 
-  case button::volume_up:
+  case buttonCmd::volume_up:
     if (mp3.isPlaying())
       volumeUpButton();
     else
       playShortCut(1);
     break;
 
-  case button::next:
+  case buttonCmd::next:
     if (mp3.isPlaying())
       nextButton();
     else
       playShortCut(1);
     break;
 
-  case button::volume_down:
+  case buttonCmd::volume_down:
     if (mp3.isPlaying())
       volumeDownButton();
     else
       playShortCut(2);
     break;
 
-  case button::previous:
+  case buttonCmd::previous:
     if (mp3.isPlaying())
       previousButton();
     else
@@ -802,15 +802,15 @@ uint8_t Tonuino::voiceMenu( int       numberOfOptions
         return optionSerial;
     }
     mp3.loop();
-    switch(buttons.getButton()) {
-    case button::track:
+    switch(buttons.getButtonRaw()) {
+    case buttonRaw::pauseLong:
       if (exitWithLongPress) {
         mp3.playMp3FolderTrack(mp3Tracks::t_802_reset_aborted);
         return defaultValue;
       }
       break;
 
-    case button::pause:
+    case buttonRaw::pause:
       if (returnValue != 0) {
         LOG(menu_log, s_info, F("voiceMenu return: "), returnValue);
         return returnValue;
@@ -818,22 +818,22 @@ uint8_t Tonuino::voiceMenu( int       numberOfOptions
       //delay(1000);
       break;
 
-    case button::next:
+    case buttonRaw::upLong:
       returnValue = min(returnValue + 10, numberOfOptions);
       voiceMenuPlayOption(returnValue, messageOffset, preview, previewFromFolder);
       break;
 
-    case button::volume_up:
+    case buttonRaw::up:
       returnValue = min(returnValue + 1, numberOfOptions);
       voiceMenuPlayOption(returnValue, messageOffset, preview, previewFromFolder);
       break;
 
-    case button::previous:
+    case buttonRaw::downLong:
       returnValue = max(returnValue - 10, 1);
       voiceMenuPlayOption(returnValue, messageOffset, preview, previewFromFolder);
       break;
 
-    case button::volume_down:
+    case buttonRaw::down:
       returnValue = max(returnValue - 1, 1);
       voiceMenuPlayOption(returnValue, messageOffset, preview, previewFromFolder);
       break;

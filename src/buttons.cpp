@@ -27,8 +27,8 @@ Buttons::Buttons(const Settings& settings)
 #endif
 }
 
-button Buttons::getButton() {
-  button ret = button::none;
+buttonRaw Buttons::getButtonRaw() {
+  buttonRaw ret = buttonRaw::none;
   readButtons();
   if ((  buttonPause.pressedFor(buttonLongPress)
       || buttonUp   .pressedFor(buttonLongPress)
@@ -37,80 +37,83 @@ button Buttons::getButton() {
      && buttonPause.isPressed()
      && buttonUp   .isPressed()
      && buttonDown .isPressed())
-    ret = button::admin;
+    ret = buttonRaw::allLong;
 
   else if (buttonPause.wasReleased()) {
     if (not ignorePauseButton)
-      ret = button::pause;
+      ret = buttonRaw::pause;
     else
       ignorePauseButton = false;
   }
 
   else if (buttonPause.pressedFor(buttonLongPress) && not ignorePauseButton) {
-    ret = button::track;
+    ret = buttonRaw::pauseLong;
     ignorePauseButton = true;
   }
 
   else if (buttonUp.wasReleased()) {
     if (!ignoreUpButton) {
-      if (!settings.invertVolumeButtons)
-        ret = button::next;
-      else
-        ret = button::volume_up;
+      ret = buttonRaw::up;
     }
     else
       ignoreUpButton = false;
   }
 
   else if (buttonUp.pressedFor(buttonLongPress) && not ignoreUpButton) {
-#ifndef FIVEBUTTONS
-    if (!settings.invertVolumeButtons)
-      ret = button::volume_up;
-    else
-      ret = button::next;
+    ret = buttonRaw::upLong;
     ignoreUpButton = true;
-#endif
   }
 
   else if (buttonDown.wasReleased()) {
     if (!ignoreDownButton) {
-      if (!settings.invertVolumeButtons)
-        ret = button::previous;
-      else
-        ret = button::volume_down;
+      ret = buttonRaw::down;
     }
     else
       ignoreDownButton = false;
   }
 
   else if (buttonDown.pressedFor(buttonLongPress) && not ignoreDownButton) {
-#ifndef FIVEBUTTONS
-    if (!settings.invertVolumeButtons)
-      ret = button::volume_down;
-    else
-      ret = button::previous;
+    ret = buttonRaw::downLong;
     ignoreDownButton = true;
-#endif
   }
 
 #ifdef FIVEBUTTONS
   else if (buttonFour.wasReleased()) {
-    if (!settings.invertVolumeButtons)
-      ret = button::volume_up;
-    else
-      ret = button::next;
+    ret = buttonRaw::four;
   }
 
   else if (buttonFive.wasReleased()) {
-    if (!settings.invertVolumeButtons)
-      ret = button::volume_down;
-    else
-      ret = button::previous;
+    ret = buttonRaw::five;
   }
 #endif
 
-  if (ret != button::none) {
-    LOG(button_log, s_debug, F("Button: "), static_cast<uint8_t>(ret));
+  if (ret != buttonRaw::none) {
+    LOG(button_log, s_debug, F("Button raw: "), static_cast<uint8_t>(ret));
+  }
+  return ret;
+}
+
+buttonCmd Buttons::getButtonCmd() {
+  buttonCmd ret = buttonCmd::none;
+  buttonRaw b = getButtonRaw();
+
+  switch (b) {
+  case buttonRaw::none     : ret = buttonCmd::none                                                                  ; break;
+  case buttonRaw::pause    : ret = buttonCmd::pause                                                                 ; break;
+  case buttonRaw::pauseLong: ret = buttonCmd::track                                                                 ; break;
+  case buttonRaw::up       : ret = (!settings.invertVolumeButtons) ? buttonCmd::next        : buttonCmd::volume_up  ; break;
+  case buttonRaw::upLong   : ret = (!settings.invertVolumeButtons) ? buttonCmd::volume_up   : buttonCmd::next       ; break;
+  case buttonRaw::down     : ret = (!settings.invertVolumeButtons) ? buttonCmd::previous    : buttonCmd::volume_down; break;
+  case buttonRaw::downLong : ret = (!settings.invertVolumeButtons) ? buttonCmd::volume_down : buttonCmd::previous   ; break;
+  case buttonRaw::allLong  : ret = buttonCmd::admin                                                                 ; break;
+#ifdef FIVEBUTTONS
+  case buttonRaw::four     : ret = (!settings.invertVolumeButtons) ? buttonCmd::volume_up   : buttonCmd::next       ; break;
+  case buttonRaw::five     : ret = (!settings.invertVolumeButtons) ? buttonCmd::volume_down : buttonCmd::previous   ; break;
+#endif
+  }
+
+  if (ret != buttonCmd::none) {
+    LOG(button_log, s_debug, F("Button cmd: "), static_cast<uint8_t>(ret));
   }
   return ret;
 }

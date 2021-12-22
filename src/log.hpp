@@ -46,6 +46,8 @@ public:
 
   template<severity Severity, typename ... Types>
   static void log(const __FlashStringHelper* /*logname*/, Types ... types) {
+//    Serial.print(millis());
+//    Serial.print(F("-"));
 //    Serial.print(getSeverityName(Severity));
 //    Serial.print(F("-"));
 //    Serial.print(logname);

@@ -7,7 +7,22 @@
 #include "settings.hpp"
 #include "constants.hpp"
 
-enum class button {
+enum class buttonRaw {
+  none,
+  pause,
+  pauseLong,
+  up,
+  upLong,
+  down,
+  downLong,
+  allLong,
+#ifdef FIVEBUTTONS
+  four,
+  five,
+#endif
+};
+
+enum class buttonCmd {
   none,
   admin,
   pause,
@@ -22,7 +37,8 @@ class Buttons {
 public:
   Buttons(const Settings& settings);
 
-  button getButton();
+  buttonRaw getButtonRaw();
+  buttonCmd getButtonCmd();
   void waitForNoButton();
   bool isReset();
   bool isBreak();
