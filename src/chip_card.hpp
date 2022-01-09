@@ -3,6 +3,10 @@
 
 #include <stdint.h>
 
+#include <MFRC522.h>
+
+#include "constants.hpp"
+
 enum class mode_t: uint8_t {
   none          =   0,
 
@@ -34,7 +38,7 @@ struct folderSettings {
   mode_t  mode;
   uint8_t special;
   uint8_t special2;
-  bool operator==(const folderSettings& rhs) {
+  bool operator==(const folderSettings& rhs) const {
     return folder   == rhs.folder  &&
            mode     == rhs.mode    &&
            special  == rhs.special &&
@@ -44,10 +48,10 @@ struct folderSettings {
 
 // this object stores nfc tag data
 struct nfcTagObject {
-  uint32_t       cookie;
-  uint8_t        version;
+  uint32_t       cookie  = cardCookie;
+  uint8_t        version = cardVersion;
   folderSettings nfcFolderSettings;
-  bool operator==(const nfcTagObject& rhs) {
+  bool operator==(const nfcTagObject& rhs) const {
     return cookie            == rhs.cookie           &&
            version           == rhs.version          &&
            nfcFolderSettings == rhs.nfcFolderSettings;
@@ -60,8 +64,7 @@ enum class cardEvent {
   inserted,
 };
 
-class MFRC522; // forward declaration to not have to include it here
-class Mp3;
+class Mp3;     // forward declaration to not have to include it here
 class Buttons;
 
 class delayedSwitchOn {
@@ -86,14 +89,15 @@ public:
   bool writeCard(const nfcTagObject &nfcTag);
   void sleepCard();
   void initCard ();
-  void stopCard ();
-  void stopCrypto1();
   cardEvent getCardEvent();
-  void waitForCardRemoved();
-  void waitForCardInserted();
+  bool isCardRemoved() { return cardRemoved; }
 
 private:
-  MFRC522             &mfrc522;
+  void stopCrypto1();
+  void stopCard ();
+  bool auth(MFRC522::PICC_Type piccType);
+
+  MFRC522             mfrc522;
   Mp3                 &mp3;
   Buttons             &buttons;
 

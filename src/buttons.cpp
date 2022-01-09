@@ -36,8 +36,9 @@ buttonRaw Buttons::getButtonRaw() {
       )
      && buttonPause.isPressed()
      && buttonUp   .isPressed()
-     && buttonDown .isPressed())
+     && buttonDown .isPressed()) {
     ret = buttonRaw::allLong;
+  }
 
   else if (buttonPause.wasReleased()) {
     if (not ignorePauseButton)
@@ -93,9 +94,8 @@ buttonRaw Buttons::getButtonRaw() {
   return ret;
 }
 
-buttonCmd Buttons::getButtonCmd() {
+buttonCmd Buttons::getButtonCmd(buttonRaw b) {
   buttonCmd ret = buttonCmd::none;
-  buttonRaw b = getButtonRaw();
 
   switch (b) {
   case buttonRaw::none     : ret = buttonCmd::none                                                                  ; break;
@@ -110,6 +110,7 @@ buttonCmd Buttons::getButtonCmd() {
   case buttonRaw::four     : ret = (!settings.invertVolumeButtons) ? buttonCmd::volume_up   : buttonCmd::next       ; break;
   case buttonRaw::five     : ret = (!settings.invertVolumeButtons) ? buttonCmd::volume_down : buttonCmd::previous   ; break;
 #endif
+  case buttonRaw::start    : ret = buttonCmd::start;                                                                ; break;
   }
 
   if (ret != buttonCmd::none) {
@@ -118,52 +119,11 @@ buttonCmd Buttons::getButtonCmd() {
   return ret;
 }
 
-void Buttons::waitForNoButton() {
-  do {
-    readButtons();
-  } while (  buttonPause.isPressed()
-          || buttonUp   .isPressed()
-          || buttonDown .isPressed()
-#ifdef FIVEBUTTONS
-          || buttonFour .isPressed()
-          || buttonFive .isPressed()
-#endif
-          );
-  ignorePauseButton = false;
-  ignoreUpButton    = false;
-  ignoreDownButton  = false;
-}
-
 bool Buttons::isReset() {
   const int buttonActiveLevel = getLevel(buttonPinType, level::active);
   return (digitalRead(buttonPausePin) == buttonActiveLevel &&
           digitalRead(buttonUpPin   ) == buttonActiveLevel &&
           digitalRead(buttonDownPin ) == buttonActiveLevel );
-}
-
-bool Buttons::isBreak() {
-  readButtons();
-  if (buttonUp.wasReleased() || buttonDown.wasReleased()) {
-    LOG(button_log, s_info, F("Abgebrochen!"));
-    return true;
-  }
-  return false;
-}
-
-bool Buttons::askCode(Settings::pin_t &code) {
-  uint8_t x = 0;
-  while (x < 4) {
-    readButtons();
-    if (buttonPause.pressedFor(buttonLongPress))
-      return false;
-    if (buttonPause.wasReleased())
-      code[x++] = 1;
-    if (buttonUp.wasReleased())
-      code[x++] = 2;
-    if (buttonDown.wasReleased())
-      code[x++] = 3;
-  }
-  return true;
 }
 
 void Buttons::readButtons() {

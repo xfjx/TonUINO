@@ -5,6 +5,7 @@
 
 #include "chip_card.hpp"
 #include "logger.hpp"
+#include "timer.hpp"
 
 class Tonuino;
 class Mp3;
@@ -41,7 +42,7 @@ public:
   void   start    (uint8_t minutes);
 
 private:
-  unsigned long sleepAtMillis = 0;
+  Timer sleepTimer{};
 };
 
 class FreezeDance: public Modifier {

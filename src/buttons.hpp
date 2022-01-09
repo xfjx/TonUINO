@@ -20,6 +20,7 @@ enum class buttonRaw {
   four,
   five,
 #endif
+  start,
 };
 
 enum class buttonCmd {
@@ -31,6 +32,7 @@ enum class buttonCmd {
   volume_down,
   next,
   previous,
+  start,
 };
 
 class Buttons {
@@ -38,11 +40,8 @@ public:
   Buttons(const Settings& settings);
 
   buttonRaw getButtonRaw();
-  buttonCmd getButtonCmd();
-  void waitForNoButton();
+  buttonCmd getButtonCmd(buttonRaw b);
   bool isReset();
-  bool isBreak();
-  bool askCode(Settings::pin_t &code);
 
 private:
 

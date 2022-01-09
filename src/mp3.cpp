@@ -3,6 +3,12 @@
 #include "tonuino.hpp"
 #include "constants.hpp"
 
+namespace {
+
+const __FlashStringHelper* str_Volume() { return F("Volume: ") ; }
+
+}
+
 uint16_t Mp3Notify::lastTrackFinished = 0;
 
 void Mp3Notify::OnError(uint16_t errorCode) {
@@ -13,18 +19,18 @@ void Mp3Notify::OnPlaySourceOnline  (DfMp3_PlaySources source) { PrintlnSourceAc
 void Mp3Notify::OnPlaySourceInserted(DfMp3_PlaySources source) { PrintlnSourceAction(source, F("bereit"  )); }
 void Mp3Notify::OnPlaySourceRemoved (DfMp3_PlaySources source) { PrintlnSourceAction(source, F("entfernt")); }
 void Mp3Notify::PrintlnSourceAction(DfMp3_PlaySources source, const __FlashStringHelper* action) {
-  if (source & DfMp3_PlaySources_Sd   ) LOG(mp3_log, s_info, F("SD Karte "), action);
-  if (source & DfMp3_PlaySources_Usb  ) LOG(mp3_log, s_info, F("USB "     ), action);
-  if (source & DfMp3_PlaySources_Flash) LOG(mp3_log, s_info, F("Flash "   ), action);
+  if (source & DfMp3_PlaySources_Sd   ) LOG(mp3_log, s_debug, F("SD Karte "), action);
+  if (source & DfMp3_PlaySources_Usb  ) LOG(mp3_log, s_debug, F("USB "     ), action);
+  if (source & DfMp3_PlaySources_Flash) LOG(mp3_log, s_debug, F("Flash "   ), action);
 }
 
 void Mp3Notify::OnPlayFinished(DfMp3_PlaySources /*source*/, uint16_t track) {
-  LOG(mp3_log, s_debug, F("Track beendet, Track: "), track);
+  LOG(mp3_log, s_debug, F("Track beendet: "), track);
   if (track == lastTrackFinished)
     return;
   else
     lastTrackFinished = track;
-  tonuino.nextTrack();
+  Tonuino::getTonuino().nextTrack();
 }
 
 Mp3::Mp3(const Settings& settings)
@@ -73,11 +79,11 @@ void Mp3::playMp3FolderTrack(mp3Tracks track) {
 void Mp3::playAdvertisement(uint16_t track, bool olnyIfIsPlaying) {
   if (isPlaying()) {
     DFMiniMp3<SoftwareSerial, Mp3Notify>::playAdvertisement(track);
-    delay(500);
+    delay(500); // TODO remove delay()
   } else if (not olnyIfIsPlaying) {
     start();
     DFMiniMp3<SoftwareSerial, Mp3Notify>::playAdvertisement(track);
-    waitForTrackToFinish();
+    waitForTrackToFinish(); // TODO remove waitForTrackToFinish
     pause();
   }
 }
@@ -91,18 +97,18 @@ void Mp3::increaseVolume() {
   if (volume < settings.maxVolume) {
     DFMiniMp3<SoftwareSerial, Mp3Notify>::setVolume(++volume);
   }
-  LOG(mp3_log, s_info, F("Volume: "), volume);
+  LOG(mp3_log, s_info, str_Volume(), volume);
 }
 
 void Mp3::decreaseVolume() {
   if (volume > settings.minVolume) {
     DFMiniMp3<SoftwareSerial, Mp3Notify>::setVolume(--volume);
   }
-  LOG(mp3_log, s_info, F("Volume: "), volume);
+  LOG(mp3_log, s_info, str_Volume(), volume);
 }
 
 void Mp3::setVolume() {
   volume = settings.initVolume;
   DFMiniMp3<SoftwareSerial, Mp3Notify>::setVolume(volume);
-  LOG(mp3_log, s_info, F("Volume: "), volume);
+  LOG(mp3_log, s_info, str_Volume(), volume);
 }

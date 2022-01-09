@@ -8,17 +8,27 @@
 
 #include "constants.hpp"
 #include "logger.hpp"
+#include "state_machine.hpp"
 
 namespace {
+
 template<typename T>
 void swap(T &lhs, T &rhs) {
   const T t = lhs;
   lhs       = rhs;
   rhs       = t;
 }
-}
 
-Tonuino tonuino;
+const __FlashStringHelper* str_Track    () { return F("Track: ") ; }
+const __FlashStringHelper* str_Hoerspiel() { return F("Hörspiel"); }
+const __FlashStringHelper* str_Album    () { return F("Album"); }
+const __FlashStringHelper* str_Party    () { return F("Party"); }
+const __FlashStringHelper* str_Einzel   () { return F("Einzel"); }
+const __FlashStringHelper* str_Hoerbuch () { return F("Hörbuch"); }
+const __FlashStringHelper* str_Von_Bis  () { return F("Von-Bis "); }
+const __FlashStringHelper* str_bis      () { return F(" bis "); }
+
+} // anonymous namespace
 
 void Tonuino::setup() {
   pinMode(shutdownPin  , OUTPUT);
@@ -26,9 +36,6 @@ void Tonuino::setup() {
 
   // load Settings from EEPROM
   settings.loadSettingsFromFlash();
-
-  // activate standby timer
-  tonuino.setStandbyTimer();
 
   // DFPlayer Mini initialisieren
   mp3.begin();
@@ -47,7 +54,10 @@ void Tonuino::setup() {
   }
 
   // Start Shortcut "at Startup" - e.g. Welcome Sound
-  tonuino.playShortCut(3);
+  //playShortCut(3);
+
+  SM_tonuino::start();
+  SM_tonuino::dispatch(button_e(buttonRaw::start));
 }
 
 void Tonuino::loop() {
@@ -60,8 +70,8 @@ void Tonuino::loop() {
   // Modifier : WIP!
   activeModifier->loop();
 
-  handleButtons();
-  handleChipCard();
+  SM_tonuino::dispatch(button_e(buttons.getButtonRaw()));
+  SM_tonuino::dispatch(card_e(chip_card.getCardEvent()));
 
   unsigned long  stop = millis();
 
@@ -69,202 +79,67 @@ void Tonuino::loop() {
     delay(cycleTime - (stop - start));
 }
 
-void Tonuino::handleButtons() {
-
-  switch (buttons.getButtonCmd()) {
-
-  case buttonCmd::admin:
-    mp3.pause();
-    buttons.waitForNoButton();
-    if (not adminMenuAllowed()) {
-      mp3.start();
-      break;
-    }
-    adminMenu();
-    break;
-
-  case buttonCmd::pause:
-    if (activeModifier->handlePause())
-      break;
-    if (mp3.isPlaying()) {
-      mp3.pause();
-      setStandbyTimer();
-    } else if (knownCard) {
-      mp3.start();
-      disableStandbyTimer();
-    }
-    break;
-
-  case buttonCmd::track:
-    if (activeModifier->handlePause())
-      break;
-    if (mp3.isPlaying()) {
-      uint8_t advertTrack = getCurrentTrack();
-      // Spezialmodus Von-Bis für Album und Party gibt die Dateinummer relativ zur Startposition wieder
-      if (myFolder->mode == mode_t::album_vb || myFolder->mode == mode_t::party_vb) {
-        advertTrack = advertTrack - myFolder->special + 1;
-      }
-      mp3.playAdvertisement(advertTrack);
-    } else {
-      playShortCut(0);
-    }
-    break;
-
-  case buttonCmd::volume_up:
-    if (mp3.isPlaying())
-      volumeUpButton();
-    else
-      playShortCut(1);
-    break;
-
-  case buttonCmd::next:
-    if (mp3.isPlaying())
-      nextButton();
-    else
-      playShortCut(1);
-    break;
-
-  case buttonCmd::volume_down:
-    if (mp3.isPlaying())
-      volumeDownButton();
-    else
-      playShortCut(2);
-    break;
-
-  case buttonCmd::previous:
-    if (mp3.isPlaying())
-      previousButton();
-    else
-      playShortCut(2);
-    break;
-  default:
-    break;
-  }
-}
-
-void Tonuino::handleChipCard() {
-
-  const cardEvent ce = chip_card.getCardEvent();
-
-  if (settings.pauseWhenCardRemoved && (ce == cardEvent::removed)) {
-    if (not activeModifier->handlePause() && mp3.isPlaying()) {
-      mp3.pause();
-      setStandbyTimer();
-    }
-  }
-
-  if (ce != cardEvent::inserted)
-    return;
-
-  // RFID Karte wurde aufgelegt
-  nfcTagObject tempCard;
-  if (chip_card.readCard(tempCard) && !specialCard(tempCard) && !activeModifier->handleRFID(tempCard)) {
-
-    if (settings.pauseWhenCardRemoved && knownCard && myCard == tempCard) {
-      if (not mp3.isPlaying()) {
-        mp3.start();
-        disableStandbyTimer();
-      }
-      chip_card.stopCrypto1();
-      return;
-    }
-
-    setCard(tempCard);
-    LOG(card_log, s_info, F("Folder: "), myCard.nfcFolderSettings.folder);
-
-    if (myCard.cookie == cardCookie && myCard.nfcFolderSettings.mode != mode_t::none) {
-      knownCard = false; // prevent nextTrack() when calling Mp3Notify::OnPlayFinished() in mp3.waitForTrackToFinish();
-      mp3.playMp3FolderTrack(mp3Tracks::t_262_pling);
-      mp3.waitForTrackToFinish();
-      playFolder();
-    }
-
-    // Neue Karte konfigurieren
-    else {
-      knownCard = false;
-      mp3.playMp3FolderTrack(mp3Tracks::t_300_new_tag);
-      mp3.waitForTrackToFinish();
-      setupCard();
-    }
-  }
-  chip_card.stopCrypto1();
-}
-
-void Tonuino::writeCard(const nfcTagObject &nfcTag) {
-  chip_card.waitForCardInserted();
-
-  LOG(card_log, s_info, F("schreibe Karte..."));
-  if (chip_card.writeCard(nfcTag))
-    mp3.playMp3FolderTrack(mp3Tracks::t_400_ok);
-  else
-    mp3.playMp3FolderTrack(mp3Tracks::t_401_error);
-  mp3.waitForTrackToFinish();
-
-  chip_card.waitForCardRemoved();
-}
-
 void Tonuino::playFolder() {
   LOG(play_log, s_debug, F("= playFolder()"));
-  disableStandbyTimer();
   knownCard = true;
   numTracksInFolder = mp3.getFolderTrackCount(myFolder->folder);
   firstTrack = 1;
-  LOG(play_log, s_info, numTracksInFolder, F(" Dateien im Ordner "), myFolder->folder);
+  LOG(play_log, s_info, numTracksInFolder, F(" files in folder "), myFolder->folder);
 
   switch (myFolder->mode) {
 
   case mode_t::hoerspiel:
     // Hörspielmodus: eine zufällige Datei aus dem Ordner
-    LOG(play_log, s_info, F("Hörspiel"));
+    LOG(play_log, s_info, str_Hoerspiel());
     currentTrack = random(1, numTracksInFolder + 1);
-    LOG(play_log, s_info, F("Track: "), currentTrack);
+    LOG(play_log, s_info, str_Track(), currentTrack);
     break;
 
   case mode_t::album:
     // Album Modus: kompletten Ordner spielen
-    LOG(play_log, s_info, F("Album"));
+    LOG(play_log, s_info, str_Album());
     currentTrack = 1;
     break;
 
   case mode_t::party:
     // Party Modus: Ordner in zufälliger Reihenfolge
-    LOG(play_log, s_info, F("Party"));
+    LOG(play_log, s_info, str_Party());
     shuffleQueue();
     currentTrack = 1;
     break;
 
   case mode_t::einzel:
     // Einzel Modus: eine Datei aus dem Ordner abspielen
-    LOG(play_log, s_info, F("Einzel"));
+    LOG(play_log, s_info, str_Einzel());
     currentTrack = myFolder->special;
-    LOG(play_log, s_info, F("Track: "), currentTrack);
+    LOG(play_log, s_info, str_Track(), currentTrack);
     break;
 
   case mode_t::hoerbuch:
   case mode_t::hoerbuch_1:
     // Hörbuch Modus: kompletten Ordner spielen und Fortschritt merken (oder nur eine Datei)
-    LOG(play_log, s_info, F("Hörbuch"));
+    LOG(play_log, s_info, str_Hoerbuch());
     currentTrack = settings.readFolderSettingFromFlash(myFolder->folder);
     if (currentTrack == 0 || currentTrack > numTracksInFolder) {
       currentTrack = 1;
     }
-    LOG(play_log, s_info, F("Track: "), currentTrack);
+    LOG(play_log, s_info, str_Track(), currentTrack);
     break;
 
   case mode_t::hoerspiel_vb:
     // Spezialmodus Von-Bin: Hörspiel: eine zufällige Datei aus dem Ordner
-    LOG(play_log, s_info, F("Von-Bis Hörspiel"));
+    LOG(play_log, s_info, str_Von_Bis(), str_Hoerspiel());
     LOG(play_log, s_info, myFolder->special, F(" bis "), myFolder->special2);
     firstTrack = myFolder->special;
     numTracksInFolder = myFolder->special2;
     currentTrack = random(myFolder->special, numTracksInFolder + 1);
-    LOG(play_log, s_info, F("Track: "), currentTrack);
+    LOG(play_log, s_info, str_Track(), currentTrack);
     break;
 
   case mode_t::album_vb:
     // Spezialmodus Von-Bis: Album: alle Dateien zwischen Start und Ende spielen
-    LOG(play_log, s_info, F("Von-Bis Album"));
-    LOG(play_log, s_info, myFolder->special, F(" bis "), myFolder->special2);
+    LOG(play_log, s_info, str_Von_Bis(), str_Album());
+    LOG(play_log, s_info, myFolder->special, str_bis() , myFolder->special2);
     firstTrack = myFolder->special;
     numTracksInFolder = myFolder->special2;
     currentTrack = myFolder->special;
@@ -272,8 +147,8 @@ void Tonuino::playFolder() {
 
   case mode_t::party_vb:
     // Spezialmodus Von-Bis: Party Ordner in zufälliger Reihenfolge
-    LOG(play_log, s_info, F("Von-Bis Party"));
-    LOG(play_log, s_info, myFolder->special, F(" bis "), myFolder->special2);
+    LOG(play_log, s_info, str_Von_Bis(), str_Party());
+    LOG(play_log, s_info, myFolder->special, str_bis(), myFolder->special2);
     firstTrack = myFolder->special;
     numTracksInFolder = myFolder->special2;
     shuffleQueue();
@@ -281,26 +156,22 @@ void Tonuino::playFolder() {
     break;
   default:
     knownCard = false;
-    setStandbyTimer();
     return;
   }
   playCurrentTrack();
   if (knownCard && settings.pauseWhenCardRemoved)
-    mp3.waitForTrackToStart();
+    mp3.waitForTrackToStart(); // TODO remove waitForTrackToStart
 }
 
-void Tonuino::playShortCut(uint8_t shortCut) {
-  LOG(play_log, s_info, F("= playShortCut(): "),shortCut);
-  if (settings.shortCuts[shortCut].folder != 0) {
-    setFolder(&settings.shortCuts[shortCut]);
-    playFolder();
-    delay(1000);
-  } else {
-    LOG(play_log, s_info, F("No shortcut"));
-    if (not knownCard)
-      mp3.playMp3FolderTrack(mp3Tracks::t_262_pling);
+void Tonuino::playTrackNumber () {
+  uint8_t advertTrack = getCurrentTrack();
+  // Spezialmodus Von-Bis für Album und Party gibt die Dateinummer relativ zur Startposition wieder
+  if (myFolder->mode == mode_t::album_vb || myFolder->mode == mode_t::party_vb) {
+    advertTrack = advertTrack - myFolder->special + 1;
   }
+  mp3.playAdvertisement(advertTrack);
 }
+
 
 // Leider kann das Modul selbst keine Queue abspielen, daher müssen wir selbst die Queue verwalten
 void Tonuino::nextTrack() {
@@ -318,9 +189,8 @@ void Tonuino::nextTrack() {
   case mode_t::hoerspiel   :
   case mode_t::hoerspiel_vb:
     if (not mp3.isPlaying()) {
-      LOG(play_log, s_info, F("Hörspiel -> stop"));
+      LOG(play_log, s_info, str_Hoerspiel(), F(" -> stop"));
       knownCard = false;
-      setStandbyTimer();
       //mp3.sleep(); // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
     }
     break;
@@ -330,52 +200,49 @@ void Tonuino::nextTrack() {
     if (currentTrack != numTracksInFolder) {
       ++currentTrack;
       mp3.playFolderTrack(myFolder->folder, currentTrack);
-      LOG(play_log, s_info, F("Album -> nächster Track: "), currentTrack);
+      LOG(play_log, s_info, str_Album(), F(" -> nächster Track: "), currentTrack);
     } else {
       //      mp3.sleep();   // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
       knownCard = false;
-      setStandbyTimer();
     }
     break;
 
   case mode_t::party   :
   case mode_t::party_vb:
     if (currentTrack != numTracksInFolder - firstTrack + 1) {
-      LOG(play_log, s_info, F("Party -> weiter in der Queue "));
+      LOG(play_log, s_info, str_Party(), F(" -> weiter in der Queue "));
       ++currentTrack;
     } else {
-      LOG(play_log, s_info, F("Party, Ende der Queue -> beginne von vorne"));
+      LOG(play_log, s_info, str_Party(), F(", Ende der Queue -> beginne von vorne"));
       currentTrack = 1;
       //// Wenn am Ende der Queue neu gemischt werden soll bitte die Zeilen wieder aktivieren
       //LOG(play_log, s_info, F("Ende der Queue -> mische neu"));
       //shuffleQueue();
     }
-    LOG(play_log, s_info, F("Track: "), queue[currentTrack - 1]);
+    LOG(play_log, s_info, str_Track(), queue[currentTrack - 1]);
     mp3.playFolderTrack(myFolder->folder, queue[currentTrack - 1]);
     break;
 
   case mode_t::einzel:
-    LOG(play_log, s_info, F("Einzel -> stop"));
+    LOG(play_log, s_info, str_Einzel(), F(" -> stop"));
     //mp3.sleep();      // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
     knownCard = false;
-    setStandbyTimer();
     break;
 
   case mode_t::hoerbuch:
     if (currentTrack != numTracksInFolder) {
       ++currentTrack;
-      LOG(play_log, s_info, F("Hörbuch -> nächster Track und Fortschr. speichern"));
-      LOG(play_log, s_info, F("Track: "), currentTrack);
+      LOG(play_log, s_info, str_Hoerbuch(), F(" -> nächster Track und Fortschr. speichern"));
+      LOG(play_log, s_info, str_Track(), currentTrack);
       mp3.playFolderTrack(myFolder->folder, currentTrack);
       // Fortschritt im EEPROM abspeichern
       settings.writeFolderSettingToFlash(myFolder->folder, currentTrack);
     } else {
-      LOG(play_log, s_info, F("Hörbuch -> Ende"));
+      LOG(play_log, s_info, str_Hoerbuch(), F(" -> Ende"));
       //mp3.sleep();  // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
       // Fortschritt zurück setzen
       settings.writeFolderSettingToFlash(myFolder->folder, 1);
       knownCard = false;
-      setStandbyTimer();
     }
     break;
   case mode_t::hoerbuch_1:
@@ -384,18 +251,17 @@ void Tonuino::nextTrack() {
     else
       currentTrack = 1;
 
-    LOG(play_log, s_info, F("Hörbuch single -> Fortschritt speichern und beenden"));
-    LOG(play_log, s_info, F("Track: "), currentTrack);
+    LOG(play_log, s_info, str_Hoerbuch(), F(" single -> Fortschritt speichern und beenden"));
+    LOG(play_log, s_info, str_Track(), currentTrack);
     // Fortschritt im EEPROM abspeichern
     settings.writeFolderSettingToFlash(myFolder->folder, currentTrack);
     //mp3.sleep();  // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
     knownCard = false;
-    setStandbyTimer();
     break;
     default:
     break;
   }
-  delay(500);
+  delay(500); // TODO remove delay
 }
 
 void Tonuino::previousTrack() {
@@ -404,13 +270,13 @@ void Tonuino::previousTrack() {
   switch (myFolder->mode) {
   case mode_t::hoerspiel:
   case mode_t::hoerspiel_vb:
-    LOG(play_log, s_info, F("Hörspiel -> Track von vorne spielen"));
+    LOG(play_log, s_info, str_Hoerspiel(), F(" -> Track von vorne spielen"));
     mp3.playFolderTrack(myFolder->folder, currentTrack);
     break;
 
   case mode_t::album:
   case mode_t::album_vb:
-    LOG(play_log, s_info, F("Album -> vorheriger Track"));
+    LOG(play_log, s_info, str_Album(), F(" -> vorheriger Track"));
     if (currentTrack != firstTrack) {
       --currentTrack;
     }
@@ -420,27 +286,28 @@ void Tonuino::previousTrack() {
   case mode_t::party:
   case mode_t::party_vb:
     if (currentTrack != 1) {
-      LOG(play_log, s_info, F("Party -> zurück in der Qeueue "));
+      LOG(play_log, s_info, str_Party(), F(" -> zurück in der Qeueue "));
       --currentTrack;
     } else {
-      LOG(play_log, s_info, F("Party, Anfang der Queue -> springe ans Ende "));
+      LOG(play_log, s_info, str_Party(), F(", Anfang der Queue -> springe ans Ende "));
       currentTrack = numTracksInFolder - firstTrack + 1;
     }
-    LOG(play_log, s_info, F("Track: "), queue[currentTrack - 1]);
+    LOG(play_log, s_info, str_Track(), queue[currentTrack - 1]);
     mp3.playFolderTrack(myFolder->folder, queue[currentTrack - 1]);
     break;
 
   case mode_t::einzel:
-    LOG(play_log, s_info, F("Einzel -> Track von vorne spielen"));
+    LOG(play_log, s_info, str_Einzel(), F(" -> Track von vorne spielen"));
     mp3.playFolderTrack(myFolder->folder, currentTrack);
     break;
 
   case mode_t::hoerbuch:
   case mode_t::hoerbuch_1:
-    LOG(play_log, s_info, F("Hörbuch -> vorheriger Track und Fortschr. speichern"));
+    LOG(play_log, s_info, str_Hoerbuch(), F(" -> vorheriger Track und Fortschr. speichern"));
     if (currentTrack != 1) {
       --currentTrack;
     }
+    LOG(play_log, s_info, str_Track(), currentTrack);
     mp3.playFolderTrack(myFolder->folder, currentTrack);
     // Fortschritt im EEPROM abspeichern
     settings.writeFolderSettingToFlash(myFolder->folder, currentTrack);
@@ -448,26 +315,28 @@ void Tonuino::previousTrack() {
     default:
     break;
   }
-  delay(500);
+  delay(500); // TODO remove delay
 }
 
 // Funktionen für den Standby Timer (z.B. über Pololu-Switch oder Mosfet)
 void Tonuino::setStandbyTimer() {
   LOG(standby_log, s_info, F("= setStandbyTimer()"));
-  if (settings.standbyTimer != 0)
-    standbyAtMillis = millis() + (settings.standbyTimer * 60 * 1000);
-  else
-    standbyAtMillis = 0;
-  LOG(standby_log, s_info, F("standbyAtMillis: "), standbyAtMillis);
+  if (settings.standbyTimer != 0 && not standbyTimer.isActive()) {
+    standbyTimer.start(settings.standbyTimer * 60 * 1000);
+    LOG(standby_log, s_info, F("timer started"));
+  }
 }
 
 void Tonuino::disableStandbyTimer() {
   LOG(standby_log, s_info, F("= disablestandby()"));
-  standbyAtMillis = 0;
+  if (settings.standbyTimer != 0) {
+    standbyTimer.stop();
+    LOG(standby_log, s_info, F("timer stopped"));
+  }
 }
 
 void Tonuino::checkStandbyAtMillis() {
-  if (standbyAtMillis != 0 && millis() > standbyAtMillis) {
+  if (standbyTimer.isActive() && standbyTimer.isExpired()) {
     LOG(standby_log, s_info, F("power off!"));
     // enter sleep state
     digitalWrite(shutdownPin, getLevel(shutdownPinType, level::active));
@@ -491,102 +360,7 @@ uint8_t Tonuino::getCurrentTrack() const {
     return currentTrack;
 }
 
-void Tonuino::volumeUpButton() {
-  if (activeModifier->handleVolumeUp())
-    return;
-
-  LOG(cmd_log, s_debug, F("= volumeUp()"));
-  mp3.increaseVolume();
-}
-
-void Tonuino::volumeDownButton() {
-  if (activeModifier->handleVolumeDown())
-    return;
-
-  LOG(cmd_log, s_debug, F("= volumeDown()"));
-  mp3.decreaseVolume();
-}
-
-void Tonuino::nextButton() {
-  if (activeModifier->handleNextButton())
-    return;
-
-  LOG(cmd_log, s_debug, F("= next()"));
-  nextTrack();
-}
-
-void Tonuino::previousButton() {
-  if (activeModifier->handlePreviousButton())
-    return;
-
-  LOG(cmd_log, s_debug, F("= previous()"));
-  previousTrack();
-}
-
-bool Tonuino::setupFolder(folderSettings& theFolder) {
-  // Ordner abfragen
-  theFolder.folder = voiceMenu(99, mp3Tracks::t_301_select_folder, mp3Tracks::t_0, true, 0, 0, true);
-  if (theFolder.folder == 0) return false;
-
-  // Wiedergabemodus abfragen
-  theFolder.mode = static_cast<mode_t>(voiceMenu(10, mp3Tracks::t_310_select_mode, mp3Tracks::t_310_select_mode, false, 0, 0, true));
-  if (theFolder.mode == mode_t::none) return false;
-
-  //// Hörbuchmodus -> Fortschritt im EEPROM auf 1 setzen
-  //writeFolderSettingToFlash(theFolder.folder, 1);
-
-  switch (theFolder.mode) {
-
-  // Einzelmodus -> Datei abfragen
-  case mode_t::einzel:
-    theFolder.special = voiceMenu(mp3.getFolderTrackCount(theFolder.folder), mp3Tracks::t_327_select_file, mp3Tracks::t_0,
-                                  true, theFolder.folder);
-    break;
-
-  // Admin Funktionen
-  case mode_t::admin:
-    theFolder.folder = 0;
-    theFolder.mode = mode_t::admin_card;
-    break;
-
-  // Spezialmodus Von-Bis
-  case mode_t::hoerspiel_vb:
-  case mode_t::album_vb:
-  case mode_t::party_vb:
-    theFolder.special  = voiceMenu(mp3.getFolderTrackCount(theFolder.folder), mp3Tracks::t_328_select_first_file, mp3Tracks::t_0,
-                                   true, theFolder.folder);
-    theFolder.special2 = voiceMenu(mp3.getFolderTrackCount(theFolder.folder), mp3Tracks::t_329_select_last_file, mp3Tracks::t_0,
-                                   true, theFolder.folder, theFolder.special);
-    break;
-
-  default:
-    break;
-  }
-  return true;
-}
-
-void Tonuino::setupCard() {
-  LOG(card_log, s_info, F("= setupCard()"));
-  mp3.pause();
-  nfcTagObject newCard;
-  if (setupFolder(newCard.nfcFolderSettings))
-  {
-    // Karte ist konfiguriert -> speichern
-    mp3.pause();
-    do {
-    } while (mp3.isPlaying());
-
-    writeCard(newCard);
-  }
-}
-
 bool Tonuino::specialCard(const nfcTagObject &nfcTag) {
-  if (nfcTag.cookie != cardCookie)
-    return false;
-
-  if (nfcTag.nfcFolderSettings.folder != 0)
-    return false;
-
   LOG(card_log, s_debug, F("special card, mode = "), static_cast<uint8_t>(nfcTag.nfcFolderSettings.mode));
   if (activeModifier->getActive() == nfcTag.nfcFolderSettings.mode) {
     resetActiveModifier();
@@ -597,296 +371,31 @@ bool Tonuino::specialCard(const nfcTagObject &nfcTag) {
   const Modifier *oldModifier = activeModifier;
 
   switch (nfcTag.nfcFolderSettings.mode) {
-  case mode_t::none:
-  case mode_t::admin_card:   chip_card.stopCard();
-                             adminMenu()                                                      ;break;
-  case mode_t::sleep_timer:  LOG(card_log, s_info, F("activate sleepTimer"));
+  case mode_t::sleep_timer:  LOG(card_log, s_info, F("act. sleepTimer"));
                              mp3.playAdvertisement(advertTracks::t_302_sleep, false);
                              activeModifier = &sleepTimer;
                              sleepTimer.start(nfcTag.nfcFolderSettings.special)               ;break;
-  case mode_t::freeze_dance: LOG(card_log, s_info, F("activate freezeDance"));
+  case mode_t::freeze_dance: LOG(card_log, s_info, F("act. freezeDance"));
                              mp3.playAdvertisement(advertTracks::t_300_freeze_into, false);
                              activeModifier = &freezeDance;                                   ;break;
-  case mode_t::locked:       LOG(card_log, s_info, F("activate locked"));
+  case mode_t::locked:       LOG(card_log, s_info, F("act. locked"));
                              mp3.playAdvertisement(advertTracks::t_303_locked, false);
                              activeModifier = &locked                                         ;break;
-  case mode_t::toddler:      LOG(card_log, s_info, F("activate toddlerMode"));
+  case mode_t::toddler:      LOG(card_log, s_info, F("act. toddlerMode"));
                              mp3.playAdvertisement(advertTracks::t_304_buttonslocked, false);
                              activeModifier = &toddlerMode                                    ;break;
-  case mode_t::kindergarden: LOG(card_log, s_info, F("activate kindergardenMode"));
+  case mode_t::kindergarden: LOG(card_log, s_info, F("act. kindergardenMode"));
                              mp3.playAdvertisement(advertTracks::t_305_kindergarden, false);
                              activeModifier = &kindergardenMode                               ;break;
-  case mode_t::repeat_single:LOG(card_log, s_info, F("activate repeatSingleModifier"));
+  case mode_t::repeat_single:LOG(card_log, s_info, F("act. repeatSingleModifier"));
                              mp3.playAdvertisement(advertTracks::t_260_activate_mod_card, false);
                              activeModifier = &repeatSingleModifier                           ;break;
-  default:                                                                                     break;
+  default:                   return false;
   }
   if (oldModifier != activeModifier)
     activeModifier->init();
-  delay(2000);
+  delay(2000);  // TODO remove delay
   return true;
-}
-
-bool Tonuino::adminMenuAllowed() {
-  // Admin menu has been locked - it still can be trigged via admin card
-  switch (settings.adminMenuLocked) {
-  case 1:
-    return false;
-
-  // Pin check
-  case 2:
-    Settings::pin_t pin;
-    mp3.playMp3FolderTrack(mp3Tracks::t_991_admin_pin);
-    return (buttons.askCode(pin) && pin == settings.adminMenuPin);
-
-  // Match check
-  case 3:
-  {
-    const uint8_t a = random(10, 20);
-    const uint8_t b = random(1, a);
-    uint8_t c;
-    mp3.playMp3FolderTrack(mp3Tracks::t_992_admin_calc);
-    mp3.waitForTrackToFinish();
-    mp3.playMp3FolderTrack(a);
-    mp3.waitForTrackToFinish();
-
-    if (random(1, 3) == 2) {
-      // a + b
-      c = a + b;
-      mp3.playMp3FolderTrack(mp3Tracks::t_993_admin_calc);
-    } else {
-      // a - b
-      c = a - b;
-      mp3.playMp3FolderTrack(mp3Tracks::t_994_admin_calc);
-    }
-    mp3.waitForTrackToFinish();
-    mp3.playMp3FolderTrack(b);
-    LOG(admin_log, s_info, F("Result: "), c);
-    return (voiceMenu(255, mp3Tracks::t_0, mp3Tracks::t_0, false) == c);
-  }
-  }
-
-  // not locked
-  return true;
-}
-
-void Tonuino::adminMenu() {
-  LOG(admin_log, s_info, F("= adminMenu()"));
-
-  chip_card.waitForCardRemoved();
-
-  disableStandbyTimer();
-  mp3.pause();
-  knownCard = false;
-
-  const int subMenu = voiceMenu(13, mp3Tracks::t_900_admin, mp3Tracks::t_900_admin, false, false, 0, true);
-
-  switch (subMenu) {
-  case 0:  //break
-           setStandbyTimer();
-           return;
-  case 1:  // create new card
-           setupCard();
-           chip_card.stopCard();
-           break;
-  case 2:  // Maximum Volume
-           settings.maxVolume = voiceMenu(30 - settings.minVolume, mp3Tracks::t_930_max_volume_intro, static_cast<mp3Tracks>(settings.minVolume), false, false, settings.maxVolume - settings.minVolume) + settings.minVolume;
-           break;
-  case 3:  // Minimum Volume
-           settings.minVolume = voiceMenu(settings.maxVolume - 1, mp3Tracks::t_931_min_volume_into, mp3Tracks::t_0, false, false, settings.minVolume);
-           break;
-  case 4:  // Initial Volume
-           settings.initVolume = voiceMenu(settings.maxVolume - settings.minVolume + 1, mp3Tracks::t_932_init_volume_into, static_cast<mp3Tracks>(settings.minVolume - 1), false, false, settings.initVolume - settings.minVolume + 1) + settings.minVolume - 1;
-           break;
-  case 5:  // EQ
-           settings.eq = voiceMenu(6, mp3Tracks::t_920_eq_intro, mp3Tracks::t_920_eq_intro, false, false, settings.eq);
-           mp3.setEq(static_cast<DfMp3_Eq>(settings.eq - 1));
-           break;
-  case 6:  // create modifier card
-           createModifierCard();
-           break;
-  case 7:  // shortcut
-           setupFolder(settings.shortCuts[voiceMenu(4, mp3Tracks::t_940_shortcut_into, mp3Tracks::t_940_shortcut_into) - 1]);
-           mp3.playMp3FolderTrack(mp3Tracks::t_400_ok);
-           break;
-  case 8:  // standby timer
-           switch (voiceMenu(5, mp3Tracks::t_960_timer_intro, mp3Tracks::t_960_timer_intro)) {
-           case 1: settings.standbyTimer =  5; break;
-           case 2: settings.standbyTimer = 15; break;
-           case 3: settings.standbyTimer = 30; break;
-           case 4: settings.standbyTimer = 60; break;
-           case 5: settings.standbyTimer =  0; break;
-           }
-           break;
-  case 9:  // Create Cards for Folder
-           createCardsForFolder();
-           break;
-  case 10: // Invert Functions for Up/Down Buttons
-           if (voiceMenu(2, mp3Tracks::t_933_switch_volume_intro, mp3Tracks::t_933_switch_volume_intro, false) == 2) {
-             settings.invertVolumeButtons = true;
-           }
-           else {
-             settings.invertVolumeButtons = false;
-           }
-           break;
-  case 11: // reset EEPROM
-           settings.clearEEPROM();
-           settings.resetSettings();
-           mp3.playMp3FolderTrack(mp3Tracks::t_999_reset_ok);
-           break;
-  case 12: // lock admin menu
-           switch (voiceMenu(4, mp3Tracks::t_980_admin_lock_intro, mp3Tracks::t_980_admin_lock_intro, false)) {
-           case 1: settings.adminMenuLocked = 0;
-                   break;
-           case 2: settings.adminMenuLocked = 1;
-                   break;
-           case 3: {
-                     Settings::pin_t pin;
-                     mp3.playMp3FolderTrack(mp3Tracks::t_991_admin_pin);
-                     if (buttons.askCode(pin))
-                       settings.adminMenuPin = pin;
-                     else
-                       break;
-                   }
-                   settings.adminMenuLocked = 2;
-                   break;
-           }
-           break;
-  case 13: // Pause, wenn Karte entfernt wird
-          if (voiceMenu(2, mp3Tracks::t_913_pause_on_card_removed, mp3Tracks::t_933_switch_volume_intro, false) == 2) {
-            settings.pauseWhenCardRemoved = true;
-          }
-          else {
-            settings.pauseWhenCardRemoved = false;
-          }
-          break;
-  }
-  settings.writeSettingsToFlash();
-  mp3.playMp3FolderTrack(mp3Tracks::t_262_pling);
-  setStandbyTimer();
-}
-
-void Tonuino::voiceMenuPlayOption( uint8_t   returnValue
-                                 , mp3Tracks messageOffset
-                                 , bool      preview
-                                 , int       previewFromFolder) {
-  LOG(menu_log, s_info, F("playOption for: "), returnValue);
-  mp3.playMp3FolderTrack(messageOffset + returnValue);
-  if (preview) {
-    mp3.waitForTrackToFinish();
-    if (previewFromFolder == 0)
-      mp3.playFolderTrack(returnValue, 1);
-    else
-      mp3.playFolderTrack(previewFromFolder, returnValue);
-  }
-}
-
-uint8_t Tonuino::voiceMenu( int       numberOfOptions
-                          , mp3Tracks startMessage
-                          , mp3Tracks messageOffset
-                          , bool      preview
-                          , int       previewFromFolder
-                          , int       defaultValue
-                          , bool      exitWithLongPress) {
-  uint8_t returnValue = defaultValue;
-
-  if (startMessage != mp3Tracks::t_0)
-    mp3.playMp3FolderTrack(startMessage);
-
-  LOG(menu_log, s_info, F("= voiceMenu() ("), numberOfOptions, F(" Options)"));
-
-  do {
-    if (Serial.available() > 0) {
-      int optionSerial = Serial.parseInt();
-      if (optionSerial != 0 && optionSerial <= numberOfOptions)
-        return optionSerial;
-    }
-    mp3.loop();
-    switch(buttons.getButtonRaw()) {
-    case buttonRaw::pauseLong:
-      if (exitWithLongPress) {
-        mp3.playMp3FolderTrack(mp3Tracks::t_802_reset_aborted);
-        return defaultValue;
-      }
-      break;
-
-    case buttonRaw::pause:
-      if (returnValue != 0) {
-        LOG(menu_log, s_info, F("voiceMenu return: "), returnValue);
-        return returnValue;
-      }
-      //delay(1000);
-      break;
-
-    case buttonRaw::upLong:
-      returnValue = min(returnValue + 10, numberOfOptions);
-      voiceMenuPlayOption(returnValue, messageOffset, preview, previewFromFolder);
-      break;
-
-    case buttonRaw::up:
-      returnValue = min(returnValue + 1, numberOfOptions);
-      voiceMenuPlayOption(returnValue, messageOffset, preview, previewFromFolder);
-      break;
-
-    case buttonRaw::downLong:
-      returnValue = max(returnValue - 10, 1);
-      voiceMenuPlayOption(returnValue, messageOffset, preview, previewFromFolder);
-      break;
-
-    case buttonRaw::down:
-      returnValue = max(returnValue - 1, 1);
-      voiceMenuPlayOption(returnValue, messageOffset, preview, previewFromFolder);
-      break;
-    default:
-      break;
-    }
-  } while (true);
-}
-
-void Tonuino::createModifierCard() {
-  nfcTagObject tempCard;
-  tempCard.cookie = cardCookie;
-  tempCard.version = 1;
-  tempCard.nfcFolderSettings.folder = 0;
-  tempCard.nfcFolderSettings.special = 0;
-  tempCard.nfcFolderSettings.special2 = 0;
-  tempCard.nfcFolderSettings.mode = static_cast<mode_t>(voiceMenu(6, mp3Tracks::t_970_modifier_Intro, mp3Tracks::t_970_modifier_Intro, false, false, 0, true));
-
-  if (tempCard.nfcFolderSettings.mode != mode_t::none) {
-    if (tempCard.nfcFolderSettings.mode == mode_t::sleep_timer) {
-      switch (voiceMenu(4, mp3Tracks::t_960_timer_intro, mp3Tracks::t_960_timer_intro)) {
-        case 1: tempCard.nfcFolderSettings.special =  5; break;
-        case 2: tempCard.nfcFolderSettings.special = 15; break;
-        case 3: tempCard.nfcFolderSettings.special = 30; break;
-        case 4: tempCard.nfcFolderSettings.special = 60; break;
-      }
-    }
-
-    writeCard(tempCard);
-  }
-}
-
-void Tonuino::createCardsForFolder() {
-  // Ordner abfragen
-  nfcTagObject tempCard;
-  tempCard.cookie = cardCookie;
-  tempCard.version = 1;
-  tempCard.nfcFolderSettings.mode = mode_t::einzel;
-  tempCard.nfcFolderSettings.folder = voiceMenu(99, mp3Tracks::t_301_select_folder, mp3Tracks::t_0, true);
-  uint8_t special = voiceMenu(mp3.getFolderTrackCount(tempCard.nfcFolderSettings.folder), mp3Tracks::t_328_select_first_file, mp3Tracks::t_0,
-                              true, tempCard.nfcFolderSettings.folder);
-  uint8_t special2 = voiceMenu(mp3.getFolderTrackCount(tempCard.nfcFolderSettings.folder), mp3Tracks::t_329_select_last_file, mp3Tracks::t_0,
-                               true, tempCard.nfcFolderSettings.folder, special);
-
-  mp3.playMp3FolderTrack(mp3Tracks::t_936_batch_cards_intro);
-  mp3.waitForTrackToFinish();
-  for (uint8_t x = special; x <= special2; x++) {
-    mp3.playMp3FolderTrack(x);
-    tempCard.nfcFolderSettings.special = x;
-    LOG(card_log, s_info, x, F("-te Karte auflegen"));
-
-    writeCard(tempCard);
-  }
 }
 
 void Tonuino::shuffleQueue() {

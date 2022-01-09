@@ -15,6 +15,7 @@
     TonUINO Version 2.1
 
     created by Thorsten Voß and licensed under GNU/GPL.
+    refactored by Boerge1
     Information and contribution at https://tonuino.de.
 */
 
@@ -36,14 +37,15 @@ void setup() {
   LOG(init_log, s_debug, F("|_   _|___ ___|  |  |     |   | |     |"));
   LOG(init_log, s_debug, F("  | | | . |   |  |  |-   -| | | |  |  |"));
   LOG(init_log, s_debug, F("  |_| |___|_|_|_____|_____|_|___|_____|\n"));
-  LOG(init_log, s_debug, F("TonUINO Version 2.1"));
+  LOG(init_log, s_debug, F("TonUINO Version 3.0"));
   LOG(init_log, s_debug, F("created by Thorsten Voß and licensed under GNU/GPL."));
+  LOG(init_log, s_debug, F("refactored by Boerge1."));
   LOG(init_log, s_debug, F("Information and contribution at https://tonuino.de.\n"));
 
-  tonuino.setup();
+  Tonuino::getTonuino().setup();
 }
 
 void loop() {
 
-  tonuino.loop();
+  Tonuino::getTonuino().loop();
 }
