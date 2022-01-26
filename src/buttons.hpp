@@ -41,7 +41,9 @@ public:
 
   buttonRaw getButtonRaw();
   buttonCmd getButtonCmd(buttonRaw b);
+  static uint8_t   getButtonCode(buttonRaw b);
   bool isReset();
+  bool isNoButton();
 
 private:
 

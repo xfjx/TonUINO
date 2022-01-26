@@ -62,7 +62,7 @@ void Tonuino::setup() {
 
 void Tonuino::loop() {
 
-  unsigned long  start = millis();
+  unsigned long  start_cycle = millis();
   checkStandbyAtMillis();
 
   mp3.loop();
@@ -73,10 +73,10 @@ void Tonuino::loop() {
   SM_tonuino::dispatch(button_e(buttons.getButtonRaw()));
   SM_tonuino::dispatch(card_e(chip_card.getCardEvent()));
 
-  unsigned long  stop = millis();
+  unsigned long  stop_cycle = millis();
 
-  if (stop-start < cycleTime)
-    delay(cycleTime - (stop - start));
+  if (stop_cycle-start_cycle < cycleTime)
+    delay(cycleTime - (stop_cycle - start_cycle));
 }
 
 void Tonuino::playFolder() {
@@ -179,8 +179,6 @@ void Tonuino::nextTrack() {
     return;
 
   if (not knownCard)
-    // Wenn eine neue Karte angelernt wird soll das Ende eines Tracks nicht
-    // verarbeitet werden
     return;
 
   LOG(play_log, s_info, F("= nextTrack()"));
@@ -200,9 +198,11 @@ void Tonuino::nextTrack() {
     if (currentTrack != numTracksInFolder) {
       ++currentTrack;
       mp3.playFolderTrack(myFolder->folder, currentTrack);
-      LOG(play_log, s_info, str_Album(), F(" -> nächster Track: "), currentTrack);
+      LOG(play_log, s_info, str_Album(), F(" -> next"));
+      LOG(play_log, s_info, str_Track(), currentTrack);
     } else {
-      //      mp3.sleep();   // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
+      LOG(play_log, s_info, str_Album(), F(" -> stop"));
+      //mp3.sleep();   // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
       knownCard = false;
     }
     break;
@@ -210,17 +210,20 @@ void Tonuino::nextTrack() {
   case mode_t::party   :
   case mode_t::party_vb:
     if (currentTrack != numTracksInFolder - firstTrack + 1) {
-      LOG(play_log, s_info, str_Party(), F(" -> weiter in der Queue "));
       ++currentTrack;
+      LOG(play_log, s_info, str_Party(), F(" -> next in queue"));
     } else {
-      LOG(play_log, s_info, str_Party(), F(", Ende der Queue -> beginne von vorne"));
       currentTrack = 1;
+      LOG(play_log, s_info, str_Party(), F(" -> end, start again"));
       //// Wenn am Ende der Queue neu gemischt werden soll bitte die Zeilen wieder aktivieren
       //LOG(play_log, s_info, F("Ende der Queue -> mische neu"));
       //shuffleQueue();
     }
-    LOG(play_log, s_info, str_Track(), queue[currentTrack - 1]);
-    mp3.playFolderTrack(myFolder->folder, queue[currentTrack - 1]);
+    {
+      const uint16_t track = queue[currentTrack - 1];
+      LOG(play_log, s_info, str_Track(), track);
+      mp3.playFolderTrack(myFolder->folder, track);
+    }
     break;
 
   case mode_t::einzel:
@@ -229,34 +232,30 @@ void Tonuino::nextTrack() {
     knownCard = false;
     break;
 
-  case mode_t::hoerbuch:
-    if (currentTrack != numTracksInFolder) {
-      ++currentTrack;
-      LOG(play_log, s_info, str_Hoerbuch(), F(" -> nächster Track und Fortschr. speichern"));
-      LOG(play_log, s_info, str_Track(), currentTrack);
-      mp3.playFolderTrack(myFolder->folder, currentTrack);
-      // Fortschritt im EEPROM abspeichern
-      settings.writeFolderSettingToFlash(myFolder->folder, currentTrack);
-    } else {
-      LOG(play_log, s_info, str_Hoerbuch(), F(" -> Ende"));
-      //mp3.sleep();  // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
-      // Fortschritt zurück setzen
-      settings.writeFolderSettingToFlash(myFolder->folder, 1);
-      knownCard = false;
-    }
-    break;
   case mode_t::hoerbuch_1:
-    if (currentTrack != numTracksInFolder)
+    knownCard = false;
+    LOG(play_log, s_info, str_Hoerbuch(), F(" single -> stop and save"));
+    __attribute__((fallthrough));
+    // no break by intention
+  case mode_t::hoerbuch:
+    if (currentTrack < numTracksInFolder) {
       ++currentTrack;
-    else
+      if (knownCard) {
+        LOG(play_log, s_info, str_Hoerbuch(), F(" -> next and save"));
+        mp3.playFolderTrack(myFolder->folder, currentTrack);
+      }
+    }
+    else {
       currentTrack = 1;
-
-    LOG(play_log, s_info, str_Hoerbuch(), F(" single -> Fortschritt speichern und beenden"));
+      if (knownCard) {
+        LOG(play_log, s_info, str_Hoerbuch(), F(" -> stop and save"));
+        knownCard = false;
+      }
+    }
     LOG(play_log, s_info, str_Track(), currentTrack);
     // Fortschritt im EEPROM abspeichern
     settings.writeFolderSettingToFlash(myFolder->folder, currentTrack);
     //mp3.sleep();  // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
-    knownCard = false;
     break;
     default:
     break;
@@ -270,40 +269,46 @@ void Tonuino::previousTrack() {
   switch (myFolder->mode) {
   case mode_t::hoerspiel:
   case mode_t::hoerspiel_vb:
-    LOG(play_log, s_info, str_Hoerspiel(), F(" -> Track von vorne spielen"));
+    LOG(play_log, s_info, str_Hoerspiel(), F(" -> restart"));
+    LOG(play_log, s_info, str_Track(), currentTrack);
     mp3.playFolderTrack(myFolder->folder, currentTrack);
     break;
 
   case mode_t::album:
   case mode_t::album_vb:
-    LOG(play_log, s_info, str_Album(), F(" -> vorheriger Track"));
+    LOG(play_log, s_info, str_Album(), F(" -> previous"));
     if (currentTrack != firstTrack) {
       --currentTrack;
     }
+    LOG(play_log, s_info, str_Track(), currentTrack);
     mp3.playFolderTrack(myFolder->folder, currentTrack);
     break;
 
   case mode_t::party:
   case mode_t::party_vb:
     if (currentTrack != 1) {
-      LOG(play_log, s_info, str_Party(), F(" -> zurück in der Qeueue "));
+      LOG(play_log, s_info, str_Party(), F(" -> previous in queue "));
       --currentTrack;
     } else {
-      LOG(play_log, s_info, str_Party(), F(", Anfang der Queue -> springe ans Ende "));
+      LOG(play_log, s_info, str_Party(), F(", beginning of queue -> go to end"));
       currentTrack = numTracksInFolder - firstTrack + 1;
     }
-    LOG(play_log, s_info, str_Track(), queue[currentTrack - 1]);
-    mp3.playFolderTrack(myFolder->folder, queue[currentTrack - 1]);
+    {
+      const uint16_t track = queue[currentTrack - 1];
+      LOG(play_log, s_info, str_Track(), track);
+      mp3.playFolderTrack(myFolder->folder, track);
+    }
     break;
 
   case mode_t::einzel:
-    LOG(play_log, s_info, str_Einzel(), F(" -> Track von vorne spielen"));
+    LOG(play_log, s_info, str_Einzel(), F(" -> restart"));
+    LOG(play_log, s_info, str_Track(), currentTrack);
     mp3.playFolderTrack(myFolder->folder, currentTrack);
     break;
 
   case mode_t::hoerbuch:
   case mode_t::hoerbuch_1:
-    LOG(play_log, s_info, str_Hoerbuch(), F(" -> vorheriger Track und Fortschr. speichern"));
+    LOG(play_log, s_info, str_Hoerbuch(), F(" -> previous and save"));
     if (currentTrack != 1) {
       --currentTrack;
     }
@@ -328,7 +333,7 @@ void Tonuino::setStandbyTimer() {
 }
 
 void Tonuino::disableStandbyTimer() {
-  LOG(standby_log, s_info, F("= disablestandby()"));
+  LOG(standby_log, s_info, F("= disableStandbyTimer()"));
   if (settings.standbyTimer != 0) {
     standbyTimer.stop();
     LOG(standby_log, s_info, F("timer stopped"));
@@ -412,9 +417,9 @@ void Tonuino::shuffleQueue() {
     const uint8_t j = random(0, numTracksInFolder - firstTrack + 1);
     swap(queue[i], queue[j]);
   }
-//  LOG(menu_log, s_info, F("Queue :"));
-//  for (uint8_t x = 0; x < numTracksInFolder - firstTrack + 1 ; ++x)
-//  LOG(menu_log, s_info, queue[x]);
+  LOG(play_log, s_debug, F("Queue :"));
+  for (uint8_t x = 0; x < numTracksInFolder - firstTrack + 1 ; ++x)
+    LOG(play_log, s_debug, queue[x]);
 }
 
 

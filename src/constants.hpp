@@ -44,10 +44,11 @@ inline constexpr byte     mfrc522_SSPin        = 10;          // Configurable, s
 
 // ####### mp3 #########################################
 
-inline constexpr uint8_t   dfPlayer_receivePin  = 2;
-inline constexpr uint8_t   dfPlayer_transmitPin = 3;
-inline constexpr uint8_t   dfPlayer_busyPin     = 4;
-inline constexpr levelType dfPlayer_busyPinType = levelType::activeHigh;
+inline constexpr uint8_t       dfPlayer_receivePin      = 2;
+inline constexpr uint8_t       dfPlayer_transmitPin     = 3;
+inline constexpr uint8_t       dfPlayer_busyPin         = 4;
+inline constexpr levelType     dfPlayer_busyPinType     = levelType::activeHigh;
+inline constexpr unsigned long dfPlayer_timeUntilStarts = 300;
 
 
 // ####### tonuino #####################################
@@ -55,6 +56,6 @@ inline constexpr levelType dfPlayer_busyPinType = levelType::activeHigh;
 inline constexpr uint8_t   shutdownPin          = 7;
 inline constexpr levelType shutdownPinType      = levelType::activeHigh;
 inline constexpr uint8_t   openAnalogPin        = A7;
-inline constexpr unsigned long cycleTime        = 200;
+inline constexpr unsigned long cycleTime        = 50;
 
 #endif /* SRC_CONSTANTS_HPP_ */

@@ -5,10 +5,9 @@
 #include "buttons.hpp"
 #include "chip_card.hpp"
 #include "mp3.hpp"
+#include "timer.hpp"
 
-struct ChMode;
 class Tonuino;
-class Mp3;
 
 // ----------------------------------------------------------------------------
 // Event Declarations
@@ -38,15 +37,22 @@ public:
   virtual void react(card_e   const &) { };
 
   virtual void entry(void) { };
-  void         exit(void)  { };
+  void         exit(void)  { waitForPlayFinish = false; };
 
-  static folderSettings  folder; // TODO: put this into base of setupCard states
+  bool isAbort(button_e const &b);
+  bool isWaitForPlayFinish();
+  void startWaitForPlayFinish();
+
+  static folderSettings folder;
 protected:
   static Tonuino        &tonuino;
   static Mp3            &mp3;
   static Buttons        &buttons;
   static Settings       &settings;
   static Chip_card      &chip_card;
+
+  static Timer          timer;
+  static bool           waitForPlayFinish;
 };
 
 typedef SM<SM_type::tonuino  > SM_tonuino;
@@ -57,7 +63,7 @@ class Base: public SM_tonuino
 {
 protected:
   bool readCard();
-  nfcTagObject tempCard;
+  static nfcTagObject lastCardRead;
 };
 
 class Idle: public Base

@@ -119,6 +119,21 @@ buttonCmd Buttons::getButtonCmd(buttonRaw b) {
   return ret;
 }
 
+uint8_t Buttons::getButtonCode(buttonRaw b) {
+  switch (b) {
+  case buttonRaw::pause: return 1;
+  case buttonRaw::up   : return 2;
+  case buttonRaw::down : return 3;
+  default              : return 0;
+  }
+}
+
+bool Buttons::isNoButton() {
+  return not buttonPause.isPressed()
+      && not buttonUp   .isPressed()
+      && not buttonDown .isPressed();
+}
+
 bool Buttons::isReset() {
   const int buttonActiveLevel = getLevel(buttonPinType, level::active);
   return (digitalRead(buttonPausePin) == buttonActiveLevel &&
