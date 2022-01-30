@@ -70,14 +70,14 @@ class Buttons;
 class delayedSwitchOn {
 public:
   delayedSwitchOn(unsigned int delay)
-  : delay(delay)
+  : delaySteps(delay)
   {}
-  delayedSwitchOn& operator++() { if (counter < delay) ++counter; return *this; }
+  delayedSwitchOn& operator++() { if (counter < delaySteps) ++counter; return *this; }
   void reset() { counter = 0; }
-  bool on()    { return counter == delay; }
+  bool on()    { return counter == delaySteps; }
 
 private:
-  const unsigned int delay;
+  const unsigned int delaySteps;
   unsigned int counter = 0;
 };
 

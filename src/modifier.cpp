@@ -68,8 +68,7 @@ bool KindergardenMode::handleRFID(const nfcTagObject &newCard) {
 }
 
 bool RepeatSingleModifier::handleNext() {
-  LOG(modifier_log, s_debug, str_RepeatSingleModifier(), F(" -> REPEAT"));
-  delay(50); // TODO remove delay()
+  LOG(modifier_log, s_info, str_RepeatSingleModifier(), F(" -> REPEAT"));
   if (!mp3.isPlaying()) {
     mp3.loop(); // this will call Mp3Notify::OnPlayFinished() but will be blocked by lastTrackFinished
     Mp3Notify::ResetLastTrackFinished();

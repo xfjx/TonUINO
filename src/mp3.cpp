@@ -79,7 +79,6 @@ void Mp3::playMp3FolderTrack(mp3Tracks track) {
 void Mp3::playAdvertisement(uint16_t track, bool olnyIfIsPlaying) {
   if (isPlaying()) {
     DFMiniMp3<SoftwareSerial, Mp3Notify>::playAdvertisement(track);
-    delay(500); // TODO remove delay()
   } else if (not olnyIfIsPlaying) {
     start();
     DFMiniMp3<SoftwareSerial, Mp3Notify>::playAdvertisement(track);

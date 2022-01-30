@@ -159,8 +159,6 @@ void Tonuino::playFolder() {
     return;
   }
   playCurrentTrack();
-  if (knownCard && settings.pauseWhenCardRemoved)
-    mp3.waitForTrackToStart(); // TODO remove waitForTrackToStart
 }
 
 void Tonuino::playTrackNumber () {
@@ -260,7 +258,6 @@ void Tonuino::nextTrack() {
     default:
     break;
   }
-  delay(500); // TODO remove delay
 }
 
 void Tonuino::previousTrack() {
@@ -320,7 +317,6 @@ void Tonuino::previousTrack() {
     default:
     break;
   }
-  delay(500); // TODO remove delay
 }
 
 // Funktionen für den Standby Timer (z.B. über Pololu-Switch oder Mosfet)
@@ -399,7 +395,6 @@ bool Tonuino::specialCard(const nfcTagObject &nfcTag) {
   }
   if (oldModifier != activeModifier)
     activeModifier->init();
-  delay(2000);  // TODO remove delay
   return true;
 }
 
