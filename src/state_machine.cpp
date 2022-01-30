@@ -15,21 +15,21 @@ const __FlashStringHelper* str_Idle                    () { return F("Idle") ; }
 const __FlashStringHelper* str_StartPlay               () { return F("StartPlay") ; }
 const __FlashStringHelper* str_Play                    () { return F("Play") ; }
 const __FlashStringHelper* str_Pause                   () { return F("Pause") ; }
-const __FlashStringHelper* str_Admin_Allow             () { return F("Admin_Allow") ; }
-const __FlashStringHelper* str_Admin_Entry             () { return F("Admin_Entry") ; }
-const __FlashStringHelper* str_Admin_NewCard           () { return F("Admin_NewCard") ; }
-const __FlashStringHelper* str_Admin_MaxVolume         () { return F("Admin_MaxVolume") ; }
-const __FlashStringHelper* str_Admin_MinVolume         () { return F("Admin_MinVolume") ; }
-const __FlashStringHelper* str_Admin_InitVolume        () { return F("Admin_InitVolume") ; }
-const __FlashStringHelper* str_Admin_Eq                () { return F("Admin_Eq") ; }
-const __FlashStringHelper* str_Admin_ModCard           () { return F("Admin_ModCard") ; }
-const __FlashStringHelper* str_Admin_ShortCut          () { return F("Admin_ShortCut") ; }
-const __FlashStringHelper* str_Admin_StandbyTimer      () { return F("Admin_StandbyTimer") ; }
-const __FlashStringHelper* str_Admin_CardsForFolder    () { return F("Admin_CardsForFolder") ; }
-const __FlashStringHelper* str_Admin_InvButtons        () { return F("Admin_InvButtons") ; }
-const __FlashStringHelper* str_Admin_ResetEeprom       () { return F("Admin_ResetEeprom") ; }
-const __FlashStringHelper* str_Admin_LockAdmin         () { return F("Admin_LockAdmin") ; }
-const __FlashStringHelper* str_Admin_PauseIfCardRemoved() { return F("Admin_PauseIfCardRemoved") ; }
+const __FlashStringHelper* str_Admin_Allow             () { return F("AdmAllow") ; }
+const __FlashStringHelper* str_Admin_Entry             () { return F("AdmEntry") ; }
+const __FlashStringHelper* str_Admin_NewCard           () { return F("AdmNewCard") ; }
+const __FlashStringHelper* str_Admin_MaxVolume         () { return F("AdmMaxVolume") ; }
+const __FlashStringHelper* str_Admin_MinVolume         () { return F("AdmMinVolume") ; }
+const __FlashStringHelper* str_Admin_InitVolume        () { return F("AdmInitVolume") ; }
+const __FlashStringHelper* str_Admin_Eq                () { return F("AdmEq") ; }
+const __FlashStringHelper* str_Admin_ModCard           () { return F("AdmModCard") ; }
+const __FlashStringHelper* str_Admin_ShortCut          () { return F("AdmShortCut") ; }
+const __FlashStringHelper* str_Admin_StandbyTimer      () { return F("AdmStandbyTimer") ; }
+const __FlashStringHelper* str_Admin_CardsForFolder    () { return F("AdmCardsForFolder") ; }
+const __FlashStringHelper* str_Admin_InvButtons        () { return F("AdmInvButtons") ; }
+const __FlashStringHelper* str_Admin_ResetEeprom       () { return F("AdmResetEeprom") ; }
+const __FlashStringHelper* str_Admin_LockAdmin         () { return F("AdmLockAdmin") ; }
+const __FlashStringHelper* str_Admin_PauseIfCardRemoved() { return F("AdmPauseIfCardRem") ; }
 const __FlashStringHelper* str_VoiceMenu               () { return F("VoiceMenu") ; }
 const __FlashStringHelper* str_to                      () { return F(" -> ") ; }
 const __FlashStringHelper* str_enter                   () { return F("enter ") ; }
@@ -301,7 +301,6 @@ bool SM<SMT>::isAbort(button_e const &b) {
 template<SM_type SMT>
 bool SM<SMT>::isWaitForPlayFinish() {
   if (waitForPlayFinish && timer.isExpired() && not mp3.isPlaying()) {
-    waitForPlayFinish = false;
     return true;
   }
   return false;
@@ -370,7 +369,7 @@ void VoiceMenu<SMT>::react(button_e const &b) {
     break;
   }
   if (b.b != buttonRaw::none) {
-    LOG(state_log, s_debug, str_VoiceMenu(), F("::react() currentValue: "), currentValue);
+    LOG(state_log, s_info, str_VoiceMenu(), F(" currentVal: "), currentValue);
   }
 };
 
@@ -1841,7 +1840,7 @@ Chip_card      &SM<SMT>::chip_card = Tonuino::getTonuino().getChipCard();
 template<SM_type SMT>
 Timer           SM<SMT>::timer{};
 template<SM_type SMT>
-bool           SM<SMT>::waitForPlayFinish{};
+bool           SM<SMT>::waitForPlayFinish = false;
 
 template<SM_type SMT>
 int       VoiceMenu<SMT>::numberOfOptions  ;

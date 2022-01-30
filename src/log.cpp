@@ -2,10 +2,10 @@
 
 const __FlashStringHelper* getSeverityName(severity sev) {
   switch (sev) {
-  case s_debug  : return F("debug"  );
-  case s_info   : return F("info"   );
-  case s_warning: return F("warning");
-  case s_error  : return F("error"  );
+  case s_debug  : return F("D");
+  case s_info   : return F("I");
+  case s_warning: return F("W");
+  case s_error  : return F("E");
   }
   return F("unknown");
 }

@@ -41,6 +41,8 @@ inline constexpr uint32_t cardCookie           = 0x1337b347;
 inline constexpr uint8_t  cardVersion          = 0x02;
 inline constexpr byte     mfrc522_RSTPin       =  9;          // Configurable, see typical pin layout above
 inline constexpr byte     mfrc522_SSPin        = 10;          // Configurable, see typical pin layout above
+inline constexpr unsigned int cardRemoveDelay  =  3;
+
 
 // ####### mp3 #########################################
 

@@ -15,20 +15,29 @@ constexpr bool verbosePrintPiccType   = false;
 
 namespace {
 
-const __FlashStringHelper* str_failed     () { return F("failed: ") ; }
+const __FlashStringHelper* str_failed     () { return F(" failed: ") ; }
 const __FlashStringHelper* str_MIFARE_Read() { return F("MIFARE_Read ") ; }
 
 /**
   Helper routine to dump a byte array as hex values to Serial.
 */
-String dump_byte_array(byte * buffer, size_t bufferSize) {
-  String res((char *)0);
-  res.reserve(3*bufferSize);
+const char* dump_byte_array(byte * buffer, size_t bufferSize) {
+  static char ret[3*10+1];
+  ret[0] = '\0';
+  if (bufferSize > 10)
+    return ret;
+  size_t pos = 0;
   for (byte i = 0; i < bufferSize; ++i) {
-    res += String(buffer[i] < 0x10 ? " 0" : " ");
-    res += String(buffer[i], HEX);
+    const bool pad = buffer[i] < 0x10;
+    ret[pos++] = ' ';
+    if (pad)
+      ret[pos++] = '0';
+    utoa(buffer[i], ret+(pos++), HEX);
+    if (!pad)
+      ++pos;
   }
-  return res;
+  ret[pos] = '\0';
+  return ret;
 }
 
 auto printStatusCode(MFRC522& mfrc522, MFRC522::StatusCode status) {
@@ -49,15 +58,13 @@ auto printPiccType(MFRC522& mfrc522, MFRC522::PICC_Type piccType) {
 MFRC522::MIFARE_Key key{ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 const byte sector       = 1;
 const byte trailerBlock = 7;
-
-const unsigned int removeDelay = 3;
 } // namespace
 
 Chip_card::Chip_card(Mp3 &mp3, Buttons &buttons)
 : mfrc522(mfrc522_SSPin, mfrc522_RSTPin)
 , mp3(mp3)
 , buttons(buttons)
-, cardRemovedSwitch(removeDelay)
+, cardRemovedSwitch(cardRemoveDelay)
 {}
 
 bool Chip_card::auth(MFRC522::PICC_Type piccType) {
@@ -90,7 +97,7 @@ bool Chip_card::auth(MFRC522::PICC_Type piccType) {
 
 bool Chip_card::readCard(nfcTagObject &nfcTag) {
   // Show some details of the PICC (that is: the tag/card)
-  LOG(card_log, s_info, F("Card UID: "), dump_byte_array(mfrc522.uid.uidByte, mfrc522.uid.size).c_str());
+  LOG(card_log, s_info, F("Card UID: "), dump_byte_array(mfrc522.uid.uidByte, mfrc522.uid.size));
   const MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(mfrc522.uid.sak);
   LOG(card_log, s_info, F("PICC type: "), printPiccType(mfrc522, piccType));
 
@@ -113,7 +120,7 @@ bool Chip_card::readCard(nfcTagObject &nfcTag) {
     byte size = sizeof(buffer);
     status = static_cast<MFRC522::StatusCode>(mfrc522.MIFARE_Read(4, buffer, &size));
     if (status != MFRC522::STATUS_OK) {
-      LOG(card_log, s_error, str_MIFARE_Read(), F("4 "), str_failed(), printStatusCode(mfrc522, status));
+      LOG(card_log, s_error, str_MIFARE_Read(), F("4"), str_failed(), printStatusCode(mfrc522, status));
       return false;
     }
   }
@@ -124,35 +131,35 @@ bool Chip_card::readCard(nfcTagObject &nfcTag) {
 
     status = static_cast<MFRC522::StatusCode>(mfrc522.MIFARE_Read(8, buffer2, &size2));
     if (status != MFRC522::STATUS_OK) {
-      LOG(card_log, s_error, str_MIFARE_Read(), F("8 "), str_failed(), printStatusCode(mfrc522, status));
+      LOG(card_log, s_error, str_MIFARE_Read(), F("8"), str_failed(), printStatusCode(mfrc522, status));
       return false;
     }
     memcpy(buffer, buffer2, 4);
 
     status = static_cast<MFRC522::StatusCode>(mfrc522.MIFARE_Read(9, buffer2, &size2));
     if (status != MFRC522::STATUS_OK) {
-      LOG(card_log, s_error, str_MIFARE_Read(), F("9 "), str_failed(), printStatusCode(mfrc522, status));
+      LOG(card_log, s_error, str_MIFARE_Read(), F("9"), str_failed(), printStatusCode(mfrc522, status));
       return false;
     }
     memcpy(buffer + 4, buffer2, 4);
 
     status = static_cast<MFRC522::StatusCode>(mfrc522.MIFARE_Read(10, buffer2, &size2));
     if (status != MFRC522::STATUS_OK) {
-      LOG(card_log, s_error, str_MIFARE_Read(), F("10 "), str_failed(), printStatusCode(mfrc522, status));
+      LOG(card_log, s_error, str_MIFARE_Read(), F("10"), str_failed(), printStatusCode(mfrc522, status));
       return false;
     }
     memcpy(buffer + 8, buffer2, 4);
 
     status = static_cast<MFRC522::StatusCode>(mfrc522.MIFARE_Read(11, buffer2, &size2));
     if (status != MFRC522::STATUS_OK) {
-      LOG(card_log, s_error, str_MIFARE_Read(), F("11 "), str_failed(), printStatusCode(mfrc522, status));
+      LOG(card_log, s_error, str_MIFARE_Read(), F("11"), str_failed(), printStatusCode(mfrc522, status));
       return false;
     }
     memcpy(buffer + 12, buffer2, 4);
   }
   stopCrypto1();
 
-  LOG(card_log, s_info, F("Data on Card: "), dump_byte_array(buffer, 9).c_str());
+  LOG(card_log, s_info, F("Data on Card: "), dump_byte_array(buffer, 9));
 
   uint32_t tempCookie;
   tempCookie  = (uint32_t)buffer[0] << 24;
@@ -200,7 +207,7 @@ bool Chip_card::writeCard(const nfcTagObject &nfcTag) {
   MFRC522::StatusCode status = MFRC522::STATUS_ERROR;
 
   // Write data to the block
-  LOG(card_log, s_info, F("Writing data: "), dump_byte_array(buffer, 9).c_str());
+  LOG(card_log, s_info, F("Writing data: "), dump_byte_array(buffer, 9));
 
   if ((mifareType == MFRC522::PICC_TYPE_MIFARE_MINI ) ||
       (mifareType == MFRC522::PICC_TYPE_MIFARE_1K ) ||
