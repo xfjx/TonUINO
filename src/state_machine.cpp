@@ -3,6 +3,11 @@
 #include "tonuino.hpp"
 #include "logger.hpp"
 
+class Admin_Entry;
+class Idle;
+//using Admin_End = Idle;
+using Admin_End = Admin_Entry;
+
 namespace {
 
 const __FlashStringHelper* str_ChMode                  () { return F("ChMode") ; }
@@ -18,10 +23,7 @@ const __FlashStringHelper* str_Pause                   () { return F("Pause") ; 
 const __FlashStringHelper* str_Admin_Allow             () { return F("AdmAllow") ; }
 const __FlashStringHelper* str_Admin_Entry             () { return F("AdmEntry") ; }
 const __FlashStringHelper* str_Admin_NewCard           () { return F("AdmNewCard") ; }
-const __FlashStringHelper* str_Admin_MaxVolume         () { return F("AdmMaxVolume") ; }
-const __FlashStringHelper* str_Admin_MinVolume         () { return F("AdmMinVolume") ; }
-const __FlashStringHelper* str_Admin_InitVolume        () { return F("AdmInitVolume") ; }
-const __FlashStringHelper* str_Admin_Eq                () { return F("AdmEq") ; }
+const __FlashStringHelper* str_Admin_SimpleSetting     () { return F("Admin_SimpleSetting") ; }
 const __FlashStringHelper* str_Admin_ModCard           () { return F("AdmModCard") ; }
 const __FlashStringHelper* str_Admin_ShortCut          () { return F("AdmShortCut") ; }
 const __FlashStringHelper* str_Admin_StandbyTimer      () { return F("AdmStandbyTimer") ; }
@@ -43,17 +45,16 @@ const __FlashStringHelper* str_abort                   () { return F(" abort") ;
 template<SM_type SMT>
 class VoiceMenu : public SM<SMT>
 {
-public:
-  void entry() override;
-  void react(button_e const &) override;
 protected:
+  void entry(bool entryPlayAfter = true);
+  void react(button_e const &) override;
   void playCurrentValue();
 
-  static int       numberOfOptions  ;
+  static uint8_t   numberOfOptions  ;
   static mp3Tracks startMessage     ;
   static mp3Tracks messageOffset    ;
   static bool      preview          ;
-  static int       previewFromFolder;
+  static uint8_t   previewFromFolder;
   static uint8_t   currentValue     ;
 
   static Timer     previewTimer     ;
@@ -63,45 +64,45 @@ protected:
 class ChMode : public VoiceMenu<SM_type::setupCard>
 {
 public:
-  void entry() override;
-  void react(button_e const &) override;
+  void entry() final;
+  void react(button_e const &) final;
 };
 
 class ChFolder : public VoiceMenu<SM_type::setupCard>
 {
 public:
-  void entry() override;
-  void react(button_e const &) override;
+  void entry() final;
+  void react(button_e const &) final;
 };
 
 class ChTrack : public VoiceMenu<SM_type::setupCard>
 {
 public:
-  void entry() override;
-  void react(button_e const &) override;
+  void entry() final;
+  void react(button_e const &) final;
 };
 
 class ChFirstTrack : public VoiceMenu<SM_type::setupCard>
 {
 public:
-  void entry() override;
-  void react(button_e const &) override;
+  void entry() final;
+  void react(button_e const &) final;
 };
 
 class ChLastTrack : public VoiceMenu<SM_type::setupCard>
 {
 public:
-  void entry() override;
-  void react(button_e const &) override;
+  void entry() final;
+  void react(button_e const &) final;
 };
 
 class WriteCard : public SM_writeCard
 {
 public:
-  void entry() override;
-  void react(button_e const &) override;
+  void entry() final;
+  void react(button_e const &) final;
 private:
-  enum subState {
+  enum subState: uint8_t {
     start_waitCardInserted,
     run_writeCard,
     end_writeCard,
@@ -113,10 +114,10 @@ private:
 class Admin_Allow: public VoiceMenu<SM_type::tonuino>
 {
 public:
-  void entry() override;
-  void react(button_e const &) override;
+  void entry() final;
+  void react(button_e const &) final;
 private:
-  enum subState {
+  enum subState: uint8_t {
     select_method,
     wait_for_no_button,
     get_pin,
@@ -138,18 +139,18 @@ private:
 class Admin_Entry: public VoiceMenu<SM_type::tonuino>
 {
 public:
-  void entry() override;
-  void react(button_e const &) override;
+  void entry() final;
+  void react(button_e const &) final;
   static uint8_t   lastCurrentValue     ;
 };
 
 class Admin_NewCard: public SM_tonuino
 {
 public:
-  void entry() override;
-  void react(button_e const &) override;
+  void entry() final;
+  void react(button_e const &) final;
 private:
-  enum subState {
+  enum subState: uint8_t {
     start_setupCard,
     run_setupCard,
     end_setupCard,
@@ -160,42 +161,28 @@ private:
   subState current_subState;
 };
 
-class Admin_MaxVolume: public VoiceMenu<SM_type::tonuino>
+class Admin_SimpleSetting: public VoiceMenu<SM_type::tonuino>
 {
 public:
-  void entry() override;
-  void react(button_e const &) override;
-};
-
-class Admin_MinVolume: public VoiceMenu<SM_type::tonuino>
-{
-public:
-  void entry() override;
-  void react(button_e const &) override;
-};
-
-class Admin_InitVolume: public VoiceMenu<SM_type::tonuino>
-{
-public:
-  void entry() override;
-  void react(button_e const &) override;
-};
-
-class Admin_Eq: public VoiceMenu<SM_type::tonuino>
-{
-public:
-  void entry() override;
-  void react(button_e const &) override;
+  void entry() final;
+  void react(button_e const &) final;
+  enum Type: uint8_t {
+    maxVolume,
+    minVolume,
+    initVolume,
+    eq,
+  };
+  static Type type;
 };
 
 class Admin_ModCard: public VoiceMenu<SM_type::tonuino>
 {
 public:
-  void entry() override;
-  void react(button_e const &) override;
+  void entry() final;
+  void react(button_e const &) final;
 private:
   mode_t mode;
-  enum subState {
+  enum subState: uint8_t {
     start_writeCard,
     run_writeCard,
     end_writeCard,
@@ -207,32 +194,32 @@ private:
 class Admin_ShortCut: public VoiceMenu<SM_type::tonuino>
 {
 public:
-  void entry() override;
-  void react(button_e const &) override;
+  void entry() final;
+  void react(button_e const &) final;
 private:
-  enum subState {
+  enum subState: uint8_t {
     start_setupCard,
     run_setupCard,
     end_setupCard,
   };
   subState current_subState;
-  size_t   shortcut;
+  uint8_t  shortcut;
 };
 
 class Admin_StandbyTimer: public VoiceMenu<SM_type::tonuino>
 {
 public:
-  void entry() override;
-  void react(button_e const &) override;
+  void entry() final;
+  void react(button_e const &) final;
 };
 
 class Admin_CardsForFolder: public VoiceMenu<SM_type::tonuino>
 {
 public:
-  void entry() override;
-  void react(button_e const &) override;
+  void entry() final;
+  void react(button_e const &) final;
 private:
-  enum subState {
+  enum subState: uint8_t {
     start_getFolder,
     run_getFolder,
     start_getSpecial,
@@ -251,38 +238,38 @@ private:
 class Admin_InvButtons: public VoiceMenu<SM_type::tonuino>
 {
 public:
-  void entry() override;
-  void react(button_e const &) override;
+  void entry() final;
+  void react(button_e const &) final;
 };
 
 class Admin_ResetEeprom: public SM_tonuino
 {
 public:
-  void entry() override;
-  void react(button_e const &) override;
+  void entry() final;
+  void react(button_e const &) final;
 };
 
 class Admin_LockAdmin: public VoiceMenu<SM_type::tonuino>
 {
 public:
-  void entry() override;
-  void react(button_e const &) override;
+  void entry() final;
+  void react(button_e const &) final;
 private:
-  enum subState {
+  enum subState: uint8_t {
     get_mode,
     get_pin,
     finished,
   };
   subState current_subState;
   Settings::pin_t pin;
-  size_t          pin_number;
+  uint8_t         pin_number;
 };
 
 class Admin_PauseIfCardRemoved: public VoiceMenu<SM_type::tonuino>
 {
 public:
-  void entry() override;
-  void react(button_e const &) override;
+  void entry() final;
+  void react(button_e const &) final;
 };
 
 
@@ -291,41 +278,27 @@ public:
 template<SM_type SMT>
 bool SM<SMT>::isAbort(button_e const &b) {
   if (b.b == buttonRaw::pauseLong) {
-    SM<SMT>::mp3.playMp3FolderTrack(mp3Tracks::t_802_reset_aborted);
+    SM<SMT>::mp3.enqueueMp3FolderTrack(mp3Tracks::t_802_reset_aborted);
     LOG(state_log, s_info, F("SM"), str_abort());
     return true;
   }
   return false;
 }
 
-template<SM_type SMT>
-bool SM<SMT>::isWaitForPlayFinish() {
-  if (waitForPlayFinish && timer.isExpired() && not mp3.isPlaying()) {
-    return true;
-  }
-  return false;
-}
-
-template<SM_type SMT>
-void SM<SMT>::startWaitForPlayFinish() {
-  timer.start(dfPlayer_timeUntilStarts);
-  waitForPlayFinish = true;
-}
-
 // #######################################################
 
 template<SM_type SMT>
-void VoiceMenu<SMT>::entry() {
+void VoiceMenu<SMT>::entry(bool entryPlayAfter) {
   LOG(state_log, s_debug, str_VoiceMenu(), F("::entry() "), static_cast<int>(startMessage));
   if (startMessage != mp3Tracks::t_0)
-    SM<SMT>::mp3.playMp3FolderTrack(startMessage);
+    SM<SMT>::mp3.enqueueMp3FolderTrack(startMessage, entryPlayAfter);
 
   currentValue      = 0;
 };
 
 template<SM_type SMT>
 void VoiceMenu<SMT>::playCurrentValue() {
-  SM<SMT>::mp3.playMp3FolderTrack(messageOffset + currentValue);
+  SM<SMT>::mp3.enqueueMp3FolderTrack(messageOffset + currentValue);
   previewTimer.start(1000);
   previewStarted = false;
 }
@@ -339,9 +312,9 @@ void VoiceMenu<SMT>::react(button_e const &b) {
       && not SM<SMT>::mp3.isPlaying()) {
     LOG(state_log, s_debug, str_VoiceMenu(), F("::react() start preview "), currentValue);
     if (previewFromFolder == 0)
-      SM<SMT>::mp3.playFolderTrack(currentValue, 1);
+      SM<SMT>::mp3.enqueueTrack(currentValue, 1);
     else
-      SM<SMT>::mp3.playFolderTrack(previewFromFolder, currentValue);
+      SM<SMT>::mp3.enqueueTrack(previewFromFolder, currentValue);
     previewStarted = true;
   }
 
@@ -530,9 +503,10 @@ void ChLastTrack::entry() {
   messageOffset     = mp3Tracks::t_0;
   preview           = true;
   previewFromFolder = folder.folder;
-  currentValue      = folder.special;
 
   VoiceMenu::entry();
+
+  currentValue      = folder.special;
 };
 
 void ChLastTrack::react(button_e const &b) {
@@ -567,7 +541,7 @@ void WriteCard::react(button_e const &b) {
   }
 
   if (b.b == buttonRaw::pauseLong) {
-    mp3.playMp3FolderTrack(mp3Tracks::t_802_reset_aborted);
+    mp3.enqueueMp3FolderTrack(mp3Tracks::t_802_reset_aborted);
     LOG(state_log, s_info, str_WriteCard(), str_to(), F("finished_abort"));
     transit<finished_abort_writeCard>();
     return;
@@ -575,7 +549,7 @@ void WriteCard::react(button_e const &b) {
 
   switch (current_subState) {
   case start_waitCardInserted:
-    mp3.playMp3FolderTrack(mp3Tracks::t_800_waiting_for_card);
+    mp3.enqueueMp3FolderTrack(mp3Tracks::t_800_waiting_for_card, true/*playAfter*/);
     current_subState = run_writeCard;
     break;
   case run_writeCard:
@@ -583,9 +557,9 @@ void WriteCard::react(button_e const &b) {
       nfcTagObject newCard;
       newCard.nfcFolderSettings = folder;
       if (chip_card.writeCard(newCard))
-        mp3.playMp3FolderTrack(mp3Tracks::t_400_ok);
+        mp3.enqueueMp3FolderTrack(mp3Tracks::t_400_ok);
       else
-        mp3.playMp3FolderTrack(mp3Tracks::t_401_error);
+        mp3.enqueueMp3FolderTrack(mp3Tracks::t_401_error);
       timer.start(dfPlayer_timeUntilStarts);
       current_subState = end_writeCard;
     }
@@ -614,18 +588,24 @@ bool Base::readCard() {
   if (lastCardRead.cookie != cardCookie)
     return false;
 
+  if (lastCardRead.nfcFolderSettings.folder == 0) {
+    if (lastCardRead.nfcFolderSettings.mode == mode_t::admin_card) {
+      LOG(state_log, s_debug, F("Base"), str_to(), str_Admin_Entry());
+      Admin_Entry::lastCurrentValue = 0;
+      transit<Admin_Entry>();
+      return false;
+    }
+
+    if (tonuino.specialCard(lastCardRead))
+      return false;
+  }
+
+  if (tonuino.getActiveModifier().handleRFID(lastCardRead))
+      return false;
+
   if (lastCardRead.nfcFolderSettings.folder != 0) {
     return true;
   }
-
-  if (lastCardRead.nfcFolderSettings.mode == mode_t::admin_card) {
-    LOG(state_log, s_debug, F("Base"), str_to(), str_Admin_Entry());
-    Admin_Entry::lastCurrentValue = 0;
-    transit<Admin_Entry>();
-    return false;
-  }
-
-  tonuino.specialCard(lastCardRead);
 
   return false;
 }
@@ -635,7 +615,6 @@ bool Base::readCard() {
 void Idle::entry() {
   LOG(state_log, s_info, str_enter(), str_Idle());
   tonuino.setStandbyTimer();
-  mp3.stop();
 };
 
 void Idle::react(button_e const &b) {
@@ -643,13 +622,12 @@ void Idle::react(button_e const &b) {
     LOG(state_log, s_debug, str_Idle(), F("::react(b) "), static_cast<int>(b.b));
   }
 
-  buttonCmd cmd      = buttons.getButtonCmd(b.b);
-  uint8_t   shortCut = 99;
+  const buttonCmd cmd      = buttons.getButtonCmd(b.b);
+  uint8_t         shortCut = 0xff;
 
   switch (cmd) {
   case buttonCmd::admin:
     LOG(state_log, s_debug, str_Idle(), str_to(), str_Admin_Allow());
-    // adminMenuAllowed()
     transit<Admin_Allow>();
     return;
   case buttonCmd::pause:
@@ -691,7 +669,7 @@ void Idle::react(button_e const &b) {
     transit<StartPlay>();
   }
   else if (shortCut == 3) {
-    mp3.playMp3FolderTrack(mp3Tracks::t_262_pling);
+    mp3.enqueueMp3FolderTrack(mp3Tracks::t_262_pling);
   }
 };
 
@@ -732,10 +710,10 @@ void Play::react(button_e const &b) {
   switch (cmd) {
   case buttonCmd::admin:
     LOG(state_log, s_debug, str_Play(), str_to(), str_Admin_Allow());
-    // adminMenuAllowed()
     transit<Admin_Allow>();
     return;
   case buttonCmd::pause:
+    LOG(state_log, s_debug, F("Pause Taste"));
     if (tonuino.getActiveModifier().handlePause())
       break;
     LOG(state_log, s_debug, str_Play(), str_to(), str_Pause());
@@ -769,8 +747,11 @@ void Play::react(button_e const &b) {
   default:
     break;
   }
-  if (not tonuino.knownCard)
+  if (not mp3.isPlayingFolder()) {
+    if (mp3.isPlaying())
+      mp3.stop();
     transit<Idle>();
+  }
 };
 
 void Play::react(card_e const &c) {
@@ -809,8 +790,8 @@ void Pause::react(button_e const &b) {
     LOG(state_log, s_debug, str_Pause(), F("::react(b) "), static_cast<int>(b.b));
   }
 
-  buttonCmd cmd      = buttons.getButtonCmd(b.b);
-  uint8_t   shortCut = 99;
+  const buttonCmd cmd      = buttons.getButtonCmd(b.b);
+  uint8_t         shortCut = 99;
 
   switch (cmd) {
   case buttonCmd::admin:
@@ -886,12 +867,15 @@ void Pause::react(card_e const &c) {
 
 void StartPlay::entry() {
   LOG(state_log, s_info, str_enter(), str_StartPlay());
-  tonuino.playFolder();
+  mp3.enqueueMp3FolderTrack(mp3Tracks::t_262_pling);
 };
 
 void StartPlay::react(button_e const &/*b*/) {
   LOG(state_log, s_debug, str_StartPlay(), str_to(), str_Play());
-  transit<Play>();
+  if (not mp3.isPlayingMp3()) {
+    tonuino.playFolder();
+    transit<Play>();
+  }
 };
 
 // #######################################################
@@ -899,6 +883,7 @@ void StartPlay::react(button_e const &/*b*/) {
 void Admin_Allow::entry() {
   LOG(state_log, s_info, str_enter(), str_Admin_Allow());
   current_subState = select_method;
+  tonuino.resetActiveModifier();
 };
 
 void Admin_Allow::react(button_e const &b) {
@@ -920,7 +905,7 @@ void Admin_Allow::react(button_e const &b) {
       current_subState = not_allow;
     }
     else if (settings.adminMenuLocked == 2) {
-      mp3.playMp3FolderTrack(mp3Tracks::t_991_admin_pin);
+      mp3.enqueueMp3FolderTrack(mp3Tracks::t_991_admin_pin);
       pin_number = 0;
       current_subState = wait_for_no_button;
     }
@@ -955,13 +940,13 @@ void Admin_Allow::react(button_e const &b) {
 //  case start_match         :
 //    av = random(10, 20);
 //    bv = random(1, av);
-//    mp3.playMp3FolderTrack(mp3Tracks::t_992_admin_calc);
+//    mp3.enqueueMp3FolderTrack(mp3Tracks::t_992_admin_calc);
 //    timer.start(dfPlayer_timeUntilStarts);
 //    current_subState = play_match_intro;
 //    break;
 //  case play_match_intro    :
 //    if (timer.isExpired() && not mp3.isPlaying()) {
-//      mp3.playMp3FolderTrack(av);
+//      mp3.enqueueMp3FolderTrack(av);
 //      timer.start(dfPlayer_timeUntilStarts);
 //      current_subState = play_match_a;
 //    }
@@ -970,10 +955,10 @@ void Admin_Allow::react(button_e const &b) {
 //    if (timer.isExpired() && not mp3.isPlaying()) {
 //      if (random(1, 3) == 2) {
 //        cv = av + bv;
-//        mp3.playMp3FolderTrack(mp3Tracks::t_993_admin_calc);
+//        mp3.enqueueMp3FolderTrack(mp3Tracks::t_993_admin_calc);
 //      } else {
 //        cv = av - bv;
-//        mp3.playMp3FolderTrack(mp3Tracks::t_994_admin_calc);
+//        mp3.enqueueMp3FolderTrack(mp3Tracks::t_994_admin_calc);
 //      }
 //      timer.start(dfPlayer_timeUntilStarts);
 //      LOG(admin_log, s_info, F("Result: "), cv);
@@ -982,7 +967,7 @@ void Admin_Allow::react(button_e const &b) {
 //    break;
 //  case play_match_operation:
 //    if (timer.isExpired() && not mp3.isPlaying()) {
-//      mp3.playMp3FolderTrack(bv);
+//      mp3.enqueueMp3FolderTrack(bv);
 //      timer.start(dfPlayer_timeUntilStarts);
 //      current_subState = play_match_b;
 //    }
@@ -995,7 +980,7 @@ void Admin_Allow::react(button_e const &b) {
 //      preview           = false;
 //      previewFromFolder = 0;
 //
-//      tonuino.knownCard = false;
+//      mp3.clearFolderQueue();
 //
 //      VoiceMenu::entry();
 //      current_subState = get_match_c;
@@ -1027,6 +1012,7 @@ void Admin_Allow::react(button_e const &b) {
 void Admin_Entry::entry() {
   LOG(state_log, s_info, str_enter(), str_Admin_Entry());
   tonuino.disableStandbyTimer();
+  tonuino.resetActiveModifier();
 
   numberOfOptions   = 13;
   startMessage      = lastCurrentValue == 0 ? mp3Tracks::t_900_admin : mp3Tracks::t_919_continue_admin;
@@ -1034,7 +1020,10 @@ void Admin_Entry::entry() {
   preview           = false;
   previewFromFolder = 0;
 
-  tonuino.knownCard = false;
+  if (mp3.isPlayingFolder()) {
+    mp3.clearFolderQueue();
+    mp3.stop();
+  }
 
   VoiceMenu::entry();
 
@@ -1064,20 +1053,24 @@ void Admin_Entry::react(button_e const &b) {
              transit<Admin_NewCard>();
              return;
     case 2:  // Maximum Volume
-             LOG(state_log, s_debug, str_Admin_Entry(), str_to(), str_Admin_MaxVolume());
-             transit<Admin_MaxVolume>();
+             LOG(state_log, s_debug, str_Admin_Entry(), str_to(), str_Admin_SimpleSetting());
+             Admin_SimpleSetting::type = Admin_SimpleSetting::maxVolume;
+             transit<Admin_SimpleSetting>();
              return;
     case 3:  // Minimum Volume
-             LOG(state_log, s_debug, str_Admin_Entry(), str_to(), str_Admin_MinVolume());
-             transit<Admin_MinVolume>();
+             LOG(state_log, s_debug, str_Admin_Entry(), str_to(), str_Admin_SimpleSetting());
+             Admin_SimpleSetting::type = Admin_SimpleSetting::minVolume;
+             transit<Admin_SimpleSetting>();
              return;
     case 4:  // Initial Volume
-             LOG(state_log, s_debug, str_Admin_Entry(), str_to(), str_Admin_InitVolume());
-             transit<Admin_InitVolume>();
+             LOG(state_log, s_debug, str_Admin_Entry(), str_to(), str_Admin_SimpleSetting());
+             Admin_SimpleSetting::type = Admin_SimpleSetting::initVolume;
+             transit<Admin_SimpleSetting>();
              return;
     case 5:  // EQ
-             LOG(state_log, s_debug, str_Admin_Entry(), str_to(), str_Admin_Eq());
-             transit<Admin_Eq>();
+             LOG(state_log, s_debug, str_Admin_Entry(), str_to(), str_Admin_SimpleSetting());
+             Admin_SimpleSetting::type = Admin_SimpleSetting::eq;
+             transit<Admin_SimpleSetting>();
              return;
     case 6:  // create modifier card
              LOG(state_log, s_debug, str_Admin_Entry(), str_to(), str_Admin_ModCard());
@@ -1114,9 +1107,6 @@ void Admin_Entry::react(button_e const &b) {
     }
   }
 };
-
-//using Admin_End = Idle;
-using Admin_End = Admin_Entry;
 
 // #######################################################
 
@@ -1173,23 +1163,35 @@ void Admin_NewCard::react(button_e const &b) {
 
 // #######################################################
 
-void Admin_MaxVolume::entry() {
-  LOG(state_log, s_info, str_enter(), str_Admin_MaxVolume());
+void Admin_SimpleSetting::entry() {
+  LOG(state_log, s_info, str_enter(), str_Admin_SimpleSetting(), type);
 
-  numberOfOptions   = 30 - settings.minVolume;
-  startMessage      = mp3Tracks::t_930_max_volume_intro;
-  messageOffset     = static_cast<mp3Tracks>(settings.minVolume);
+  numberOfOptions   = type == maxVolume  ? 30 - settings.minVolume                        :
+                      type == minVolume  ? settings.maxVolume - 1                         :
+                      type == initVolume ? settings.maxVolume - settings.minVolume + 1    :
+                      type == eq         ? 6                                              : 0;
+  startMessage      = type == maxVolume  ? mp3Tracks::t_930_max_volume_intro              :
+                      type == minVolume  ? mp3Tracks::t_931_min_volume_into               :
+                      type == initVolume ? mp3Tracks::t_932_init_volume_into              :
+                      type == eq         ? mp3Tracks::t_920_eq_intro                      : mp3Tracks::t_0;
+  messageOffset     = type == maxVolume  ? static_cast<mp3Tracks>(settings.minVolume)     :
+                      type == minVolume  ? mp3Tracks::t_0                                 :
+                      type == initVolume ? static_cast<mp3Tracks>(settings.minVolume - 1) :
+                      type == eq         ? mp3Tracks::t_920_eq_intro                      : mp3Tracks::t_0;
   preview           = false;
   previewFromFolder = 0;
 
-  VoiceMenu::entry();
+  VoiceMenu::entry(false);
 
-  currentValue      = settings.maxVolume - settings.minVolume;
+  currentValue      = type == maxVolume  ? settings.maxVolume - settings.minVolume        :
+                      type == minVolume  ? settings.minVolume                             :
+                      type == initVolume ? settings.initVolume - settings.minVolume + 1   :
+                      type == eq         ? settings.eq                                    : 0;
 };
 
-void Admin_MaxVolume::react(button_e const &b) {
+void Admin_SimpleSetting::react(button_e const &b) {
   if (b.b != buttonRaw::none) {
-    LOG(state_log, s_debug, str_Admin_MaxVolume(), F("::react() "), static_cast<int>(b.b));
+    LOG(state_log, s_debug, str_Admin_SimpleSetting(), F("::react() "), static_cast<int>(b.b));
   }
   VoiceMenu::react(b);
 
@@ -1197,138 +1199,21 @@ void Admin_MaxVolume::react(button_e const &b) {
     transit<Idle>();
     return;
   }
-  if (isWaitForPlayFinish()) {
-    LOG(state_log, s_debug, str_Admin_MaxVolume(), str_to(), str_Idle());
-    transit<Admin_End>();
-    return;
-  }
 
   if ((b.b == buttonRaw::pause) && (currentValue != 0)) {
-    settings.maxVolume = currentValue + settings.minVolume;
+    switch (type) {
+    case maxVolume : settings.maxVolume  = currentValue + settings.minVolume    ; break;
+    case minVolume : settings.minVolume  = currentValue                         ; break;
+    case initVolume: settings.initVolume = currentValue + settings.minVolume - 1; break;
+    case eq        : settings.eq = currentValue;
+                     mp3.setEq(static_cast<DfMp3_Eq>(settings.eq - 1))          ; break;
+
+    }
     settings.writeSettingsToFlash();
-    mp3.playMp3FolderTrack(mp3Tracks::t_402_ok_settings);
-    startWaitForPlayFinish();
-  }
-};
-
-// #######################################################
-
-void Admin_MinVolume::entry() {
-  LOG(state_log, s_info, str_enter(), str_Admin_MinVolume());
-
-  numberOfOptions   = settings.maxVolume - 1;
-  startMessage      = mp3Tracks::t_931_min_volume_into;
-  messageOffset     = mp3Tracks::t_0;
-  preview           = false;
-  previewFromFolder = settings.maxVolume - settings.minVolume;
-
-  VoiceMenu::entry();
-
-  currentValue      = settings.minVolume;
-};
-
-void Admin_MinVolume::react(button_e const &b) {
-  if (b.b != buttonRaw::none) {
-    LOG(state_log, s_debug, str_Admin_MinVolume(), F("::react() "), static_cast<int>(b.b));
-  }
-  VoiceMenu::react(b);
-
-  if (isAbort(b)) {
-    transit<Idle>();
-    return;
-  }
-  if (isWaitForPlayFinish()) {
-    LOG(state_log, s_debug, str_Admin_MinVolume(), str_to(), str_Idle());
+    mp3.enqueueMp3FolderTrack(mp3Tracks::t_402_ok_settings);
+    LOG(state_log, s_debug, str_Admin_SimpleSetting(), str_to(), str_Idle());
     transit<Admin_End>();
     return;
-  }
-
-  if ((b.b == buttonRaw::pause) && (currentValue != 0)) {
-    settings.minVolume = currentValue;
-    settings.writeSettingsToFlash();
-    mp3.playMp3FolderTrack(mp3Tracks::t_402_ok_settings);
-    startWaitForPlayFinish();
-  }
-};
-
-// #######################################################
-
-void Admin_InitVolume::entry() {
-  LOG(state_log, s_info, str_enter(), str_Admin_InitVolume());
-
-  numberOfOptions   = settings.maxVolume - settings.minVolume + 1;
-  startMessage      = mp3Tracks::t_932_init_volume_into;
-  messageOffset     = static_cast<mp3Tracks>(settings.minVolume - 1);
-  preview           = false;
-  previewFromFolder = 0;
-
-  VoiceMenu::entry();
-
-  currentValue      = settings.initVolume - settings.minVolume + 1;
-};
-
-void Admin_InitVolume::react(button_e const &b) {
-  if (b.b != buttonRaw::none) {
-    LOG(state_log, s_debug, str_Admin_InitVolume(), F("::react() "), static_cast<int>(b.b));
-  }
-  VoiceMenu::react(b);
-
-  if (isAbort(b)) {
-    transit<Idle>();
-    return;
-  }
-  if (isWaitForPlayFinish()) {
-    LOG(state_log, s_debug, str_Admin_InitVolume(), str_to(), str_Idle());
-    transit<Admin_End>();
-    return;
-  }
-
-  if ((b.b == buttonRaw::pause) && (currentValue != 0)) {
-    settings.initVolume = currentValue + settings.minVolume - 1;
-    settings.writeSettingsToFlash();
-    mp3.playMp3FolderTrack(mp3Tracks::t_402_ok_settings);
-    startWaitForPlayFinish();
-  }
-};
-
-// #######################################################
-
-void Admin_Eq::entry() {
-  LOG(state_log, s_info, str_enter(), str_Admin_Eq());
-
-  numberOfOptions   = 6;
-  startMessage      = mp3Tracks::t_920_eq_intro;
-  messageOffset     = mp3Tracks::t_920_eq_intro;
-  preview           = false;
-  previewFromFolder = 0;
-
-  VoiceMenu::entry();
-
-  currentValue      = settings.eq;
-};
-
-void Admin_Eq::react(button_e const &b) {
-  if (b.b != buttonRaw::none) {
-    LOG(state_log, s_debug, str_Admin_Eq(), F("::react() "), static_cast<int>(b.b));
-  }
-  VoiceMenu::react(b);
-
-  if (isAbort(b)) {
-    transit<Idle>();
-    return;
-  }
-  if (isWaitForPlayFinish()) {
-    LOG(state_log, s_debug, str_Admin_Eq(), str_to(), str_Idle());
-    transit<Admin_End>();
-    return;
-  }
-
-  if ((b.b == buttonRaw::pause) && (currentValue != 0)) {
-    settings.eq = currentValue;
-    mp3.setEq(static_cast<DfMp3_Eq>(settings.eq - 1));
-    settings.writeSettingsToFlash();
-    mp3.playMp3FolderTrack(mp3Tracks::t_402_ok_settings);
-    startWaitForPlayFinish();
   }
 };
 
@@ -1343,7 +1228,7 @@ void Admin_ModCard::entry() {
   preview           = false;
   previewFromFolder = 0;
 
-  VoiceMenu::entry();
+  VoiceMenu::entry(false);
 
   mode              = mode_t::none;
   current_subState  = start_writeCard;
@@ -1411,16 +1296,18 @@ void Admin_ModCard::react(button_e const &b) {
     if (mode == mode_t::none) {
       mode = static_cast<mode_t>(currentValue);
       if (mode != mode_t::sleep_timer) {
+        mp3.clearMp3Queue();
         readyToWrite = true;
       }
       else {
         numberOfOptions   = 4;
         startMessage      = mp3Tracks::t_960_timer_intro;
         messageOffset     = mp3Tracks::t_960_timer_intro;
-        VoiceMenu::entry();
+        VoiceMenu::entry(false);
       }
     }
     else {
+      mp3.clearMp3Queue();
       readyToWrite = true;
     }
   }
@@ -1437,7 +1324,7 @@ void Admin_ShortCut::entry() {
   preview           = false;
   previewFromFolder = 0;
 
-  VoiceMenu::entry();
+  VoiceMenu::entry(false);
 
   shortcut = 0;
 };
@@ -1452,13 +1339,8 @@ void Admin_ShortCut::react(button_e const &b) {
     transit<Idle>();
     return;
   }
-  if (isWaitForPlayFinish()) {
-    LOG(state_log, s_debug, str_Admin_ShortCut(), str_to(), str_Idle());
-    transit<Admin_End>();
-    return;
-  }
 
-  if (shortcut > 0) {
+  if (shortcut == 0) {
     if ((b.b == buttonRaw::pause) && (currentValue != 0)) {
       shortcut = currentValue;
       current_subState = start_setupCard;
@@ -1482,9 +1364,10 @@ void Admin_ShortCut::react(button_e const &b) {
       break;
     case end_setupCard:
       settings.shortCuts[shortcut] = SM_setupCard::folder;
-      mp3.playMp3FolderTrack(mp3Tracks::t_402_ok_settings);
-      startWaitForPlayFinish();
-      break;
+      mp3.enqueueMp3FolderTrack(mp3Tracks::t_402_ok_settings);
+      LOG(state_log, s_debug, str_Admin_ShortCut(), str_to(), str_Idle());
+      transit<Admin_End>();
+      return;
     default:
       break;
     }
@@ -1503,7 +1386,7 @@ void Admin_StandbyTimer::entry() {
   preview           = false;
   previewFromFolder = 0;
 
-  VoiceMenu::entry();
+  VoiceMenu::entry(false);
 };
 
 void Admin_StandbyTimer::react(button_e const &b) {
@@ -1516,11 +1399,6 @@ void Admin_StandbyTimer::react(button_e const &b) {
     transit<Idle>();
     return;
   }
-  if (isWaitForPlayFinish()) {
-    LOG(state_log, s_debug, str_Admin_StandbyTimer(), str_to(), str_Idle());
-    transit<Admin_End>();
-    return;
-  }
 
   if ((b.b == buttonRaw::pause) && (currentValue != 0)) {
     switch (currentValue) {
@@ -1531,8 +1409,10 @@ void Admin_StandbyTimer::react(button_e const &b) {
     case 5: settings.standbyTimer =  0; break;
     }
     settings.writeSettingsToFlash();
-    mp3.playMp3FolderTrack(mp3Tracks::t_402_ok_settings);
-    startWaitForPlayFinish();
+    mp3.enqueueMp3FolderTrack(mp3Tracks::t_402_ok_settings);
+    LOG(state_log, s_debug, str_Admin_StandbyTimer(), str_to(), str_Idle());
+    transit<Admin_End>();
+    return;
   }
 };
 
@@ -1607,21 +1487,19 @@ void Admin_CardsForFolder::react(button_e const &b) {
     VoiceMenu::react(b);
     if ((b.b == buttonRaw::pause) && (currentValue != 0)) {
       special2 = currentValue;
-      mp3.playMp3FolderTrack(mp3Tracks::t_936_batch_cards_intro);
-      timer.start(dfPlayer_timeUntilStarts);
+      mp3.enqueueMp3FolderTrack(mp3Tracks::t_936_batch_cards_intro);
       current_subState = prepare_writeCard;
     }
     break;
   case prepare_writeCard:
-    if (timer.isExpired() && not mp3.isPlaying() && chip_card.isCardRemoved()) {
+    if (chip_card.isCardRemoved()) {
       if (special > special2) {
-        //mp3.playMp3FolderTrack(mp3Tracks::t_400_ok);
         LOG(state_log, s_debug, str_Admin_CardsForFolder(), str_to(), str_Idle());
         transit<Admin_End>();
         return;
       }
       folder.special = special;
-      mp3.playMp3FolderTrack(special);
+      mp3.enqueueMp3FolderTrack(special, true/*playAfter*/);
       timer.start(dfPlayer_timeUntilStarts);
       LOG(card_log, s_info, special, F("-te Karte auflegen"));
       current_subState = start_writeCard;
@@ -1631,22 +1509,19 @@ void Admin_CardsForFolder::react(button_e const &b) {
     if (timer.isExpired() && not mp3.isPlaying() && chip_card.isCardRemoved()) {
       SM_writeCard::folder = folder;
       SM_writeCard::start();
-      timer.start(dfPlayer_timeUntilStarts);
       current_subState = run_writeCard;
     }
     break;
   case run_writeCard:
-    if (timer.isExpired() && not mp3.isPlaying()) {
-      SM_writeCard::dispatch(b);
-      if (SM_writeCard::is_in_state<finished_writeCard>()) {
-        ++special;
-        current_subState = prepare_writeCard;
-      }
-      if (SM_writeCard::is_in_state<finished_abort_writeCard>()) {
-        LOG(state_log, s_info, str_Admin_CardsForFolder(), str_abort());
-        transit<Idle>();
-        return;
-      }
+    SM_writeCard::dispatch(b);
+    if (SM_writeCard::is_in_state<finished_writeCard>()) {
+      ++special;
+      current_subState = prepare_writeCard;
+    }
+    else if (SM_writeCard::is_in_state<finished_abort_writeCard>()) {
+      LOG(state_log, s_info, str_Admin_CardsForFolder(), str_abort());
+      transit<Idle>();
+      return;
     }
     break;
   default:
@@ -1665,7 +1540,7 @@ void Admin_InvButtons::entry() {
   preview           = false;
   previewFromFolder = 0;
 
-  VoiceMenu::entry();
+  VoiceMenu::entry(false);
 };
 
 void Admin_InvButtons::react(button_e const &b) {
@@ -1678,11 +1553,6 @@ void Admin_InvButtons::react(button_e const &b) {
     transit<Idle>();
     return;
   }
-  if (isWaitForPlayFinish()) {
-    LOG(state_log, s_debug, str_Admin_InvButtons(), str_to(), str_Idle());
-    transit<Admin_End>();
-    return;
-  }
 
   if ((b.b == buttonRaw::pause) && (currentValue != 0)) {
     switch (currentValue) {
@@ -1690,8 +1560,10 @@ void Admin_InvButtons::react(button_e const &b) {
     case 2: settings.invertVolumeButtons = true ; break;
     }
     settings.writeSettingsToFlash();
-    mp3.playMp3FolderTrack(mp3Tracks::t_402_ok_settings);
-    startWaitForPlayFinish();
+    mp3.enqueueMp3FolderTrack(mp3Tracks::t_402_ok_settings);
+    LOG(state_log, s_debug, str_Admin_InvButtons(), str_to(), str_Idle());
+    transit<Admin_End>();
+    return;
   }
 };
 
@@ -1701,16 +1573,13 @@ void Admin_ResetEeprom::entry() {
   LOG(state_log, s_info, str_enter(), str_Admin_ResetEeprom());
   settings.clearEEPROM();
   settings.resetSettings();
-  mp3.playMp3FolderTrack(mp3Tracks::t_999_reset_ok);
-  startWaitForPlayFinish();
+  mp3.enqueueMp3FolderTrack(mp3Tracks::t_999_reset_ok);
 };
 
 void Admin_ResetEeprom::react(button_e const &/*b*/) {
-  if (isWaitForPlayFinish()) {
-    LOG(state_log, s_debug, str_Admin_ResetEeprom(), str_to(), str_Idle());
-    transit<Admin_End>();
-    return;
-  }
+  LOG(state_log, s_debug, str_Admin_ResetEeprom(), str_to(), str_Idle());
+  transit<Admin_End>();
+  return;
 };
 
 // #######################################################
@@ -1724,7 +1593,7 @@ void Admin_LockAdmin::entry() {
   preview           = false;
   previewFromFolder = 0;
 
-  VoiceMenu::entry();
+  VoiceMenu::entry(false);
 
   current_subState = get_mode;
 };
@@ -1738,11 +1607,6 @@ void Admin_LockAdmin::react(button_e const &b) {
     transit<Idle>();
     return;
   }
-  if (isWaitForPlayFinish()) {
-    LOG(state_log, s_debug, str_Admin_LockAdmin(), str_to(), str_Idle());
-    transit<Admin_End>();
-    return;
-  }
 
   switch(current_subState) {
   case get_mode:
@@ -1751,7 +1615,7 @@ void Admin_LockAdmin::react(button_e const &b) {
       settings.adminMenuLocked = currentValue-1;
       if (settings.adminMenuLocked == 2) {
         current_subState = get_pin;
-        mp3.playMp3FolderTrack(mp3Tracks::t_991_admin_pin);
+        mp3.enqueueMp3FolderTrack(mp3Tracks::t_991_admin_pin);
       }
       else
         current_subState = finished;
@@ -1772,9 +1636,10 @@ void Admin_LockAdmin::react(button_e const &b) {
   }
   case finished:
     settings.writeSettingsToFlash();
-    mp3.playMp3FolderTrack(mp3Tracks::t_402_ok_settings);
-    startWaitForPlayFinish();
-    break;
+    mp3.enqueueMp3FolderTrack(mp3Tracks::t_402_ok_settings);
+    LOG(state_log, s_debug, str_Admin_LockAdmin(), str_to(), str_Idle());
+    transit<Admin_End>();
+    return;
   }
 };
 
@@ -1789,7 +1654,7 @@ void Admin_PauseIfCardRemoved::entry() {
   preview           = false;
   previewFromFolder = 0;
 
-  VoiceMenu::entry();
+  VoiceMenu::entry(false);
 };
 
 void Admin_PauseIfCardRemoved::react(button_e const &b) {
@@ -1802,11 +1667,6 @@ void Admin_PauseIfCardRemoved::react(button_e const &b) {
     transit<Idle>();
     return;
   }
-  if (isWaitForPlayFinish()) {
-    LOG(state_log, s_debug, str_Admin_PauseIfCardRemoved(), str_to(), str_Idle());
-    transit<Admin_End>();
-    return;
-  }
 
   if ((b.b == buttonRaw::pause) && (currentValue != 0)) {
     switch (currentValue) {
@@ -1814,8 +1674,10 @@ void Admin_PauseIfCardRemoved::react(button_e const &b) {
     case 2: settings.pauseWhenCardRemoved = true ; break;
     }
     settings.writeSettingsToFlash();
-    mp3.playMp3FolderTrack(mp3Tracks::t_402_ok_settings);
-    startWaitForPlayFinish();
+    mp3.enqueueMp3FolderTrack(mp3Tracks::t_402_ok_settings);
+    LOG(state_log, s_debug, str_Admin_PauseIfCardRemoved(), str_to(), str_Idle());
+    transit<Admin_End>();
+    return;
   }
 };
 
@@ -1840,10 +1702,10 @@ Chip_card      &SM<SMT>::chip_card = Tonuino::getTonuino().getChipCard();
 template<SM_type SMT>
 Timer           SM<SMT>::timer{};
 template<SM_type SMT>
-bool           SM<SMT>::waitForPlayFinish = false;
+bool           SM<SMT>::waitForPlayFinish{};
 
 template<SM_type SMT>
-int       VoiceMenu<SMT>::numberOfOptions  ;
+uint8_t   VoiceMenu<SMT>::numberOfOptions  ;
 template<SM_type SMT>
 mp3Tracks VoiceMenu<SMT>::startMessage     ;
 template<SM_type SMT>
@@ -1851,7 +1713,7 @@ mp3Tracks VoiceMenu<SMT>::messageOffset    ;
 template<SM_type SMT>
 bool      VoiceMenu<SMT>::preview          ;
 template<SM_type SMT>
-int       VoiceMenu<SMT>::previewFromFolder;
+uint8_t   VoiceMenu<SMT>::previewFromFolder;
 template<SM_type SMT>
 uint8_t   VoiceMenu<SMT>::currentValue     ;
 
@@ -1861,4 +1723,5 @@ template<SM_type SMT>
 bool      VoiceMenu<SMT>::previewStarted   ;
 
 nfcTagObject Base::lastCardRead{};
-uint8_t Admin_Entry::lastCurrentValue = 0;
+uint8_t Admin_Entry::lastCurrentValue{};
+Admin_SimpleSetting::Type Admin_SimpleSetting::type{};

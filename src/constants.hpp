@@ -5,11 +5,11 @@
 
 // ####### helper for level ############################
 
-enum class level {
+enum class level: uint8_t {
   inactive,
   active  ,
 };
-enum class levelType {
+enum class levelType: uint8_t {
   activeHigh,
   activeLow,
 };
@@ -41,16 +41,17 @@ inline constexpr uint32_t cardCookie           = 0x1337b347;
 inline constexpr uint8_t  cardVersion          = 0x02;
 inline constexpr byte     mfrc522_RSTPin       =  9;          // Configurable, see typical pin layout above
 inline constexpr byte     mfrc522_SSPin        = 10;          // Configurable, see typical pin layout above
-inline constexpr unsigned int cardRemoveDelay  =  3;
+inline constexpr uint8_t  cardRemoveDelay      =  3;
 
 
 // ####### mp3 #########################################
 
+inline constexpr uint8_t       maxTracksInFolder        = 255;
 inline constexpr uint8_t       dfPlayer_receivePin      = 2;
 inline constexpr uint8_t       dfPlayer_transmitPin     = 3;
 inline constexpr uint8_t       dfPlayer_busyPin         = 4;
 inline constexpr levelType     dfPlayer_busyPinType     = levelType::activeHigh;
-inline constexpr unsigned long dfPlayer_timeUntilStarts = 300;
+inline constexpr unsigned long dfPlayer_timeUntilStarts = 500;
 
 
 // ####### tonuino #####################################

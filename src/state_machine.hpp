@@ -24,7 +24,7 @@ struct card_e  : tinyfsm::Event {
 // ----------------------------------------------------------------------------
 // State Machine Base Class Declaration
 //
-enum class SM_type {
+enum class SM_type: uint8_t {
   tonuino,
   setupCard,
   writeCard,
@@ -40,8 +40,6 @@ public:
   void         exit(void)  { waitForPlayFinish = false; };
 
   bool isAbort(button_e const &b);
-  bool isWaitForPlayFinish();
-  void startWaitForPlayFinish();
 
   static folderSettings folder;
 protected:

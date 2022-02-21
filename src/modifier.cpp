@@ -58,23 +58,27 @@ bool KindergardenMode::handleNext() {
   return false;
 }
 bool KindergardenMode::handleRFID(const nfcTagObject &newCard) {
-  LOG(modifier_log, s_info, str_KindergardenMode(), F(" -> queued!"));
-  nextCard = newCard;
-  cardQueued = true;
-  if (!mp3.isPlaying()) {
-    handleNext();
+  if (!mp3.isPlaying())
+    return false;
+
+  if (!cardQueued) {
+    LOG(modifier_log, s_info, str_KindergardenMode(), F(" -> queued!"));
+    nextCard = newCard;
+    cardQueued = true;
   }
   return true;
 }
 
 bool RepeatSingleModifier::handleNext() {
   LOG(modifier_log, s_info, str_RepeatSingleModifier(), F(" -> REPEAT"));
-  if (!mp3.isPlaying()) {
-    mp3.loop(); // this will call Mp3Notify::OnPlayFinished() but will be blocked by lastTrackFinished
-    Mp3Notify::ResetLastTrackFinished();
-    tonuino.playCurrentTrack();
-  }
+  mp3.loop(); // WA: this will call again Mp3Notify::OnPlayFinished() (error in DFMiniMp3 lib)
+              //     but will be blocked by lastTrackFinished
+  Mp3Notify::ResetLastTrackFinished(); // unblock this track so that it can be repeated
+  mp3.playCurrent();
   return true;
+}
+bool RepeatSingleModifier::handlePrevious() {
+  return handleNext();
 }
 
 //bool FeedbackModifier::handleVolumeDown() {

@@ -7,7 +7,7 @@
 #include "settings.hpp"
 #include "constants.hpp"
 
-enum class buttonRaw {
+enum class buttonRaw: uint8_t {
   none,
   pause,
   pauseLong,
@@ -23,7 +23,7 @@ enum class buttonRaw {
   start,
 };
 
-enum class buttonCmd {
+enum class buttonCmd: uint8_t {
   none,
   admin,
   pause,

@@ -17,7 +17,7 @@
   if constexpr ( Logger_::will_log(Severity_) )                                  \
     Statement
 
-enum severity {
+enum severity: uint8_t {
   s_debug  ,
   s_info   ,
   s_warning,

@@ -107,8 +107,9 @@ private:
 class RepeatSingleModifier: public Modifier {
 public:
   RepeatSingleModifier(Tonuino &tonuino, Mp3 &mp3, const Settings &settings): Modifier(tonuino, mp3, settings) {}
-  bool   handleNext() final;
-  mode_t getActive () final { return mode_t::repeat_single; }
+  bool   handleNext    () final;
+  bool   handlePrevious() final;
+  mode_t getActive     () final { return mode_t::repeat_single; }
 };
 
 // An modifier can also do somethings in addition to the modified action

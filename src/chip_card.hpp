@@ -58,7 +58,7 @@ struct nfcTagObject {
   }
 };
 
-enum class cardEvent {
+enum class cardEvent: uint8_t {
   none,
   removed,
   inserted,
@@ -69,7 +69,7 @@ class Buttons;
 
 class delayedSwitchOn {
 public:
-  delayedSwitchOn(unsigned int delay)
+  delayedSwitchOn(uint8_t delay)
   : delaySteps(delay)
   {}
   delayedSwitchOn& operator++() { if (counter < delaySteps) ++counter; return *this; }
@@ -77,8 +77,8 @@ public:
   bool on()    { return counter == delaySteps; }
 
 private:
-  const unsigned int delaySteps;
-  unsigned int counter = 0;
+  const uint8_t delaySteps;
+  uint8_t counter = 0;
 };
 
 class Chip_card {

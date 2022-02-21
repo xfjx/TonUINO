@@ -10,7 +10,7 @@
 
 // select whether StatusCode and PiccType are printed as names
 // that uses about 690 bytes or 2.2% of flash
-constexpr bool verbosePrintStatusCode = false;
+constexpr bool verbosePrintStatusCode = true;
 constexpr bool verbosePrintPiccType   = false;
 
 namespace {
