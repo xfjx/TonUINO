@@ -31,6 +31,8 @@ Temporary Items
 /tools/*.pyc
 /Release/
 /sc-card_priv/
+
+# Eclipse Sloeber plugin for Arduino
 /sloeber.ino.cpp
 /spec.d
 /.cproject
