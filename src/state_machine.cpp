@@ -5,8 +5,8 @@
 
 class Admin_Entry;
 class Idle;
-//using Admin_End = Idle;
-using Admin_End = Admin_Entry;
+//using Admin_End = Idle;      // use this if you want end admin menu after one setting
+using Admin_End = Admin_Entry; // use this if you want continue admin menu after one setting
 
 namespace {
 
@@ -23,7 +23,7 @@ const __FlashStringHelper* str_Pause                   () { return F("Pause") ; 
 const __FlashStringHelper* str_Admin_Allow             () { return F("AdmAllow") ; }
 const __FlashStringHelper* str_Admin_Entry             () { return F("AdmEntry") ; }
 const __FlashStringHelper* str_Admin_NewCard           () { return F("AdmNewCard") ; }
-const __FlashStringHelper* str_Admin_SimpleSetting     () { return F("Admin_SimpleSetting") ; }
+const __FlashStringHelper* str_Admin_SimpleSetting     () { return F("AdmSimpleSetting") ; }
 const __FlashStringHelper* str_Admin_ModCard           () { return F("AdmModCard") ; }
 const __FlashStringHelper* str_Admin_ShortCut          () { return F("AdmShortCut") ; }
 const __FlashStringHelper* str_Admin_StandbyTimer      () { return F("AdmStandbyTimer") ; }
@@ -61,35 +61,38 @@ protected:
   static bool      previewStarted   ;
 };
 
-class ChMode : public VoiceMenu<SM_type::setupCard>
+using VoiceMenu_tonuino   = VoiceMenu<SM_type::tonuino  >;
+using VoiceMenu_setupCard = VoiceMenu<SM_type::setupCard>;
+
+class ChMode : public VoiceMenu_setupCard
 {
 public:
   void entry() final;
   void react(button_e const &) final;
 };
 
-class ChFolder : public VoiceMenu<SM_type::setupCard>
+class ChFolder : public VoiceMenu_setupCard
 {
 public:
   void entry() final;
   void react(button_e const &) final;
 };
 
-class ChTrack : public VoiceMenu<SM_type::setupCard>
+class ChTrack : public VoiceMenu_setupCard
 {
 public:
   void entry() final;
   void react(button_e const &) final;
 };
 
-class ChFirstTrack : public VoiceMenu<SM_type::setupCard>
+class ChFirstTrack : public VoiceMenu_setupCard
 {
 public:
   void entry() final;
   void react(button_e const &) final;
 };
 
-class ChLastTrack : public VoiceMenu<SM_type::setupCard>
+class ChLastTrack : public VoiceMenu_setupCard
 {
 public:
   void entry() final;
@@ -111,7 +114,7 @@ private:
   subState current_subState;
 };
 
-class Admin_Allow: public VoiceMenu<SM_type::tonuino>
+class Admin_Allow: public VoiceMenu_tonuino
 {
 public:
   void entry() final;
@@ -136,7 +139,7 @@ private:
 //  uint8_t         av, bv, cv;
 };
 
-class Admin_Entry: public VoiceMenu<SM_type::tonuino>
+class Admin_Entry: public VoiceMenu_tonuino
 {
 public:
   void entry() final;
@@ -161,7 +164,7 @@ private:
   subState current_subState;
 };
 
-class Admin_SimpleSetting: public VoiceMenu<SM_type::tonuino>
+class Admin_SimpleSetting: public VoiceMenu_tonuino
 {
 public:
   void entry() final;
@@ -175,7 +178,7 @@ public:
   static Type type;
 };
 
-class Admin_ModCard: public VoiceMenu<SM_type::tonuino>
+class Admin_ModCard: public VoiceMenu_tonuino
 {
 public:
   void entry() final;
@@ -191,7 +194,7 @@ private:
   bool     readyToWrite;
 };
 
-class Admin_ShortCut: public VoiceMenu<SM_type::tonuino>
+class Admin_ShortCut: public VoiceMenu_tonuino
 {
 public:
   void entry() final;
@@ -206,14 +209,14 @@ private:
   uint8_t  shortcut;
 };
 
-class Admin_StandbyTimer: public VoiceMenu<SM_type::tonuino>
+class Admin_StandbyTimer: public VoiceMenu_tonuino
 {
 public:
   void entry() final;
   void react(button_e const &) final;
 };
 
-class Admin_CardsForFolder: public VoiceMenu<SM_type::tonuino>
+class Admin_CardsForFolder: public VoiceMenu_tonuino
 {
 public:
   void entry() final;
@@ -235,7 +238,7 @@ private:
   uint8_t special2;
 };
 
-class Admin_InvButtons: public VoiceMenu<SM_type::tonuino>
+class Admin_InvButtons: public VoiceMenu_tonuino
 {
 public:
   void entry() final;
@@ -249,7 +252,7 @@ public:
   void react(button_e const &) final;
 };
 
-class Admin_LockAdmin: public VoiceMenu<SM_type::tonuino>
+class Admin_LockAdmin: public VoiceMenu_tonuino
 {
 public:
   void entry() final;
@@ -265,7 +268,7 @@ private:
   uint8_t         pin_number;
 };
 
-class Admin_PauseIfCardRemoved: public VoiceMenu<SM_type::tonuino>
+class Admin_PauseIfCardRemoved: public VoiceMenu_tonuino
 {
 public:
   void entry() final;
@@ -280,6 +283,7 @@ bool SM<SMT>::isAbort(button_e const &b) {
   if (b.b == buttonRaw::pauseLong) {
     SM<SMT>::mp3.enqueueMp3FolderTrack(mp3Tracks::t_802_reset_aborted);
     LOG(state_log, s_info, F("SM"), str_abort());
+    this->template transit<finished_abort>();
     return true;
   }
   return false;
@@ -368,10 +372,8 @@ void ChMode::react(button_e const &b) {
   }
   VoiceMenu::react(b);
 
-  if (isAbort(b)) {
-    transit<finished_abort_setupCard>();
+  if (isAbort(b))
     return;
-  }
 
   if ((b.b == buttonRaw::pause) && (currentValue != 0)) {
     folder.mode = static_cast<mode_t>(currentValue);
@@ -379,7 +381,7 @@ void ChMode::react(button_e const &b) {
     if (folder.mode == mode_t::admin) {
       folder.folder = 0;
       folder.mode = mode_t::admin_card;
-      transit<finished_setupCard>();
+      transit<finished>();
       return;
     }
     transit<ChFolder>();
@@ -406,10 +408,8 @@ void ChFolder::react(button_e const &b) {
   }
   VoiceMenu::react(b);
 
-  if (isAbort(b)) {
-    transit<finished_abort_setupCard>();
+  if (isAbort(b))
     return;
-  }
 
   if ((b.b == buttonRaw::pause) && (currentValue != 0)) {
     folder.folder = currentValue;
@@ -424,7 +424,7 @@ void ChFolder::react(button_e const &b) {
       transit<ChFirstTrack>();
       return;
     }
-    transit<finished_setupCard>();
+    transit<finished>();
     return;
   }
 };
@@ -448,15 +448,13 @@ void ChTrack::react(button_e const &b) {
   }
   VoiceMenu::react(b);
 
-  if (isAbort(b)) {
-    transit<finished_abort_setupCard>();
+  if (isAbort(b))
     return;
-  }
 
   if ((b.b == buttonRaw::pause) && (currentValue != 0)) {
     folder.special = currentValue;
     LOG(state_log, s_info, str_ChTrack(), F(": "), currentValue);
-    transit<finished_setupCard>();
+    transit<finished>();
     return;
   }
 };
@@ -480,10 +478,8 @@ void ChFirstTrack::react(button_e const &b) {
   }
   VoiceMenu::react(b);
 
-  if (isAbort(b)) {
-    transit<finished_abort_setupCard>();
+  if (isAbort(b))
     return;
-  }
 
   if ((b.b == buttonRaw::pause) && (currentValue != 0)) {
     folder.special = currentValue;
@@ -515,15 +511,13 @@ void ChLastTrack::react(button_e const &b) {
   }
   VoiceMenu::react(b);
 
-  if (isAbort(b)) {
-    transit<finished_abort_setupCard>();
+  if (isAbort(b))
     return;
-  }
 
   if ((b.b == buttonRaw::pause) && (currentValue != 0)) {
     folder.special2 = currentValue;
     LOG(state_log, s_info, str_ChLastTrack(), F(": "), currentValue);
-    transit<finished_setupCard>();
+    transit<finished>();
     return;
   }
 };
@@ -540,12 +534,8 @@ void WriteCard::react(button_e const &b) {
     LOG(state_log, s_debug, str_WriteCard(), F("::react() "), static_cast<int>(b.b));
   }
 
-  if (b.b == buttonRaw::pauseLong) {
-    mp3.enqueueMp3FolderTrack(mp3Tracks::t_802_reset_aborted);
-    LOG(state_log, s_info, str_WriteCard(), str_to(), F("finished_abort"));
-    transit<finished_abort_writeCard>();
+  if (isAbort(b))
     return;
-  }
 
   switch (current_subState) {
   case start_waitCardInserted:
@@ -571,7 +561,7 @@ void WriteCard::react(button_e const &b) {
   case run_waitCardRemoved:
     if (chip_card.isCardRemoved()) {
       LOG(state_log, s_info, str_WriteCard(), str_to(), F("finished"));
-      transit<finished_writeCard>();
+      transit<finished>();
     }
     break;
   default:
@@ -583,9 +573,6 @@ void WriteCard::react(button_e const &b) {
 
 bool Base::readCard() {
   if (not chip_card.readCard(lastCardRead))
-    return false;
-
-  if (lastCardRead.cookie != cardCookie)
     return false;
 
   if (lastCardRead.nfcFolderSettings.folder == 0) {
@@ -891,10 +878,8 @@ void Admin_Allow::react(button_e const &b) {
     LOG(state_log, s_debug, str_Admin_Allow(), F("::react() "), static_cast<int>(b.b));
   }
 
-  if (isAbort(b)) {
-    transit<Idle>();
+  if (isAbort(b))
     return;
-  }
 
   switch (current_subState) {
   case select_method       :
@@ -1002,7 +987,7 @@ void Admin_Allow::react(button_e const &b) {
     return;
   case not_allow:
     LOG(state_log, s_debug, str_Admin_Allow(), str_abort());
-    transit<Idle>();
+    transit<finished_abort>();
     return;
   }
 };
@@ -1039,10 +1024,8 @@ void Admin_Entry::react(button_e const &b) {
   }
   VoiceMenu::react(b);
 
-  if (isAbort(b)) {
-    transit<Idle>();
+  if (isAbort(b))
     return;
-  }
 
   if ((b.b == buttonRaw::pause) && (currentValue != 0)) {
     lastCurrentValue = currentValue;
@@ -1130,7 +1113,7 @@ void Admin_NewCard::react(button_e const &b) {
       current_subState = end_setupCard;
     if (SM_setupCard::is_in_state<finished_abort_setupCard>()) {
       LOG(state_log, s_info, str_Admin_NewCard(), str_abort());
-      transit<Idle>();
+      transit<finished_abort>();
       return;
     }
     break;
@@ -1148,7 +1131,7 @@ void Admin_NewCard::react(button_e const &b) {
       current_subState = end_writeCard;
     if (SM_writeCard::is_in_state<finished_abort_writeCard>()) {
       LOG(state_log, s_info, str_Admin_NewCard(), str_abort());
-      transit<Idle>();
+      transit<finished_abort>();
       return;
     }
     break;
@@ -1195,10 +1178,8 @@ void Admin_SimpleSetting::react(button_e const &b) {
   }
   VoiceMenu::react(b);
 
-  if (isAbort(b)) {
-    transit<Idle>();
+  if (isAbort(b))
     return;
-  }
 
   if ((b.b == buttonRaw::pause) && (currentValue != 0)) {
     switch (type) {
@@ -1241,10 +1222,8 @@ void Admin_ModCard::react(button_e const &b) {
   }
   VoiceMenu::react(b);
 
-  if (isAbort(b)) {
-    transit<Idle>();
+  if (isAbort(b))
     return;
-  }
 
   if (readyToWrite) {
     switch (current_subState) {
@@ -1278,7 +1257,7 @@ void Admin_ModCard::react(button_e const &b) {
         current_subState = end_writeCard;
       if (SM_writeCard::is_in_state<finished_abort_writeCard>()) {
         LOG(state_log, s_info, str_Admin_ModCard(), str_abort());
-        transit<Idle>();
+        transit<finished_abort>();
         return;
       }
       break;
@@ -1335,10 +1314,8 @@ void Admin_ShortCut::react(button_e const &b) {
   }
   VoiceMenu::react(b);
 
-  if (isAbort(b)) {
-    transit<Idle>();
+  if (isAbort(b))
     return;
-  }
 
   if (shortcut == 0) {
     if ((b.b == buttonRaw::pause) && (currentValue != 0)) {
@@ -1358,7 +1335,7 @@ void Admin_ShortCut::react(button_e const &b) {
         current_subState = end_setupCard;
       if (SM_setupCard::is_in_state<finished_abort_setupCard>()) {
         LOG(state_log, s_info, str_Admin_ShortCut(), str_abort());
-        transit<Idle>();
+        transit<finished_abort>();
         return;
       }
       break;
@@ -1395,10 +1372,8 @@ void Admin_StandbyTimer::react(button_e const &b) {
   }
   VoiceMenu::react(b);
 
-  if (isAbort(b)) {
-    transit<Idle>();
+  if (isAbort(b))
     return;
-  }
 
   if ((b.b == buttonRaw::pause) && (currentValue != 0)) {
     switch (currentValue) {
@@ -1431,10 +1406,8 @@ void Admin_CardsForFolder::react(button_e const &b) {
     LOG(state_log, s_debug, str_Admin_CardsForFolder(), F("::react() "), static_cast<int>(b.b));
   }
 
-  if (isAbort(b)) {
-    transit<Idle>();
+  if (isAbort(b))
     return;
-  }
 
   switch (current_subState) {
   case start_getFolder:
@@ -1520,7 +1493,7 @@ void Admin_CardsForFolder::react(button_e const &b) {
     }
     else if (SM_writeCard::is_in_state<finished_abort_writeCard>()) {
       LOG(state_log, s_info, str_Admin_CardsForFolder(), str_abort());
-      transit<Idle>();
+      transit<finished_abort>();
       return;
     }
     break;
@@ -1549,10 +1522,8 @@ void Admin_InvButtons::react(button_e const &b) {
   }
   VoiceMenu::react(b);
 
-  if (isAbort(b)) {
-    transit<Idle>();
+  if (isAbort(b))
     return;
-  }
 
   if ((b.b == buttonRaw::pause) && (currentValue != 0)) {
     switch (currentValue) {
@@ -1603,10 +1574,8 @@ void Admin_LockAdmin::react(button_e const &b) {
     LOG(state_log, s_debug, str_Admin_LockAdmin(), F("::react() "), static_cast<int>(b.b));
   }
 
-  if (isAbort(b)) {
-    transit<Idle>();
+  if (isAbort(b))
     return;
-  }
 
   switch(current_subState) {
   case get_mode:
@@ -1663,10 +1632,8 @@ void Admin_PauseIfCardRemoved::react(button_e const &b) {
   }
   VoiceMenu::react(b);
 
-  if (isAbort(b)) {
-    transit<Idle>();
+  if (isAbort(b))
     return;
-  }
 
   if ((b.b == buttonRaw::pause) && (currentValue != 0)) {
     switch (currentValue) {

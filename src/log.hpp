@@ -22,6 +22,7 @@ enum severity: uint8_t {
   s_info   ,
   s_warning,
   s_error  ,
+  s_none   ,
 };
 
 extern const __FlashStringHelper* getSeverityName(severity sev);

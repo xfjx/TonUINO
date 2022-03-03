@@ -24,6 +24,12 @@ struct card_e  : tinyfsm::Event {
 // ----------------------------------------------------------------------------
 // State Machine Base Class Declaration
 //
+class finished_setupCard      ;
+class finished_abort_setupCard;
+class finished_writeCard      ;
+class finished_abort_writeCard;
+class Idle                    ;
+
 enum class SM_type: uint8_t {
   tonuino,
   setupCard,
@@ -33,6 +39,19 @@ template<SM_type SMT>
 class SM: public tinyfsm::Fsm<SM<SMT>>
 {
 public:
+  typedef typename conditional<
+             (SMT == SM_type::setupCard), finished_setupCard,
+          typename conditional<
+             (SMT == SM_type::writeCard), finished_writeCard,
+          Idle>::type
+  >::type finished;
+  typedef typename conditional<
+             (SMT == SM_type::setupCard), finished_abort_setupCard,
+          typename conditional<
+             (SMT == SM_type::writeCard), finished_abort_writeCard,
+          Idle>::type
+  >::type finished_abort;
+
   virtual void react(button_e const &) { };
   virtual void react(card_e   const &) { };
 
@@ -50,12 +69,12 @@ protected:
   static Chip_card      &chip_card;
 
   static Timer          timer;
-  static bool           waitForPlayFinish;
+  static bool           waitForPlayFinish; // with this it needs 66 Byte lesser program code ;-)
 };
 
-typedef SM<SM_type::tonuino  > SM_tonuino;
-typedef SM<SM_type::setupCard> SM_setupCard;
-typedef SM<SM_type::writeCard> SM_writeCard;
+using SM_tonuino   = SM<SM_type::tonuino  >;
+using SM_setupCard = SM<SM_type::setupCard>;
+using SM_writeCard = SM<SM_type::writeCard>;
 
 class Base: public SM_tonuino
 {
@@ -102,7 +121,5 @@ class finished_setupCard      : public SM_setupCard{};
 class finished_abort_setupCard: public SM_setupCard{};
 class finished_writeCard      : public SM_writeCard{};
 class finished_abort_writeCard: public SM_writeCard{};
-
-
 
 #endif /* SRC_STATE_MACHINE_HPP_ */

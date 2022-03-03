@@ -8,7 +8,6 @@ struct array {
   T data[N];
 
   static constexpr uint8_t length() { return N; }
-  using type = T;
 
   // Item access
   T &operator[](uint8_t index) { return data[index]; }

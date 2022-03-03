@@ -4,7 +4,7 @@
 #include "logger.hpp"
 
 namespace {
-const bool buttonPinIsActiveLow = (buttonPinType == levelType::activeLow);
+constexpr bool buttonPinIsActiveLow = (buttonPinType == levelType::activeLow);
 }
 
 Buttons::Buttons(const Settings& settings)
@@ -135,7 +135,7 @@ bool Buttons::isNoButton() {
 }
 
 bool Buttons::isReset() {
-  const int buttonActiveLevel = getLevel(buttonPinType, level::active);
+  constexpr int buttonActiveLevel = getLevel(buttonPinType, level::active);
   return (digitalRead(buttonPausePin) == buttonActiveLevel &&
           digitalRead(buttonUpPin   ) == buttonActiveLevel &&
           digitalRead(buttonDownPin ) == buttonActiveLevel );

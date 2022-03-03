@@ -30,19 +30,17 @@ void SleepTimer::start(uint8_t minutes) {
 }
 
 void FreezeDance::loop() {
-  if (nextStopAtMillis != 0 && millis() > nextStopAtMillis) {
+  if (stopTimer.isExpired()) {
     LOG(modifier_log, s_info, str_FreezeDance(), F(" -> FREEZE!"));
-    if (mp3.isPlaying()) {
-      mp3.playAdvertisement(advertTracks::t_301_freeze_freeze);
-    }
+    mp3.playAdvertisement(advertTracks::t_301_freeze_freeze);
     setNextStopAtMillis();
   }
 }
 
 void FreezeDance::setNextStopAtMillis() {
   const uint16_t seconds = random(minSecondsBetweenStops, maxSecondsBetweenStops + 1);
-  LOG(modifier_log, s_info, str_FreezeDance(), F(" next stop at: "), seconds);
-  nextStopAtMillis = millis() + seconds * 1000;
+  LOG(modifier_log, s_info, str_FreezeDance(), F(" next stop in "), seconds);
+  stopTimer.start(seconds * 1000);
 }
 
 bool KindergardenMode::handleNext() {
@@ -87,7 +85,7 @@ bool RepeatSingleModifier::handlePrevious() {
 //  } else {
 //    playAdvertisement(volume, false);
 //  }
-//  LOG(modifier_log, s_info, F("= FeedbackModifier::handleVolumeDown()!"));
+//  LOG(modifier_log, s_info, F("FeedbackModifier::handleVolumeDown()!"));
 //  return false;
 //}
 //bool FeedbackModifier::handleVolumeUp() {
@@ -96,11 +94,11 @@ bool RepeatSingleModifier::handlePrevious() {
 //  } else {
 //    playAdvertisement(volume, false);
 //  }
-//  LOG(modifier_log, s_info, F("= FeedbackModifier::handleVolumeUp()!"));
+//  LOG(modifier_log, s_info, F("FeedbackModifier::handleVolumeUp()!"));
 //  return false;
 //}
 //bool FeedbackModifier::handleRFID(const nfcTagObject &/*newCard*/) {
-//  LOG(modifier_log, s_info, F("= FeedbackModifier::handleRFID()"));
+//  LOG(modifier_log, s_info, F("FeedbackModifier::handleRFID()"));
 //  return false;
 //}
 

@@ -48,13 +48,9 @@ struct folderSettings {
 
 // this object stores nfc tag data
 struct nfcTagObject {
-  uint32_t       cookie  = cardCookie;
-  uint8_t        version = cardVersion;
   folderSettings nfcFolderSettings;
   bool operator==(const nfcTagObject& rhs) const {
-    return cookie            == rhs.cookie           &&
-           version           == rhs.version          &&
-           nfcFolderSettings == rhs.nfcFolderSettings;
+    return nfcFolderSettings == rhs.nfcFolderSettings;
   }
 };
 

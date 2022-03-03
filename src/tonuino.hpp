@@ -12,11 +12,11 @@ public:
   Tonuino() {}
   static Tonuino& getTonuino() { static Tonuino tonuino; return tonuino; }
 
-  void setup         ();
-  void loop          ();
+  void setup          ();
+  void loop           ();
 
-  void playFolder      ();
-  void playTrackNumber ();
+  void playFolder     ();
+  void playTrackNumber();
 
   void       nextTrack(bool fromOnPlayFinished = false);
   void   previousTrack();
@@ -25,7 +25,7 @@ public:
   Modifier& getActiveModifier() { return *activeModifier; }
 
   void setStandbyTimer();
-  void disableStandbyTimer ();
+  void disableStandbyTimer();
 
   void setCard  (const nfcTagObject   &newCard) { myCard = newCard; setFolder(&myCard.nfcFolderSettings); }
   const nfcTagObject& getCard() const           { return myCard; }
@@ -38,7 +38,7 @@ public:
 
 private:
 
-  void checkStandbyAtMillis();
+  void checkStandby();
 
   bool specialCard(const nfcTagObject &nfcTag);
 
@@ -58,13 +58,13 @@ private:
   RepeatSingleModifier repeatSingleModifier{*this, mp3, settings};
   //FeedbackModifier     feedbackModifier    {*this, mp3, settings};
 
-  Modifier*             activeModifier    = &noneModifier;
+  Modifier*            activeModifier      {&noneModifier};
 
-  Timer                 standbyTimer{};
+  Timer                standbyTimer        {};
 
-  nfcTagObject          myCard{};
-  folderSettings*       myFolder  = &myCard.nfcFolderSettings;
-  uint16_t              numTracksInFolder{};
+  nfcTagObject         myCard              {};
+  folderSettings*      myFolder            {&myCard.nfcFolderSettings};
+  uint16_t             numTracksInFolder   {};
 };
 
 #endif /* SRC_TONUINO_HPP_ */

@@ -20,19 +20,19 @@ uint8_t Settings::readByteFromFlash(uint16_t address) {
 }
 
 void Settings::clearEEPROM() {
-  LOG(settings_log, s_info, F("Reset -> EEPROM wird gelöscht"));
+  LOG(settings_log, s_info, F("clearEEPROM"));
   for (uint16_t i = 0; i < EEPROM.length(); i++) {
     writeByteToFlash(i, 0);
   }
 }
 
 void Settings::writeSettingsToFlash() {
-  LOG(settings_log, s_debug, F("=== writeSettingsToFlash()"));
+  LOG(settings_log, s_debug, F("writeSettingsToFlash"));
   EEPROM.put(startAddressAdminSettings, *this);
 }
 
 void Settings::resetSettings() {
-  LOG(settings_log, s_debug, F("=== resetSettings()"));
+  LOG(settings_log, s_debug, F("resetSettings"));
   cookie              = cardCookie;
   version             =  2;
   maxVolume           = 25;
@@ -58,7 +58,7 @@ void Settings::resetSettings() {
 
 void Settings::migrateSettings(int oldVersion) {
   if (oldVersion == 1) {
-    LOG(settings_log, s_info, F("=== migradeSettings() 1 -> 2"));
+    LOG(settings_log, s_info, F("migradeSettings 1 -> 2"));
     version = 2;
     adminMenuLocked = 0;
     adminMenuPin[0] = 1;
@@ -71,27 +71,27 @@ void Settings::migrateSettings(int oldVersion) {
 }
 
 void Settings::loadSettingsFromFlash() {
-  LOG(settings_log, s_debug, F("=== loadSettingsFromFlash()"));
+  LOG(settings_log, s_debug, F("loadSettingsFromFlash"));
   EEPROM.get(startAddressAdminSettings, *this);
   if (cookie != cardCookie)
     resetSettings();
   migrateSettings(version);
 
   LOG(settings_log, s_info, F("Version: "                ), version);
-  LOG(settings_log, s_info, F("Maximal Volume: "         ), maxVolume);
-  LOG(settings_log, s_info, F("Minimal Volume: "         ), minVolume);
-  LOG(settings_log, s_info, F("Initial Volume: "         ), initVolume);
+  LOG(settings_log, s_info, F("Max Vol: "                ), maxVolume);
+  LOG(settings_log, s_info, F("Min Vol: "                ), minVolume);
+  LOG(settings_log, s_info, F("Init Vol: "               ), initVolume);
   LOG(settings_log, s_info, F("EQ: "                     ), eq);
   LOG(settings_log, s_info, F("Locked: "                 ), locked);
   LOG(settings_log, s_info, F("Sleep Timer: "            ), standbyTimer);
-  LOG(settings_log, s_info, F("Inverted Volume Buttons: "), invertVolumeButtons);
+  LOG(settings_log, s_info, F("Inverted Vol Buttons: "   ), invertVolumeButtons);
   LOG(settings_log, s_info, F("Admin Menu locked: "      ), adminMenuLocked);
   LOG(settings_log, s_info, F("Admin Menu Pin: "         ), adminMenuPin[0], adminMenuPin[1], adminMenuPin[2], adminMenuPin[3]);
   LOG(settings_log, s_info, F("Pause when card removed: "), pauseWhenCardRemoved);
 }
 
 void Settings::writeFolderSettingToFlash(uint8_t folder, uint16_t track) {
-  writeByteToFlash(folder, min(track, 0xff));
+  writeByteToFlash(folder, min(track, 0xffu));
 }
 
 uint16_t Settings::readFolderSettingFromFlash(uint8_t folder) {

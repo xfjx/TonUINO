@@ -13,7 +13,7 @@ uint16_t Mp3Notify::lastTrackFinished = 0;
 
 void Mp3Notify::OnError(uint16_t errorCode) {
   // see DfMp3_Error for code meaning
-  LOG(mp3_log, s_error, F("Com Error: "), errorCode);
+  LOG(mp3_log, s_error, F("DfPlayer Error: "), errorCode);
 }
 void Mp3Notify::OnPlaySourceOnline  (DfMp3_PlaySources source) { PrintlnSourceAction(source, F("online"  )); }
 void Mp3Notify::OnPlaySourceInserted(DfMp3_PlaySources source) { PrintlnSourceAction(source, F("bereit"  )); }

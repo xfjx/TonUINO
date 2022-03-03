@@ -47,11 +47,10 @@ void Tonuino::setup() {
 void Tonuino::loop() {
 
   unsigned long  start_cycle = millis();
-  checkStandbyAtMillis();
+  checkStandby();
 
   mp3.loop();
 
-  // Modifier : WIP!
   activeModifier->loop();
 
   SM_tonuino::dispatch(button_e(buttons.getButtonRaw()));
@@ -64,46 +63,49 @@ void Tonuino::loop() {
 }
 
 void Tonuino::playFolder() {
-  LOG(play_log, s_debug, F("= playFolder()"));
+  LOG(play_log, s_debug, F("playFolder"));
   numTracksInFolder = mp3.getFolderTrackCount(myFolder->folder);
   LOG(play_log, s_info, numTracksInFolder, F(" files in folder "), myFolder->folder);
-  numTracksInFolder = min(numTracksInFolder, 0xff);
+  numTracksInFolder = min(numTracksInFolder, 0xffu);
   mp3.clearAllQueue();
 
   switch (myFolder->mode) {
 
   case mode_t::hoerspiel:
     // Hörspielmodus: eine zufällige Datei aus dem Ordner
-    LOG(play_log, s_info, F("Hörspiel"));
     myFolder->special = 1;
     myFolder->special2 = numTracksInFolder;
     __attribute__ ((fallthrough));
+    /* no break */
   case mode_t::hoerspiel_vb:
     // Spezialmodus Von-Bin: Hörspiel: eine zufällige Datei aus dem Ordner
-    LOG(play_log, s_info, myFolder->special, F(" bis "), myFolder->special2);
+    LOG(play_log, s_info, F("Hörspiel"));
+    LOG(play_log, s_info, myFolder->special, str_bis(), myFolder->special2);
     mp3.enqueueTrack(myFolder->folder, random(myFolder->special, myFolder->special2 + 1));
     break;
 
   case mode_t::album:
     // Album Modus: kompletten Ordner spielen
-    LOG(play_log, s_info, F("Album"));
     myFolder->special = 1;
     myFolder->special2 = numTracksInFolder;
     __attribute__ ((fallthrough));
+    /* no break */
   case mode_t::album_vb:
     // Spezialmodus Von-Bis: Album: alle Dateien zwischen Start und Ende spielen
+    LOG(play_log, s_info, F("Album"));
     LOG(play_log, s_info, myFolder->special, str_bis() , myFolder->special2);
     mp3.enqueueTrack(myFolder->folder, myFolder->special, myFolder->special2);
     break;
 
   case mode_t::party:
     // Party Modus: Ordner in zufälliger Reihenfolge
-    LOG(play_log, s_info, F("Party"));
     myFolder->special = 1;
     myFolder->special2 = numTracksInFolder;
     __attribute__ ((fallthrough));
+    /* no break */
   case mode_t::party_vb:
     // Spezialmodus Von-Bis: Party Ordner in zufälliger Reihenfolge
+    LOG(play_log, s_info, F("Party"));
     LOG(play_log, s_info, myFolder->special, str_bis(), myFolder->special2);
     mp3.enqueueTrack(myFolder->folder, myFolder->special, myFolder->special2);
     mp3.shuffleQueue();
@@ -141,7 +143,7 @@ void Tonuino::playTrackNumber () {
 
 // Leider kann das Modul selbst keine Queue abspielen, daher müssen wir selbst die Queue verwalten
 void Tonuino::nextTrack(bool fromOnPlayFinished) {
-  LOG(play_log, s_info, F("= nextTrack()"));
+  LOG(play_log, s_info, F("nextTrack"));
   if (activeModifier->handleNext())
     return;
   if (mp3.isPlayingFolder() && (myFolder->mode == mode_t::hoerbuch || myFolder->mode == mode_t::hoerbuch_1)) {
@@ -154,7 +156,7 @@ void Tonuino::nextTrack(bool fromOnPlayFinished) {
 }
 
 void Tonuino::previousTrack() {
-  LOG(play_log, s_info, F("= previousTrack()"));
+  LOG(play_log, s_info, F("previousTrack"));
   if (mp3.isPlayingFolder() && (myFolder->mode == mode_t::hoerbuch || myFolder->mode == mode_t::hoerbuch_1)) {
     const uint8_t trackToSave = (mp3.getCurrentTrack() > numTracksInFolder) ? mp3.getCurrentTrack()-1 : 1;
     settings.writeFolderSettingToFlash(myFolder->folder, trackToSave);
@@ -164,7 +166,7 @@ void Tonuino::previousTrack() {
 
 // Funktionen für den Standby Timer (z.B. über Pololu-Switch oder Mosfet)
 void Tonuino::setStandbyTimer() {
-  LOG(standby_log, s_info, F("= setStandbyTimer()"));
+  LOG(standby_log, s_info, F("setStandbyTimer"));
   if (settings.standbyTimer != 0 && not standbyTimer.isActive()) {
     standbyTimer.start(settings.standbyTimer * 60 * 1000);
     LOG(standby_log, s_info, F("timer started"));
@@ -172,14 +174,14 @@ void Tonuino::setStandbyTimer() {
 }
 
 void Tonuino::disableStandbyTimer() {
-  LOG(standby_log, s_info, F("= disableStandbyTimer()"));
+  LOG(standby_log, s_info, F("disableStandbyTimer"));
   if (settings.standbyTimer != 0) {
     standbyTimer.stop();
     LOG(standby_log, s_info, F("timer stopped"));
   }
 }
 
-void Tonuino::checkStandbyAtMillis() {
+void Tonuino::checkStandby() {
   if (standbyTimer.isActive() && standbyTimer.isExpired()) {
     LOG(standby_log, s_info, F("power off!"));
     // enter sleep state
@@ -209,20 +211,20 @@ bool Tonuino::specialCard(const nfcTagObject &nfcTag) {
 
   switch (nfcTag.nfcFolderSettings.mode) {
   case mode_t::sleep_timer:  LOG(card_log, s_info, F("act. sleepTimer"));
-                             mp3.playAdvertisement(advertTracks::t_302_sleep, false)/*olnyIfIsPlaying*/;
+                             mp3.playAdvertisement(advertTracks::t_302_sleep            , false/*olnyIfIsPlaying*/);
                              activeModifier = &sleepTimer;
                              sleepTimer.start(nfcTag.nfcFolderSettings.special)               ;break;
   case mode_t::freeze_dance: LOG(card_log, s_info, F("act. freezeDance"));
-                             mp3.playAdvertisement(advertTracks::t_300_freeze_into, false/*olnyIfIsPlaying*/);
+                             mp3.playAdvertisement(advertTracks::t_300_freeze_into      , false/*olnyIfIsPlaying*/);
                              activeModifier = &freezeDance;                                   ;break;
   case mode_t::locked:       LOG(card_log, s_info, F("act. locked"));
-                             mp3.playAdvertisement(advertTracks::t_303_locked, false/*olnyIfIsPlaying*/);
+                             mp3.playAdvertisement(advertTracks::t_303_locked           , false/*olnyIfIsPlaying*/);
                              activeModifier = &locked                                         ;break;
   case mode_t::toddler:      LOG(card_log, s_info, F("act. toddlerMode"));
-                             mp3.playAdvertisement(advertTracks::t_304_buttonslocked, false/*olnyIfIsPlaying*/);
+                             mp3.playAdvertisement(advertTracks::t_304_buttonslocked    , false/*olnyIfIsPlaying*/);
                              activeModifier = &toddlerMode                                    ;break;
   case mode_t::kindergarden: LOG(card_log, s_info, F("act. kindergardenMode"));
-                             mp3.playAdvertisement(advertTracks::t_305_kindergarden, false/*olnyIfIsPlaying*/);
+                             mp3.playAdvertisement(advertTracks::t_305_kindergarden     , false/*olnyIfIsPlaying*/);
                              activeModifier = &kindergardenMode                               ;break;
   case mode_t::repeat_single:LOG(card_log, s_info, F("act. repeatSingleModifier"));
                              mp3.playAdvertisement(advertTracks::t_260_activate_mod_card, false/*olnyIfIsPlaying*/);
