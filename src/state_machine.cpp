@@ -21,6 +21,8 @@ const __FlashStringHelper* str_Idle                    () { return F("Idle") ; }
 const __FlashStringHelper* str_StartPlay               () { return F("StartPlay") ; }
 const __FlashStringHelper* str_Play                    () { return F("Play") ; }
 const __FlashStringHelper* str_Pause                   () { return F("Pause") ; }
+const __FlashStringHelper* str_Admin_BaseSetting       () { return F("AdmBaseSetting") ; }
+const __FlashStringHelper* str_Admin_BaseWriteCard     () { return F("AdmBaseWriteCard") ; }
 const __FlashStringHelper* str_Admin_Allow             () { return F("AdmAllow") ; }
 const __FlashStringHelper* str_Admin_Entry             () { return F("AdmEntry") ; }
 const __FlashStringHelper* str_Admin_NewCard           () { return F("AdmNewCard") ; }
@@ -115,6 +117,17 @@ private:
   subState current_subState;
 };
 
+class Admin_BaseSetting: public VoiceMenu_tonuino
+{
+protected:
+  void saveAndTransit();
+};
+
+class Amin_BaseWriteCard: public VoiceMenu_tonuino {
+protected:
+  bool handleWriteCard(button_e const &b);
+};
+
 class Admin_Allow: public VoiceMenu_tonuino
 {
 public:
@@ -148,7 +161,7 @@ public:
   static uint8_t   lastCurrentValue     ;
 };
 
-class Admin_NewCard: public SM_tonuino
+class Admin_NewCard: public Amin_BaseWriteCard
 {
 public:
   void entry() final;
@@ -160,12 +173,11 @@ private:
     end_setupCard,
     start_writeCard,
     run_writeCard,
-    end_writeCard,
   };
   subState current_subState;
 };
 
-class Admin_SimpleSetting: public VoiceMenu_tonuino
+class Admin_SimpleSetting: public Admin_BaseSetting
 {
 public:
   void entry() final;
@@ -179,7 +191,7 @@ public:
   static Type type;
 };
 
-class Admin_ModCard: public VoiceMenu_tonuino
+class Admin_ModCard: public Amin_BaseWriteCard
 {
 public:
   void entry() final;
@@ -189,13 +201,12 @@ private:
   enum subState: uint8_t {
     start_writeCard,
     run_writeCard,
-    end_writeCard,
   };
   subState current_subState;
   bool     readyToWrite;
 };
 
-class Admin_ShortCut: public VoiceMenu_tonuino
+class Admin_ShortCut: public Admin_BaseSetting
 {
 public:
   void entry() final;
@@ -210,14 +221,14 @@ private:
   uint8_t  shortcut;
 };
 
-class Admin_StandbyTimer: public VoiceMenu_tonuino
+class Admin_StandbyTimer: public Admin_BaseSetting
 {
 public:
   void entry() final;
   void react(button_e const &) final;
 };
 
-class Admin_CardsForFolder: public VoiceMenu_tonuino
+class Admin_CardsForFolder: public Amin_BaseWriteCard
 {
 public:
   void entry() final;
@@ -239,7 +250,7 @@ private:
   uint8_t special2;
 };
 
-class Admin_InvButtons: public VoiceMenu_tonuino
+class Admin_InvButtons: public Admin_BaseSetting
 {
 public:
   void entry() final;
@@ -253,7 +264,7 @@ public:
   void react(button_e const &) final;
 };
 
-class Admin_LockAdmin: public VoiceMenu_tonuino
+class Admin_LockAdmin: public Admin_BaseSetting
 {
 public:
   void entry() final;
@@ -269,7 +280,7 @@ private:
   uint8_t         pin_number;
 };
 
-class Admin_PauseIfCardRemoved: public VoiceMenu_tonuino
+class Admin_PauseIfCardRemoved: public Admin_BaseSetting
 {
 public:
   void entry() final;
@@ -878,6 +889,31 @@ void StartPlay::react(button_e const &/*b*/) {
 
 // #######################################################
 
+void Admin_BaseSetting::saveAndTransit() {
+  settings.writeSettingsToFlash();
+  mp3.enqueueMp3FolderTrack(mp3Tracks::t_402_ok_settings);
+  LOG(state_log, s_debug, str_Admin_BaseSetting(), str_to(), F("Idle or AdmEntry"));
+  transit<Admin_End>();
+}
+
+bool Amin_BaseWriteCard::handleWriteCard(button_e const &b) {
+  SM_writeCard::dispatch(b);
+  if (SM_writeCard::is_in_state<finished_writeCard>()) {
+    LOG(state_log, s_debug, str_Admin_BaseWriteCard(), str_to(), F("Idle or AdmEntry"));
+    transit<Admin_End>();
+    return true;
+  }
+  else if (SM_writeCard::is_in_state<finished_abort_writeCard>()) {
+    LOG(state_log, s_info, str_Admin_BaseWriteCard(), str_abort());
+    transit<finished_abort>();
+    return true;
+  }
+  return false;
+}
+
+
+// #######################################################
+
 void Admin_Allow::entry() {
   LOG(state_log, s_info, str_enter(), str_Admin_Allow());
   current_subState = select_method;
@@ -1137,19 +1173,9 @@ void Admin_NewCard::react(button_e const &b) {
     current_subState = run_writeCard;
     break;
   case run_writeCard:
-    SM_writeCard::dispatch(b);
-    if (SM_writeCard::is_in_state<finished_writeCard>())
-      current_subState = end_writeCard;
-    if (SM_writeCard::is_in_state<finished_abort_writeCard>()) {
-      LOG(state_log, s_info, str_Admin_NewCard(), str_abort());
-      transit<finished_abort>();
+    if (handleWriteCard(b))
       return;
-    }
     break;
-  case end_writeCard:
-    LOG(state_log, s_debug, str_Admin_NewCard(), str_to(), str_Idle());
-    transit<Admin_End>();
-    return;
   default:
     break;
   }
@@ -1201,10 +1227,7 @@ void Admin_SimpleSetting::react(button_e const &b) {
                      mp3.setEq(static_cast<DfMp3_Eq>(settings.eq - 1))          ; break;
 
     }
-    settings.writeSettingsToFlash();
-    mp3.enqueueMp3FolderTrack(mp3Tracks::t_402_ok_settings);
-    LOG(state_log, s_debug, str_Admin_SimpleSetting(), str_to(), str_Idle());
-    transit<Admin_End>();
+    saveAndTransit();
     return;
   }
 };
@@ -1263,19 +1286,9 @@ void Admin_ModCard::react(button_e const &b) {
       current_subState = run_writeCard;
       break;
     case run_writeCard:
-      SM_writeCard::dispatch(b);
-      if (SM_writeCard::is_in_state<finished_writeCard>())
-        current_subState = end_writeCard;
-      if (SM_writeCard::is_in_state<finished_abort_writeCard>()) {
-        LOG(state_log, s_info, str_Admin_ModCard(), str_abort());
-        transit<finished_abort>();
+      if (handleWriteCard(b))
         return;
-      }
       break;
-    case end_writeCard:
-      LOG(state_log, s_debug, str_Admin_ModCard(), str_to(), str_Idle());
-      transit<Admin_End>();
-      return;
     default:
       break;
     }
@@ -1352,10 +1365,7 @@ void Admin_ShortCut::react(button_e const &b) {
       break;
     case end_setupCard:
       settings.shortCuts[shortcut-1] = SM_setupCard::folder;
-      settings.writeSettingsToFlash();
-      mp3.enqueueMp3FolderTrack(mp3Tracks::t_402_ok_settings);
-      LOG(state_log, s_debug, str_Admin_ShortCut(), str_to(), str_Idle());
-      transit<Admin_End>();
+      saveAndTransit();
       return;
     default:
       break;
@@ -1395,10 +1405,7 @@ void Admin_StandbyTimer::react(button_e const &b) {
     case 4: settings.standbyTimer = 60; break;
     case 5: settings.standbyTimer =  0; break;
     }
-    settings.writeSettingsToFlash();
-    mp3.enqueueMp3FolderTrack(mp3Tracks::t_402_ok_settings);
-    LOG(state_log, s_debug, str_Admin_StandbyTimer(), str_to(), str_Idle());
-    transit<Admin_End>();
+    saveAndTransit();
     return;
   }
 };
@@ -1542,10 +1549,7 @@ void Admin_InvButtons::react(button_e const &b) {
     case 1: settings.invertVolumeButtons = false; break;
     case 2: settings.invertVolumeButtons = true ; break;
     }
-    settings.writeSettingsToFlash();
-    mp3.enqueueMp3FolderTrack(mp3Tracks::t_402_ok_settings);
-    LOG(state_log, s_debug, str_Admin_InvButtons(), str_to(), str_Idle());
-    transit<Admin_End>();
+    saveAndTransit();
     return;
   }
 };
@@ -1616,10 +1620,7 @@ void Admin_LockAdmin::react(button_e const &b) {
     break;
   }
   case finished:
-    settings.writeSettingsToFlash();
-    mp3.enqueueMp3FolderTrack(mp3Tracks::t_402_ok_settings);
-    LOG(state_log, s_debug, str_Admin_LockAdmin(), str_to(), str_Idle());
-    transit<Admin_End>();
+    saveAndTransit();
     return;
   }
 };
@@ -1652,10 +1653,7 @@ void Admin_PauseIfCardRemoved::react(button_e const &b) {
     case 1: settings.pauseWhenCardRemoved = false; break;
     case 2: settings.pauseWhenCardRemoved = true ; break;
     }
-    settings.writeSettingsToFlash();
-    mp3.enqueueMp3FolderTrack(mp3Tracks::t_402_ok_settings);
-    LOG(state_log, s_debug, str_Admin_PauseIfCardRemoved(), str_to(), str_Idle());
-    transit<Admin_End>();
+    saveAndTransit();
     return;
   }
 };
