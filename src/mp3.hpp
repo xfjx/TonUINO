@@ -27,6 +27,7 @@ enum class mp3Tracks: uint16_t {
   t_318_special_album          = 318,
   t_319_special_party          = 319,
   t_320_mode_audio_book_single = 320,
+  t_321_mode_repeat_last_card  = 321,
   t_327_select_file            = 327,
   t_328_select_first_file      = 328,
   t_329_select_last_file       = 329,

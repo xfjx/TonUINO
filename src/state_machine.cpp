@@ -16,6 +16,7 @@ const __FlashStringHelper* str_ChTrack                 () { return F("ChTrack") 
 const __FlashStringHelper* str_ChFirstTrack            () { return F("ChFirstTrack") ; }
 const __FlashStringHelper* str_ChLastTrack             () { return F("ChLastTrack") ; }
 const __FlashStringHelper* str_WriteCard               () { return F("WriteCard") ; }
+const __FlashStringHelper* str_Base                    () { return F("Base") ; }
 const __FlashStringHelper* str_Idle                    () { return F("Idle") ; }
 const __FlashStringHelper* str_StartPlay               () { return F("StartPlay") ; }
 const __FlashStringHelper* str_Play                    () { return F("Play") ; }
@@ -357,7 +358,7 @@ void ChMode::entry() {
 
   folder = folderSettings{};
 
-  numberOfOptions   = 10;
+  numberOfOptions   = 11;
   startMessage      = mp3Tracks::t_310_select_mode;
   messageOffset     = mp3Tracks::t_310_select_mode;
   preview           = false;
@@ -384,7 +385,13 @@ void ChMode::react(button_e const &b) {
       transit<finished>();
       return;
     }
-    transit<ChFolder>();
+    if (folder.mode == mode_t::repeat_last) {
+      folder.folder = 0xff; // dummy value > 0 to make readCard() returning true
+      transit<finished>();
+    }
+    else {
+      transit<ChFolder>();
+    }
     return;
   }
 };
@@ -577,7 +584,7 @@ bool Base::readCard() {
 
   if (lastCardRead.nfcFolderSettings.folder == 0) {
     if (lastCardRead.nfcFolderSettings.mode == mode_t::admin_card) {
-      LOG(state_log, s_debug, F("Base"), str_to(), str_Admin_Entry());
+      LOG(state_log, s_debug, str_Base(), str_to(), str_Admin_Entry());
       Admin_Entry::lastCurrentValue = 0;
       transit<Admin_Entry>();
       return false;
@@ -595,6 +602,26 @@ bool Base::readCard() {
   }
 
   return false;
+}
+
+void Base::handleShortcut(uint8_t shortCut) {
+  if (shortCut < 3 && settings.shortCuts[shortCut].folder != 0) {
+    if (settings.shortCuts[shortCut].mode != mode_t::repeat_last)
+      tonuino.setFolder(&settings.shortCuts[shortCut]);
+    if (tonuino.getCard().nfcFolderSettings.folder != 0) {
+      LOG(state_log, s_debug, str_Base(), str_to(), str_StartPlay());
+      transit<StartPlay>();
+    }
+  }
+}
+
+void Base::handleReadCard() {
+  if (lastCardRead.nfcFolderSettings.mode != mode_t::repeat_last)
+    tonuino.setCard(lastCardRead);
+  if (tonuino.getCard().nfcFolderSettings.folder != 0) {
+    LOG(state_log, s_debug, str_Base(), str_to(), str_StartPlay());
+    transit<StartPlay>();
+  }
 }
 
 // #######################################################
@@ -650,14 +677,10 @@ void Idle::react(button_e const &b) {
     break;
   }
 
-  if (shortCut <= 3 && settings.shortCuts[shortCut].folder != 0) {
-    tonuino.setFolder(&settings.shortCuts[shortCut]);
-    LOG(state_log, s_debug, str_Idle(), str_to(), str_StartPlay());
-    transit<StartPlay>();
-  }
-  else if (shortCut == 3) {
+  if (shortCut == 3)
     mp3.enqueueMp3FolderTrack(mp3Tracks::t_262_pling);
-  }
+
+  handleShortcut(shortCut);
 };
 
 void Idle::react(card_e const &c) {
@@ -666,11 +689,8 @@ void Idle::react(card_e const &c) {
   }
   switch (c.c) {
   case cardEvent::inserted:
-    if (readCard()) {
-      tonuino.setCard(lastCardRead);
-      LOG(state_log, s_debug, str_Idle(), str_to(), str_StartPlay());
-      transit<StartPlay>();
-    }
+    if (readCard())
+      handleReadCard();
     return;
   case cardEvent::removed:
     break;
@@ -747,11 +767,8 @@ void Play::react(card_e const &c) {
   }
   switch (c.c) {
   case cardEvent::inserted:
-    if (readCard()) {
-      tonuino.setCard(lastCardRead);
-      LOG(state_log, s_debug, str_Play(), str_to(), str_StartPlay());
-      transit<StartPlay>();
-    }
+    if (readCard())
+      handleReadCard();
     return;
   case cardEvent::removed:
     if (settings.pauseWhenCardRemoved && not tonuino.getActiveModifier().handlePause()) {
@@ -820,11 +837,7 @@ void Pause::react(button_e const &b) {
     break;
   }
 
-  if (shortCut < 3 && settings.shortCuts[shortCut].folder != 0) {
-    tonuino.setFolder(&settings.shortCuts[shortCut]);
-    LOG(state_log, s_debug, str_Idle(), str_to(), str_StartPlay());
-    transit<StartPlay>();
-  }
+  handleShortcut(shortCut);
 };
 
 void Pause::react(card_e const &c) {
@@ -838,9 +851,7 @@ void Pause::react(card_e const &c) {
         transit<Play>();
         return;
       }
-      tonuino.setCard(lastCardRead);
-      LOG(state_log, s_debug, str_Pause(), str_to(), str_StartPlay());
-      transit<StartPlay>();
+      handleReadCard();
     }
     return;
   case cardEvent::removed:
@@ -858,9 +869,9 @@ void StartPlay::entry() {
 };
 
 void StartPlay::react(button_e const &/*b*/) {
-  LOG(state_log, s_debug, str_StartPlay(), str_to(), str_Play());
   if (not mp3.isPlayingMp3()) {
     tonuino.playFolder();
+    LOG(state_log, s_debug, str_StartPlay(), str_to(), str_Play());
     transit<Play>();
   }
 };
@@ -1340,7 +1351,8 @@ void Admin_ShortCut::react(button_e const &b) {
       }
       break;
     case end_setupCard:
-      settings.shortCuts[shortcut] = SM_setupCard::folder;
+      settings.shortCuts[shortcut-1] = SM_setupCard::folder;
+      settings.writeSettingsToFlash();
       mp3.enqueueMp3FolderTrack(mp3Tracks::t_402_ok_settings);
       LOG(state_log, s_debug, str_Admin_ShortCut(), str_to(), str_Idle());
       transit<Admin_End>();

@@ -21,6 +21,7 @@ enum class mode_t: uint8_t {
   album_vb      =   8,
   party_vb      =   9,
   hoerbuch_1    =  10,
+  repeat_last   =  11,
 
   // modifier modes
   sleep_timer   =   1,
