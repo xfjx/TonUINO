@@ -401,7 +401,7 @@ void ChMode::react(button_e const &b) {
 void ChFolder::entry() {
   LOG(state_log, s_info, str_enter(), str_ChFolder());
 
-  numberOfOptions   = 10;
+  numberOfOptions   = 99;
   startMessage      = mp3Tracks::t_301_select_folder;
   messageOffset     = mp3Tracks::t_0;
   preview           = true;
