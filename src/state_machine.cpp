@@ -1350,6 +1350,9 @@ void Admin_ShortCut::react(button_e const &b) {
   else {
     switch (current_subState) {
     case start_setupCard:
+      settings.shortCuts[shortcut-1].folder = 0;
+      settings.shortCuts[shortcut-1].mode = mode_t::none;
+      settings.writeSettingsToFlash();
       SM_setupCard::start();
       current_subState = run_setupCard;
       break;

@@ -68,6 +68,7 @@ class delayedSwitchOn {
 public:
   delayedSwitchOn(uint8_t delay)
   : delaySteps(delay)
+  , counter(delay)
   {}
   delayedSwitchOn& operator++() { if (counter < delaySteps) ++counter; return *this; }
   void reset() { counter = 0; }
@@ -75,7 +76,7 @@ public:
 
 private:
   const uint8_t delaySteps;
-  uint8_t counter = 0;
+  uint8_t       counter;
 };
 
 class Chip_card {
@@ -99,7 +100,7 @@ private:
   Buttons             &buttons;
 
   delayedSwitchOn     cardRemovedSwitch;
-  bool                cardRemoved = false;
+  bool                cardRemoved = true;
 };
 
 

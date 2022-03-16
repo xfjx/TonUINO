@@ -262,8 +262,8 @@ cardEvent Chip_card::getCardEvent() {
   if(result != mfrc522.STATUS_OK) {
     ++cardRemovedSwitch;
   } else {
-    cardRemovedSwitch.reset();
     mfrc522.PICC_ReadCardSerial();
+    cardRemovedSwitch.reset();
   }
 
   if (cardRemovedSwitch.on()) {
