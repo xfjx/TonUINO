@@ -4,6 +4,15 @@ Die DIY Musikbox (nicht nur) für Kinder
 
 # Change Log
 
+## Version 3.0 (xx.xx.xxxx) noch WIP
+- vollständiges Refactoring mit State Machine
+- Die Main-Loop läuft jetzt stabil mit 50 ms
+- Neues Feature: neuer Mode: Hörbuch einzeln (nur ein Titel wird gespielt und Fortschritt gespeichert
+- Neues Feature: Pause, wenn Karte entfernt wird (lässt sich per Einstellungen steuern)
+- Das Admin Menü wir nach einer Einstellung nicht verlassen (kann in der Software geändert leicht werden)
+- Das Admin Menü kan an jeder Stelle abgrbrochen werden
+- Viele weitere Verbesserungen und Bug Fixes
+
 ## Version 2.1 (xx.xx.xxxx) noch WIP
 - Partymodus hat nun eine Queue -> jedes Lied kommt nur genau 1x vorkommt
 - Neue Wiedergabe-Modi "Spezialmodus Von-Bis" - Hörspiel, Album und Party -> erlaubt z.B. verschiedene Alben in einem Ordner zu haben und je mit einer Karte zu verknüpfen

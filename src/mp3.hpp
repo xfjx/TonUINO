@@ -6,6 +6,10 @@
 #include <SoftwareSerial.h>
 
 #include "settings.hpp"
+#include "queue.hpp"
+#include "timer.hpp"
+
+#define CHECK_MISSING_ONPLAYFINISHED
 
 enum class mp3Tracks: uint16_t {
   t_0                          =   0,
@@ -23,6 +27,7 @@ enum class mp3Tracks: uint16_t {
   t_318_special_album          = 318,
   t_319_special_party          = 319,
   t_320_mode_audio_book_single = 320,
+  t_321_mode_repeat_last_card  = 321,
   t_327_select_file            = 327,
   t_328_select_first_file      = 328,
   t_329_select_last_file       = 329,
@@ -31,6 +36,7 @@ enum class mp3Tracks: uint16_t {
   t_332_say_number             = 332,
   t_400_ok                     = 400,
   t_401_error                  = 401,
+  t_402_ok_settings            = 402,
   t_800_waiting_for_card       = 800,
   t_802_reset_aborted          = 802,
   t_900_admin                  = 900,
@@ -47,6 +53,7 @@ enum class mp3Tracks: uint16_t {
   t_911_reset                  = 911,
   t_912_admin_lock             = 912,
   t_913_pause_on_card_removed  = 913,
+  t_919_continue_admin         = 919,
   t_920_eq_intro               = 920,
   t_921_normal                 = 921,
   t_922_pop                    = 922,
@@ -124,25 +131,72 @@ private:
 
 class Mp3: public DFMiniMp3<SoftwareSerial, Mp3Notify> {
 public:
+  using Base = DFMiniMp3<SoftwareSerial, Mp3Notify>;
   Mp3(const Settings& settings);
 
   bool isPlaying() const;
   void waitForTrackToFinish();
   void waitForTrackToStart();
-  void playMp3FolderTrack(uint16_t track);
-  void playMp3FolderTrack(mp3Tracks track);
   void playAdvertisement(uint16_t     track, bool olnyIfIsPlaying = true);
   void playAdvertisement(advertTracks track, bool olnyIfIsPlaying = true);
+
+  void clearFolderQueue();
+  void clearMp3Queue();
+  void clearAllQueue() { clearFolderQueue(); clearMp3Queue(); }
+  bool isPlayingFolder() { return playing == play_folder; }
+  bool isPlayingMp3   () { return playing == play_mp3; }
+  // firstTrack and lastTrack -> index in folder starting with 1
+  // currentTrack             -> index in queue starting with 0
+  void enqueueTrack(uint8_t folder, uint8_t firstTrack, uint8_t lastTrack, uint8_t currentTrack = 0);
+  void enqueueTrack(uint8_t folder, uint8_t track);
+  void shuffleQueue();
+  void enqueueMp3FolderTrack(uint16_t track, bool playAfter=false);
+  void enqueueMp3FolderTrack(mp3Tracks track, bool playAfter=false);
+  void playCurrent();
+  void playNext();
+  void playPrevious();
+  uint8_t getCurrentTrack() { return playing ? q.get(current_track) : 0; }
+
+#ifdef CHECK_MISSING_ONPLAYFINISHED
+  void start() { isPause = false; Base::start(); }
+  void stop () { isPause = false; Base::stop (); }
+  void pause() { isPause = true ; Base::pause(); }
+#endif
 
   void increaseVolume();
   void decreaseVolume();
   void setVolume     ();
+  void loop          ();
 
 private:
+
+  typedef queue<uint8_t, maxTracksInFolder> track_queue;
+
   SoftwareSerial       softwareSerial;
   const Settings&      settings;
 
   uint8_t              volume{};
+
+  // folder queue
+  track_queue          q{};
+  uint8_t              current_folder{};
+  size_t               current_track{};
+
+  // mp3 queue
+  uint16_t             mp3_track{};
+  uint16_t             mp3_track_next{};
+
+  enum play_type: uint8_t {
+    play_none,
+    play_folder,
+    play_mp3,
+  };
+  play_type            playing{play_none};
+#ifdef CHECK_MISSING_ONPLAYFINISHED
+  Timer                startTrackTimer{};
+  Timer                missingOnPlayFinishedTimer{};
+  bool                 isPause{};
+#endif
 };
 
 #endif /* SRC_MP3_HPP_ */

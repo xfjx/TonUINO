@@ -2,75 +2,81 @@
 
 #include "mp3.hpp"
 #include "tonuino.hpp"
+#include "logger.hpp"
+#include "state_machine.hpp"
 
+namespace {
+
+const __FlashStringHelper* str_SleepTimer          () { return F("SleepTimer")  ; }
+const __FlashStringHelper* str_FreezeDance         () { return F("FreezeDance") ; }
+const __FlashStringHelper* str_KindergardenMode    () { return F("Kita")        ; }
+const __FlashStringHelper* str_RepeatSingleModifier() { return F("RepeatSingle"); }
+
+} // anonymous namespace
 
 void SleepTimer::loop() {
-  if (sleepAtMillis != 0 && millis() > sleepAtMillis) {
-    Serial.println(F("=== SleepTimer::loop() -> SLEEP!"));
-    mp3.pause();
-    tonuino.setStandbyTimer();
+  if (sleepTimer.isActive() && sleepTimer.isExpired()) {
+    LOG(modifier_log, s_info, str_SleepTimer(), F(" -> SLEEP!"));
+    if (SM_tonuino::is_in_state<Play>())
+      SM_tonuino::dispatch(button_e(buttonRaw::pause));
     tonuino.resetActiveModifier();
-    delete this;
   }
 }
 
 void SleepTimer::start(uint8_t minutes) {
-  Serial.println(F("=== SleepTimer()"));
-  Serial.println(minutes);
-  sleepAtMillis = millis() + minutes * 60000;
-  //playAdvertisement(302);
+  LOG(modifier_log, s_info, str_SleepTimer(), F(" minutes: "), minutes);
+  sleepTimer.start(minutes * 60000);
+  //playAdvertisement(advertTracks::t_302_sleep);
 }
 
 void FreezeDance::loop() {
-  if (nextStopAtMillis != 0 && millis() > nextStopAtMillis) {
-    Serial.println(F("== FreezeDance::loop() -> FREEZE!"));
-    if (mp3.isPlaying()) {
-      mp3.playAdvertisement(301);
-    }
+  if (stopTimer.isExpired()) {
+    LOG(modifier_log, s_info, str_FreezeDance(), F(" -> FREEZE!"));
+    mp3.playAdvertisement(advertTracks::t_301_freeze_freeze);
     setNextStopAtMillis();
   }
 }
 
 void FreezeDance::setNextStopAtMillis() {
   const uint16_t seconds = random(minSecondsBetweenStops, maxSecondsBetweenStops + 1);
-  Serial.println(F("=== FreezeDance::setNextStopAtMillis()"));
-  Serial.println(seconds);
-  nextStopAtMillis = millis() + seconds * 1000;
+  LOG(modifier_log, s_info, str_FreezeDance(), F(" next stop in "), seconds);
+  stopTimer.start(seconds * 1000);
 }
 
 bool KindergardenMode::handleNext() {
-  Serial.println(F("== KindergardenMode::handleNext() -> NEXT"));
   if (cardQueued) {
+    LOG(modifier_log, s_info, str_KindergardenMode(), F(" -> NEXT"));
     cardQueued = false;
 
     tonuino.setCard(nextCard);
-    Serial.println(nextCard.nfcFolderSettings.folder);
-    //Serial.println(myFolder->mode);
+    LOG(modifier_log, s_debug, F("Folder: "), nextCard.nfcFolderSettings.folder, F(" Mode: "), static_cast<uint8_t>(nextCard.nfcFolderSettings.mode));
     tonuino.playFolder();
     return true;
   }
   return false;
 }
-bool KindergardenMode::handleRFID(const nfcTagObject &newCard) { // lot of work to do!
-  Serial.println(F("== KindergardenMode::handleRFID() -> queued!"));
-  nextCard = newCard;
-  cardQueued = true;
-  if (!mp3.isPlaying()) {
-    handleNext();
+bool KindergardenMode::handleRFID(const nfcTagObject &newCard) {
+  if (!mp3.isPlaying())
+    return false;
+
+  if (!cardQueued) {
+    LOG(modifier_log, s_info, str_KindergardenMode(), F(" -> queued!"));
+    nextCard = newCard;
+    cardQueued = true;
   }
   return true;
 }
 
 bool RepeatSingleModifier::handleNext() {
-  Serial.println(F("== RepeatSingleModifier::handleNext() -> REPEAT CURRENT TRACK"));
-  delay(50);
-  if (!mp3.isPlaying()) {
-    mp3.loop(); // this will call Mp3Notify::OnPlayFinished() but will be blocked by lastTrackFinished
-    Mp3Notify::ResetLastTrackFinished();
-    tonuino.playCurrentTrack();
-  }
-
+  LOG(modifier_log, s_info, str_RepeatSingleModifier(), F(" -> REPEAT"));
+  mp3.loop(); // WA: this will call again Mp3Notify::OnPlayFinished() (error in DFMiniMp3 lib)
+              //     but will be blocked by lastTrackFinished
+  Mp3Notify::ResetLastTrackFinished(); // unblock this track so that it can be repeated
+  mp3.playCurrent();
   return true;
+}
+bool RepeatSingleModifier::handlePrevious() {
+  return handleNext();
 }
 
 //bool FeedbackModifier::handleVolumeDown() {
@@ -79,7 +85,7 @@ bool RepeatSingleModifier::handleNext() {
 //  } else {
 //    playAdvertisement(volume, false);
 //  }
-//  Serial.println(F("== FeedbackModifier::handleVolumeDown()!"));
+//  LOG(modifier_log, s_info, F("FeedbackModifier::handleVolumeDown()!"));
 //  return false;
 //}
 //bool FeedbackModifier::handleVolumeUp() {
@@ -88,11 +94,11 @@ bool RepeatSingleModifier::handleNext() {
 //  } else {
 //    playAdvertisement(volume, false);
 //  }
-//  Serial.println(F("== FeedbackModifier::handleVolumeUp()!"));
+//  LOG(modifier_log, s_info, F("FeedbackModifier::handleVolumeUp()!"));
 //  return false;
 //}
 //bool FeedbackModifier::handleRFID(const nfcTagObject &/*newCard*/) {
-//  Serial.println(F("== FeedbackModifier::handleRFID()"));
+//  LOG(modifier_log, s_info, F("FeedbackModifier::handleRFID()"));
 //  return false;
 //}
 

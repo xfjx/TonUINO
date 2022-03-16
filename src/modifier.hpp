@@ -4,6 +4,8 @@
 #include <Arduino.h>
 
 #include "chip_card.hpp"
+#include "logger.hpp"
+#include "timer.hpp"
 
 class Tonuino;
 class Mp3;
@@ -13,7 +15,6 @@ struct nfcTagObject;
 class Modifier {
 public:
   Modifier(Tonuino &tonuino, Mp3 &mp3, const Settings &settings): tonuino(tonuino), mp3(mp3), settings(settings) {}
-  virtual ~Modifier                () {}
   virtual void loop                () {}
   virtual bool handlePause         () { return false; }
   virtual bool handleNext          () { return false; }
@@ -41,7 +42,7 @@ public:
   void   start    (uint8_t minutes);
 
 private:
-  unsigned long sleepAtMillis = 0;
+  Timer sleepTimer{};
 };
 
 class FreezeDance: public Modifier {
@@ -54,21 +55,21 @@ public:
   void setNextStopAtMillis();
 
 private:
-  unsigned long nextStopAtMillis       =  0;
-  const uint8_t minSecondsBetweenStops =  5;
-  const uint8_t maxSecondsBetweenStops = 30;
+  Timer stopTimer{};
+  static constexpr uint8_t minSecondsBetweenStops =  5;
+  static constexpr uint8_t maxSecondsBetweenStops = 30;
 };
 
 class Locked: public Modifier {
 public:
   Locked(Tonuino &tonuino, Mp3 &mp3, const Settings &settings): Modifier(tonuino, mp3, settings) {}
-  bool handlePause         () final { Serial.println(F("== Locked::handlePause() -> LOCKED!"))         ; return true; }
-  bool handleNextButton    () final { Serial.println(F("== Locked::handleNextButton() -> LOCKED!"))    ; return true; }
-  bool handlePreviousButton() final { Serial.println(F("== Locked::handlePreviousButton() -> LOCKED!")); return true; }
-  bool handleVolumeUp      () final { Serial.println(F("== Locked::handleVolumeUp() -> LOCKED!"))      ; return true; }
-  bool handleVolumeDown    () final { Serial.println(F("== Locked::handleVolumeDown() -> LOCKED!"))    ; return true; }
+  bool handlePause         () final { LOG(modifier_log, s_debug, F("Locked::Pause -> LOCKED!"))     ; return true; }
+  bool handleNextButton    () final { LOG(modifier_log, s_debug, F("Locked::NextButton -> LOCKED!")); return true; }
+  bool handlePreviousButton() final { LOG(modifier_log, s_debug, F("Locked::PrevButton -> LOCKED!")); return true; }
+  bool handleVolumeUp      () final { LOG(modifier_log, s_debug, F("Locked::VolumeUp -> LOCKED!"))  ; return true; }
+  bool handleVolumeDown    () final { LOG(modifier_log, s_debug, F("Locked::VolumeDown -> LOCKED!")); return true; }
   bool handleRFID(const nfcTagObject&)
-                              final { Serial.println(F("== Locked::handleRFID() -> LOCKED!"))          ; return true; }
+                              final { LOG(modifier_log, s_debug, F("Locked::RFID -> LOCKED!"))      ; return true; }
 
   mode_t getActive() final { return mode_t::locked; }
 };
@@ -76,11 +77,11 @@ public:
 class ToddlerMode: public Modifier {
 public:
   ToddlerMode(Tonuino &tonuino, Mp3 &mp3, const Settings &settings): Modifier(tonuino, mp3, settings) {}
-  bool handlePause         () final { Serial.println(F("== ToddlerMode::handlePause() -> LOCKED!"))         ; return true; }
-  bool handleNextButton    () final { Serial.println(F("== ToddlerMode::handleNextButton() -> LOCKED!"))    ; return true; }
-  bool handlePreviousButton() final { Serial.println(F("== ToddlerMode::handlePreviousButton() -> LOCKED!")); return true; }
-  bool handleVolumeUp      () final { Serial.println(F("== ToddlerMode::handleVolumeUp() -> LOCKED!"))      ; return true; }
-  bool handleVolumeDown    () final { Serial.println(F("== ToddlerMode::handleVolumeDown() -> LOCKED!"))    ; return true; }
+  bool handlePause         () final { LOG(modifier_log, s_debug, F("ToddlerMode::Pause -> LOCKED!"))     ; return true; }
+  bool handleNextButton    () final { LOG(modifier_log, s_debug, F("ToddlerMode::NextButton -> LOCKED!")); return true; }
+  bool handlePreviousButton() final { LOG(modifier_log, s_debug, F("ToddlerMode::PrevButton -> LOCKED!")); return true; }
+  bool handleVolumeUp      () final { LOG(modifier_log, s_debug, F("ToddlerMode::VolumeUp -> LOCKED!"))  ; return true; }
+  bool handleVolumeDown    () final { LOG(modifier_log, s_debug, F("ToddlerMode::VolumeDown -> LOCKED!")); return true; }
 
   mode_t getActive() final { return mode_t::toddler; }
 };
@@ -90,9 +91,9 @@ public:
   KindergardenMode(Tonuino &tonuino, Mp3 &mp3, const Settings &settings): Modifier(tonuino, mp3, settings) {}
   bool handleNext() final;
 
-  //bool handlePause         () final { Serial.println(F("== KindergardenMode::handlePause() -> LOCKED!"))         ; return true; }
-  bool handleNextButton    () final { Serial.println(F("== KindergardenMode::handleNextButton() -> LOCKED!"))    ; return true; }
-  bool handlePreviousButton() final { Serial.println(F("== KindergardenMode::handlePreviousButton() -> LOCKED!")); return true; }
+//bool handlePause         () final { LOG(modifier_log, s_debug, F("KindergardenMode::Pause -> LOCKED!"))     ; return true; }
+  bool handleNextButton    () final { LOG(modifier_log, s_debug, F("KindergardenMode::NextButton -> LOCKED!")); return true; }
+  bool handlePreviousButton() final { LOG(modifier_log, s_debug, F("KindergardenMode::PrevButton -> LOCKED!")); return true; }
 
   bool   handleRFID(const nfcTagObject &newCard) final;
   mode_t getActive () final { return mode_t::kindergarden; }
@@ -106,8 +107,9 @@ private:
 class RepeatSingleModifier: public Modifier {
 public:
   RepeatSingleModifier(Tonuino &tonuino, Mp3 &mp3, const Settings &settings): Modifier(tonuino, mp3, settings) {}
-  bool   handleNext() final;
-  mode_t getActive () final { return mode_t::repeat_single; }
+  bool   handleNext    () final;
+  bool   handlePrevious() final;
+  mode_t getActive     () final { return mode_t::repeat_single; }
 };
 
 // An modifier can also do somethings in addition to the modified action

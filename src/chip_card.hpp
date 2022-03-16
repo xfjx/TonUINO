@@ -3,7 +3,9 @@
 
 #include <stdint.h>
 
-const uint32_t cardCookie = 322417479;
+#include <MFRC522.h>
+
+#include "constants.hpp"
 
 enum class mode_t: uint8_t {
   none          =   0,
@@ -19,6 +21,7 @@ enum class mode_t: uint8_t {
   album_vb      =   8,
   party_vb      =   9,
   hoerbuch_1    =  10,
+  repeat_last   =  11,
 
   // modifier modes
   sleep_timer   =   1,
@@ -36,7 +39,7 @@ struct folderSettings {
   mode_t  mode;
   uint8_t special;
   uint8_t special2;
-  bool operator==(const folderSettings& rhs) {
+  bool operator==(const folderSettings& rhs) const {
     return folder   == rhs.folder  &&
            mode     == rhs.mode    &&
            special  == rhs.special &&
@@ -46,49 +49,58 @@ struct folderSettings {
 
 // this object stores nfc tag data
 struct nfcTagObject {
-  uint32_t       cookie;
-  uint8_t        version;
   folderSettings nfcFolderSettings;
-  bool operator==(const nfcTagObject& rhs) {
-    return cookie            == rhs.cookie           &&
-           version           == rhs.version          &&
-           nfcFolderSettings == rhs.nfcFolderSettings;
+  bool operator==(const nfcTagObject& rhs) const {
+    return nfcFolderSettings == rhs.nfcFolderSettings;
   }
 };
 
-class MFRC522; // forward declaration to not have to include it here
+enum class cardEvent: uint8_t {
+  none,
+  removed,
+  inserted,
+};
+
+class Mp3;     // forward declaration to not have to include it here
+class Buttons;
 
 class delayedSwitchOn {
 public:
-  delayedSwitchOn(unsigned int delay)
-  : delay(delay)
+  delayedSwitchOn(uint8_t delay)
+  : delaySteps(delay)
+  , counter(delay)
   {}
-  delayedSwitchOn& operator++() { if (counter < delay) ++counter; return *this; }
+  delayedSwitchOn& operator++() { if (counter < delaySteps) ++counter; return *this; }
   void reset() { counter = 0; }
-  bool on()    { return counter == delay; }
+  bool on()    { return counter == delaySteps; }
 
 private:
-  const unsigned int delay;
-  unsigned int counter = 0;
+  const uint8_t delaySteps;
+  uint8_t       counter;
 };
 
 class Chip_card {
 public:
-  Chip_card();
+  Chip_card(Mp3 &mp3, Buttons &buttons);
 
   bool readCard (      nfcTagObject &nfcTag);
   bool writeCard(const nfcTagObject &nfcTag);
   void sleepCard();
   void initCard ();
-  void stopCard ();
-  void stopCrypto1();
-  bool newCardPresent();
-  bool cardRemoved();
+  cardEvent getCardEvent();
+  bool isCardRemoved() { return cardRemoved; }
 
 private:
-  MFRC522             &mfrc522;
+  void stopCrypto1();
+  void stopCard ();
+  bool auth(MFRC522::PICC_Type piccType);
+
+  MFRC522             mfrc522;
+  Mp3                 &mp3;
+  Buttons             &buttons;
 
   delayedSwitchOn     cardRemovedSwitch;
+  bool                cardRemoved = true;
 };
 
 

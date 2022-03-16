@@ -3,6 +3,8 @@
 #include "src/settings.hpp"
 #include "src/mp3.hpp"
 #include "src/buttons.hpp"
+#include "src/logger.hpp"
+#include "src/constants.hpp"
 
 
 /*
@@ -10,18 +12,12 @@
   |_   _|___ ___|  |  |     |   | |     |
     | | | . |   |  |  |-   -| | | |  |  |
     |_| |___|_|_|_____|_____|_|___|_____|
-    TonUINO Version 2.1
+    TonUINO Version 3.0
 
     created by Thorsten Voß and licensed under GNU/GPL.
+    refactored by Boerge1
     Information and contribution at https://tonuino.de.
 */
-
-namespace {
-
-const uint8_t openAnalogPin = A7;
-
-}
-
 
 void setup() {
 
@@ -37,18 +33,19 @@ void setup() {
   randomSeed(ADCSeed); // Zufallsgenerator initialisieren
 
   // Dieser Hinweis darf nicht entfernt werden
-  Serial.println(F("\n _____         _____ _____ _____ _____"));
-  Serial.println(F("|_   _|___ ___|  |  |     |   | |     |"));
-  Serial.println(F("  | | | . |   |  |  |-   -| | | |  |  |"));
-  Serial.println(F("  |_| |___|_|_|_____|_____|_|___|_____|\n"));
-  Serial.println(F("TonUINO Version 2.1"));
-  Serial.println(F("created by Thorsten Voß and licensed under GNU/GPL."));
-  Serial.println(F("Information and contribution at https://tonuino.de.\n"));
+  LOG(init_log, s_debug, F(" _____         _____ _____ _____ _____"));
+  LOG(init_log, s_debug, F("|_   _|___ ___|  |  |     |   | |     |"));
+  LOG(init_log, s_debug, F("  | | | . |   |  |  |-   -| | | |  |  |"));
+  LOG(init_log, s_debug, F("  |_| |___|_|_|_____|_____|_|___|_____|\n"));
+  LOG(init_log, s_info , F("TonUINO Version 3.0"));
+  LOG(init_log, s_info , F("created by Thorsten Voß and licensed under GNU/GPL."));
+  LOG(init_log, s_info , F("refactored by Boerge1."));
+  LOG(init_log, s_debug, F("Information and contribution at https://tonuino.de.\n"));
 
-  tonuino.setup();
+  Tonuino::getTonuino().setup();
 }
 
 void loop() {
 
-  tonuino.loop();
+  Tonuino::getTonuino().loop();
 }

@@ -2,6 +2,9 @@
 
 #include <EEPROM.h>
 
+#include "constants.hpp"
+#include "logger.hpp"
+
 namespace {
 
 const int startAddressAdminSettings = sizeof(folderSettings::folder) * 100;
@@ -17,19 +20,19 @@ uint8_t Settings::readByteFromFlash(uint16_t address) {
 }
 
 void Settings::clearEEPROM() {
-  Serial.println(F("Reset -> EEPROM wird gelöscht"));
+  LOG(settings_log, s_info, F("clearEEPROM"));
   for (uint16_t i = 0; i < EEPROM.length(); i++) {
     writeByteToFlash(i, 0);
   }
 }
 
 void Settings::writeSettingsToFlash() {
-  Serial.println(F("=== writeSettingsToFlash()"));
+  LOG(settings_log, s_debug, F("writeSettingsToFlash"));
   EEPROM.put(startAddressAdminSettings, *this);
 }
 
 void Settings::resetSettings() {
-  Serial.println(F("=== resetSettings()"));
+  LOG(settings_log, s_debug, F("resetSettings"));
   cookie              = cardCookie;
   version             =  2;
   maxVolume           = 25;
@@ -55,8 +58,7 @@ void Settings::resetSettings() {
 
 void Settings::migrateSettings(int oldVersion) {
   if (oldVersion == 1) {
-    Serial.println(F("=== resetSettings()"));
-    Serial.println(F("1 -> 2"));
+    LOG(settings_log, s_info, F("migradeSettings 1 -> 2"));
     version = 2;
     adminMenuLocked = 0;
     adminMenuPin[0] = 1;
@@ -69,51 +71,27 @@ void Settings::migrateSettings(int oldVersion) {
 }
 
 void Settings::loadSettingsFromFlash() {
-  Serial.println(F("=== loadSettingsFromFlash()"));
+  LOG(settings_log, s_debug, F("loadSettingsFromFlash"));
   EEPROM.get(startAddressAdminSettings, *this);
   if (cookie != cardCookie)
     resetSettings();
   migrateSettings(version);
 
-  Serial.print(F("Version: "));
-  Serial.println(version);
-
-  Serial.print(F("Maximal Volume: "));
-  Serial.println(maxVolume);
-
-  Serial.print(F("Minimal Volume: "));
-  Serial.println(minVolume);
-
-  Serial.print(F("Initial Volume: "));
-  Serial.println(initVolume);
-
-  Serial.print(F("EQ: "));
-  Serial.println(eq);
-
-  Serial.print(F("Locked: "));
-  Serial.println(locked);
-
-  Serial.print(F("Sleep Timer: "));
-  Serial.println(standbyTimer);
-
-  Serial.print(F("Inverted Volume Buttons: "));
-  Serial.println(invertVolumeButtons);
-
-  Serial.print(F("Admin Menu locked: "));
-  Serial.println(adminMenuLocked);
-
-  Serial.print(F("Admin Menu Pin: "));
-  Serial.print  (adminMenuPin[0]);
-  Serial.print  (adminMenuPin[1]);
-  Serial.print  (adminMenuPin[2]);
-  Serial.println(adminMenuPin[3]);
-
-  Serial.print(F("Pause when card removed: "));
-  Serial.println(pauseWhenCardRemoved);
+  LOG(settings_log, s_info, F("Version: "                ), version);
+  LOG(settings_log, s_info, F("Max Vol: "                ), maxVolume);
+  LOG(settings_log, s_info, F("Min Vol: "                ), minVolume);
+  LOG(settings_log, s_info, F("Init Vol: "               ), initVolume);
+  LOG(settings_log, s_info, F("EQ: "                     ), eq);
+  LOG(settings_log, s_info, F("Locked: "                 ), locked);
+  LOG(settings_log, s_info, F("Sleep Timer: "            ), standbyTimer);
+  LOG(settings_log, s_info, F("Inverted Vol Buttons: "   ), invertVolumeButtons);
+  LOG(settings_log, s_info, F("Admin Menu locked: "      ), adminMenuLocked);
+  LOG(settings_log, s_info, F("Admin Menu Pin: "         ), adminMenuPin[0], adminMenuPin[1], adminMenuPin[2], adminMenuPin[3]);
+  LOG(settings_log, s_info, F("Pause when card removed: "), pauseWhenCardRemoved);
 }
 
 void Settings::writeFolderSettingToFlash(uint8_t folder, uint16_t track) {
-  writeByteToFlash(folder, min(track, 0xff));
+  writeByteToFlash(folder, min(track, 0xffu));
 }
 
 uint16_t Settings::readFolderSettingFromFlash(uint8_t folder) {

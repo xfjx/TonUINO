@@ -5,11 +5,25 @@
 #include <JC_Button.h>
 
 #include "settings.hpp"
+#include "constants.hpp"
 
-// uncomment the below line to enable five button support
-//#define FIVEBUTTONS
+enum class buttonRaw: uint8_t {
+  none,
+  pause,
+  pauseLong,
+  up,
+  upLong,
+  down,
+  downLong,
+  allLong,
+#ifdef FIVEBUTTONS
+  four,
+  five,
+#endif
+  start,
+};
 
-enum class button {
+enum class buttonCmd: uint8_t {
   none,
   admin,
   pause,
@@ -18,25 +32,26 @@ enum class button {
   volume_down,
   next,
   previous,
+  start,
 };
 
 class Buttons {
 public:
   Buttons(const Settings& settings);
 
-  button getButton();
-  void waitForNoButton();
+  buttonRaw getButtonRaw();
+  buttonCmd getButtonCmd(buttonRaw b);
+  static uint8_t   getButtonCode(buttonRaw b);
   bool isReset();
-  bool isBreak();
-  bool askCode(Settings::pin_t &code);
+  bool isNoButton();
 
 private:
 
   void readButtons();
 
-  Button pauseButton;
-  Button    upButton;
-  Button  downButton;
+  Button buttonPause;
+  Button buttonUp   ;
+  Button buttonDown ;
   #ifdef FIVEBUTTONS
   Button  buttonFour;
   Button  buttonFive;
