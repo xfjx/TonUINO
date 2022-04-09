@@ -41,7 +41,7 @@ void Tonuino::setup() {
 
   SM_tonuino::start();
   // Start Shortcut "at Startup" - e.g. Welcome Sound
-  SM_tonuino::dispatch(button_e(buttonRaw::start));
+  SM_tonuino::dispatch(command_e(commandRaw::start));
 }
 
 void Tonuino::loop() {
@@ -53,7 +53,7 @@ void Tonuino::loop() {
 
   activeModifier->loop();
 
-  SM_tonuino::dispatch(button_e(buttons.getButtonRaw()));
+  SM_tonuino::dispatch(command_e(commands.getCommandRaw()));
   SM_tonuino::dispatch(card_e(chip_card.getCardEvent()));
 
   unsigned long  stop_cycle = millis();

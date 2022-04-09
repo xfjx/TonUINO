@@ -4,7 +4,6 @@
 #include <SPI.h>
 
 #include "mp3.hpp"
-#include "buttons.hpp"
 #include "constants.hpp"
 #include "logger.hpp"
 
@@ -71,10 +70,9 @@ const byte sector       = 1;
 const byte trailerBlock = 7;
 } // namespace
 
-Chip_card::Chip_card(Mp3 &mp3, Buttons &buttons)
+Chip_card::Chip_card(Mp3 &mp3)
 : mfrc522(mfrc522_SSPin, mfrc522_RSTPin)
 , mp3(mp3)
-, buttons(buttons)
 , cardRemovedSwitch(cardRemoveDelay)
 {}
 

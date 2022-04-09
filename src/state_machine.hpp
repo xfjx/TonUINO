@@ -2,7 +2,7 @@
 #define SRC_STATE_MACHINE_HPP_
 
 #include "tinyfsm.hpp"
-#include "buttons.hpp"
+#include "commands.hpp"
 #include "chip_card.hpp"
 #include "mp3.hpp"
 #include "timer.hpp"
@@ -12,13 +12,13 @@ class Tonuino;
 // ----------------------------------------------------------------------------
 // Event Declarations
 //
-struct button_e: tinyfsm::Event {
-  button_e(buttonRaw b):b{b} {}
-  buttonRaw b;
+struct command_e: tinyfsm::Event {
+  command_e(commandRaw cmd_raw):cmd_raw{cmd_raw} {}
+  commandRaw cmd_raw;
 };
 struct card_e  : tinyfsm::Event {
-  card_e(cardEvent c): c{c} {}
-  cardEvent c;
+  card_e(cardEvent card_ev): card_ev{card_ev} {}
+  cardEvent card_ev;
 };
 
 // ----------------------------------------------------------------------------
@@ -52,19 +52,19 @@ public:
           Idle>::type
   >::type finished_abort;
 
-  virtual void react(button_e const &) { };
-  virtual void react(card_e   const &) { };
+  virtual void react(command_e const &) { };
+  virtual void react(card_e    const &) { };
 
   virtual void entry(void) { };
-  void         exit(void)  { waitForPlayFinish = false; };
+  void         exit (void) { waitForPlayFinish = false; };
 
-  bool isAbort(button_e const &b);
+  bool isAbort(command_e const &);
 
   static folderSettings folder;
 protected:
   static Tonuino        &tonuino;
   static Mp3            &mp3;
-  static Buttons        &buttons;
+  static Commands       &commands;
   static Settings       &settings;
   static Chip_card      &chip_card;
 
@@ -89,31 +89,31 @@ class Idle: public Base
 {
 public:
   void entry() override;
-  void react(button_e const &) override;
-  void react(card_e   const &) override;
+  void react(command_e const &) override;
+  void react(card_e    const &) override;
 };
 
 class StartPlay: public Base
 {
 public:
   void entry() override;
-  void react(button_e const &) override;
+  void react(command_e const &) override;
 };
 
 class Play: public Base
 {
 public:
   void entry() override;
-  void react(button_e const &) override;
-  void react(card_e   const &) override;
+  void react(command_e const &) override;
+  void react(card_e    const &) override;
 };
 
 class Pause: public Base
 {
 public:
   void entry() override;
-  void react(button_e const &) override;
-  void react(card_e   const &) override;
+  void react(command_e const &) override;
+  void react(card_e    const &) override;
 };
 
 // ----------------------------------------------------------------------------

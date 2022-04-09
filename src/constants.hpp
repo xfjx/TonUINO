@@ -15,7 +15,7 @@ enum class levelType: uint8_t {
 };
 
 inline constexpr int getLevel(levelType t, level l) { return (l == level::inactive) ? (t==levelType::activeHigh ? LOW  : HIGH)
-                                                                          : (t==levelType::activeHigh ? HIGH : LOW ); }
+                                                                                    : (t==levelType::activeHigh ? HIGH : LOW ); }
 
 // ####### buttons #####################################
 
