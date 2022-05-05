@@ -9,8 +9,9 @@ Die DIY Musikbox (nicht nur) für Kinder
 - Die Main-Loop läuft jetzt stabil mit 50 ms
 - Neues Feature: neuer Mode: Hörbuch einzeln (nur ein Titel wird gespielt und Fortschritt gespeichert
 - Neues Feature: Pause, wenn Karte entfernt wird (lässt sich per Einstellungen steuern)
-- Das Admin Menü wir nach einer Einstellung nicht verlassen (kann in der Software geändert leicht werden)
-- Das Admin Menü kan an jeder Stelle abgrbrochen werden
+- Das Admin Menü wir nach einer Einstellung nicht verlassen (kann in der Software leicht geändert werden)
+- Das Admin Menü kann an jeder Stelle abgebrochen werden
+- Außer den Buttons können andere Command Sources hinzugefügt werden (Bsp.: Serial Input)
 - Viele weitere Verbesserungen und Bug Fixes
 
 **Achtung:** es ist jetzt c++17 erforderlich. Wer nicht plattformio verwendet, muss die Datei platform.txt editieren
