@@ -47,8 +47,9 @@ private:
   Settings             settings            {};
   Mp3                  mp3                 {settings};
   Buttons              buttons             {};
-  SerialInput          serialInput         {};
-  Commands             commands            {settings, &buttons, &serialInput};
+//  SerialInput          serialInput         {};
+//  Commands             commands            {settings, &buttons, &serialInput};
+  Commands             commands            {settings, &buttons};
   Chip_card            chip_card           {mp3};
 
   friend class Base;
