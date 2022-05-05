@@ -2,7 +2,9 @@
 #define SRC_TONUINO_HPP_
 
 #include "settings.hpp"
+#include "commands.hpp"
 #include "buttons.hpp"
+#include "serial_input.hpp"
 #include "mp3.hpp"
 #include "modifier.hpp"
 #include "timer.hpp"
@@ -32,7 +34,7 @@ public:
   void setFolder(folderSettings *newFolder    ) { myFolder = newFolder; }
 
   Mp3&      getMp3      () { return mp3      ; }
-  Buttons&  getButtons  () { return buttons  ; }
+  Commands& getCommands () { return commands ; }
   Settings& getSettings () { return settings ; }
   Chip_card& getChipCard() { return chip_card; }
 
@@ -44,8 +46,11 @@ private:
 
   Settings             settings            {};
   Mp3                  mp3                 {settings};
-  Buttons              buttons             {settings};
-  Chip_card            chip_card           {mp3, buttons};
+  Buttons              buttons             {};
+//  SerialInput          serialInput         {};
+//  Commands             commands            {settings, &buttons, &serialInput};
+  Commands             commands            {settings, &buttons};
+  Chip_card            chip_card           {mp3};
 
   friend class Base;
 

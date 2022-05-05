@@ -13,6 +13,9 @@ Die DIY Musikbox (nicht nur) für Kinder
 - Das Admin Menü kan an jeder Stelle abgrbrochen werden
 - Viele weitere Verbesserungen und Bug Fixes
 
+**Achtung:** es ist jetzt c++17 erforderlich. Wer nicht plattformio verwendet, muss die Datei platform.txt editieren
+`compiler.cpp.flags=-c -g -Os {compiler.warning_flags} -std=gnu++17 -fpermissive ...`
+
 ## Version 2.1 (xx.xx.xxxx) noch WIP
 - Partymodus hat nun eine Queue -> jedes Lied kommt nur genau 1x vorkommt
 - Neue Wiedergabe-Modi "Spezialmodus Von-Bis" - Hörspiel, Album und Party -> erlaubt z.B. verschiedene Alben in einem Ordner zu haben und je mit einer Karte zu verknüpfen

@@ -18,7 +18,7 @@ void SleepTimer::loop() {
   if (sleepTimer.isActive() && sleepTimer.isExpired()) {
     LOG(modifier_log, s_info, str_SleepTimer(), F(" -> SLEEP!"));
     if (SM_tonuino::is_in_state<Play>())
-      SM_tonuino::dispatch(button_e(buttonRaw::pause));
+      SM_tonuino::dispatch(command_e(commandRaw::pause));
     tonuino.resetActiveModifier();
   }
 }
