@@ -1,3 +1,6 @@
+# Achtung
+wird fortgesetzt im Projekt https://github.com/tonuino/TonUINO-TNG
+
 # TonUINO
 Die DIY Musikbox (nicht nur) für Kinder
 
