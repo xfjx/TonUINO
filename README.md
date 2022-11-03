@@ -1,8 +1,24 @@
+# Achtung
+wird fortgesetzt im Projekt https://github.com/tonuino/TonUINO-TNG
+
 # TonUINO
 Die DIY Musikbox (nicht nur) für Kinder
 
 
 # Change Log
+
+## Version 3.0 (xx.xx.xxxx) noch WIP
+- vollständiges Refactoring mit State Machine
+- Die Main-Loop läuft jetzt stabil mit 50 ms
+- Neues Feature: neuer Mode: Hörbuch einzeln (nur ein Titel wird gespielt und Fortschritt gespeichert
+- Neues Feature: Pause, wenn Karte entfernt wird (lässt sich per Einstellungen steuern)
+- Das Admin Menü wir nach einer Einstellung nicht verlassen (kann in der Software leicht geändert werden)
+- Das Admin Menü kann an jeder Stelle abgebrochen werden
+- Außer den Buttons können andere Command Sources hinzugefügt werden (Bsp.: Serial Input)
+- Viele weitere Verbesserungen und Bug Fixes
+
+**Achtung:** es ist jetzt c++17 erforderlich. Wer nicht plattformio verwendet, muss die Datei platform.txt editieren
+`compiler.cpp.flags=-c -g -Os {compiler.warning_flags} -std=gnu++17 -fpermissive ...`
 
 ## Version 2.1 (xx.xx.xxxx) noch WIP
 - Partymodus hat nun eine Queue -> jedes Lied kommt nur genau 1x vorkommt
