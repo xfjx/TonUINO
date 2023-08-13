@@ -1,35 +1,41 @@
-# TonUINO
-Die DIY Musikbox (nicht nur) für Kinder
+# Veraltetes TonUINO Repository (Nicht mehr aktiv)
 
+**Hinweis:** Die Entwicklung dieses Repositories wurde eingestellt, und ich arbeite aus persönlichen Gründen, wie z.B. Zeitmangel, nicht mehr daran. Die Community hat die Weiterentwicklung im neuen Repository übernommen. Bitte besuche das neue Repository für aktuelle Verbesserungen und Updates: [TonUINO-TNG](https://github.com/tonuino/TonUINO-TNG)
 
-# Change Log
+## Neue Entwicklungen
 
-## Version 2.1 (xx.xx.xxxx) noch WIP
-- Partymodus hat nun eine Queue -> jedes Lied kommt nur genau 1x vorkommt
-- Neue Wiedergabe-Modi "Spezialmodus Von-Bis" - Hörspiel, Album und Party -> erlaubt z.B. verschiedene Alben in einem Ordner zu haben und je mit einer Karte zu verknüpfen
-- Admin-Menü
-- Maximale, Minimale und Initiale Lautstärke
-- Karten werden nun über das Admin-Menü neu konfiguriert
-- die Funktion der Lautstärketasten (lauter/leiser oder vor/zurück) kann im Adminmenü vertauscht werden
-- Shortcuts können konfiguriert werden!
-- Support für 5 Knöpfe hinzugefügt
-- Reset der Einstellungen ins Adminmenü verschoben
-- Modikationskarten (Sleeptimer, Tastensperre, Stopptanz, KiTa-Modus)
-- Admin-Menü kann abgesichert werden
+Das neue Repository [TonUINO-TNG](https://github.com/tonuino/TonUINO-TNG) enthält zahlreiche Verbesserungen, Aktualisierungen und neue Funktionen, die von engagierten Mitgliedern der Community entwickelt wurden. Du bist herzlich eingeladen, dich dem neuen Repository anzuschließen, um von den aktuellen Fortschritten zu profitieren.
 
-## Version 2.01 (01.11.2018)
-- kleiner Fix um die Probleme beim Anlernen von Karten zu reduzieren
+## Wie kannst du beitragen?
 
-## Version 2.0 (26.08.2018)
+Falls du Interesse daran hast, zur Weiterentwicklung des TonUINO-Projekts beizutragen, bist du herzlich eingeladen, dich am neuen Repository zu beteiligen. Dort kannst du Pull Requests einreichen, Issues melden, an Diskussionen teilnehmen und gemeinsam mit anderen Enthusiasten an der Zukunft des Projekts arbeiten.
 
-- Lautstärke wird nun über einen langen Tastendruck geändert
-- bei kurzem Tastendruck wird der nächste / vorherige Track abgespielt (je nach Wiedergabemodus nicht verfügbar)
-- Während der Wiedergabe wird bei langem Tastendruck auf Play/Pause die Nummer des aktuellen Tracks angesagt
-- Neuer Wiedergabemodus: **Einzelmodus**
-  Eine Karte kann mit einer einzelnen Datei aus einem Ordner verknüpft werden. Dadurch sind theoretisch 25000 verschiedene Karten für je eine Datei möglich
-- Neuer Wiedergabemodus: **Hörbuch-Modus**
-  Funktioniert genau wie der Album-Modus. Zusätzlich wir der Fortschritt im EEPROM des Arduinos gespeichert und beim nächsten mal wird bei der jeweils letzten Datei neu gestartet. Leider kann nur der Track, nicht die Stelle im Track gespeichert werden
-- Um mehr als 100 Karten zu unterstützen wird die Konfiguration der Karten nicht mehr im EEPROM gespeichert sondern direkt auf den Karten - die Karte muss daher beim Anlernen aufgelegt bleiben!
-- Durch einen langen Druck auf Play/Pause kann **eine Karte neu konfiguriert** werden
-- In den Auswahldialogen kann durch langen Druck auf die Lautstärketasten jeweils um 10 Ordner oder Dateien vor und zurück gesprungen werden
-- Reset des MP3 Moduls beim Start entfernt - war nicht nötig und hat "Krach" gemacht
+## Aktualisierung empfohlen
+
+Um sicherzustellen, dass du von den neuesten Entwicklungen und Verbesserungen profitierst, wird dringend empfohlen, deine Aktivitäten und Beiträge zum TonUINO-Projekt ins neue Repository [TonUINO-TNG](https://github.com/tonuino/TonUINO-TNG) zu verlagern.
+
+Ich danke dir für deine bisherige Unterstützung und freue mich darauf, dich im neuen Repository begrüßen zu dürfen!
+
+*Hinweis: Diese README dient lediglich zu Informationszwecken und wird nicht mehr aktiv aktualisiert.*
+
+---
+
+# Deprecated TonUINO Repository (No longer active)
+
+**Note:** Development on this repository has been discontinued, and I am no longer actively working on it due to personal reasons, such as time constraints. The community has taken over further development in the new repository. Please visit the new repository for the latest improvements and updates: [TonUINO-TNG](https://github.com/tonuino/TonUINO-TNG)
+
+## New Developments
+
+The new repository [TonUINO-TNG](https://github.com/tonuino/TonUINO-TNG) contains numerous enhancements, updates, and new features developed by dedicated community members. You are invited to join the new repository to benefit from the latest advancements.
+
+## How You Can Contribute
+
+If you are interested in contributing to the advancement of the TonUINO project, you are welcome to participate in the new repository. There, you can submit pull requests, report issues, engage in discussions, and collaborate with fellow enthusiasts on shaping the project's future.
+
+## Recommended Update
+
+To ensure that you benefit from the latest developments and improvements, it is strongly recommended to shift your activities and contributions related to the TonUINO project to the new repository [TonUINO-TNG](https://github.com/tonuino/TonUINO-TNG).
+
+I appreciate your past support and look forward to welcoming you to the new repository!
+
+*Note: This README is provided for informational purposes only and will no longer be actively updated.*
