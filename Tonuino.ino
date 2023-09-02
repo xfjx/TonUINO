@@ -484,9 +484,14 @@ bool readCard(nfcTagObject *nfcTag) {
 
   byte buffer[18];
   byte size = sizeof(buffer);
-
-  // Authenticate using key A
-  Serial.println(F("Authenticating using key A..."));
+  
+  //Print key used for authentification
+  Serial.print(F("Authenticating using key: "));
+  for (byte i = 0; i < 6; i++) {
+    Serial.print(key.keyByte[i],HEX);
+    Serial.print(" ");
+  }
+  
   status = (MFRC522::StatusCode)mfrc522.PCD_Authenticate(
       MFRC522::PICC_CMD_MF_AUTH_KEY_A, trailerBlock, &key, &(mfrc522.uid));
   if (status != MFRC522::STATUS_OK) {
