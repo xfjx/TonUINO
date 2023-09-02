@@ -605,7 +605,7 @@ static void previousTrack() {
     else
     {
       Serial.print(F("Anfang der Queue -> springe ans Ende "));
-      currentTrack = numTracksInFolder;
+      currentTrack = numTracksInFolder - firstTrack + 1;
     }
     Serial.println(queue[currentTrack - 1]);
     mp3.playFolderTrack(myFolder->folder, queue[currentTrack - 1]);
