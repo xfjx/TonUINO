@@ -24,6 +24,11 @@ nfcTagObject myCard;
 static void nextTrack(uint16_t track);
 int voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
               bool preview = false, int previewFromFolder = 0);
+void setupCard();
+void resetCard();
+bool readCard(nfcTagObject *nfcTag);
+void writeCard(nfcTagObject nfcTag);
+void dump_byte_array(byte *buffer, byte bufferSize);
 
 bool knownCard = false;
 
