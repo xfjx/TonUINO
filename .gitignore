@@ -29,3 +29,6 @@ Temporary Items
 
 # TonUINO
 /tools/*.pyc
+
+# Eclipse IDE
+.project
