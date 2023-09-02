@@ -20,6 +20,8 @@
 // uncomment the below line to enable five button support
 //#define FIVEBUTTONS
 
+//#define RESETBUTTON
+
 static const uint32_t cardCookie = 322417479;
 
 // DFPlayer Mini
@@ -650,6 +652,10 @@ MFRC522::StatusCode status;
 #define buttonFivePin A4
 #endif
 
+#ifdef RESETBUTTON
+#define buttonReset A5
+#endif
+
 #define LONG_PRESS 1000
 
 Button pauseButton(buttonPause);
@@ -775,13 +781,20 @@ void setup() {
   pinMode(buttonFourPin, INPUT_PULLUP);
   pinMode(buttonFivePin, INPUT_PULLUP);
 #endif
+  #ifdef RESETBUTTON
+   pinMode(buttonReset, INPUT_PULLUP);
+  #endif
   pinMode(shutdownPin, OUTPUT);
   digitalWrite(shutdownPin, LOW);
 
 
   // RESET --- ALLE DREI KNÖPFE BEIM STARTEN GEDRÜCKT HALTEN -> alle EINSTELLUNGEN werden gelöscht
+   #ifndef RESETBUTTON
   if (digitalRead(buttonPause) == LOW && digitalRead(buttonUp) == LOW &&
       digitalRead(buttonDown) == LOW) {
+     #else
+     if (digitalRead(buttonReset) == LOW) {
+     #endif
     Serial.println(F("Reset -> EEPROM wird gelöscht"));
     for (int i = 0; i < EEPROM.length(); i++) {
       EEPROM.update(i, 0);
