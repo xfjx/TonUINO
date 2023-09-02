@@ -458,10 +458,10 @@ class RepeatSingleModifier: public Modifier {
       Serial.println(F("== RepeatSingleModifier::handleNext() -> REPEAT CURRENT TRACK"));
       delay(50);
       if (isPlaying()) return true;
-      if (myFolder->mode == 3 || myFolder->mode == 9){
+      if (myFolder->mode == 3 || myFolder->mode == 9) {
         mp3.playFolderTrack(myFolder->folder, queue[currentTrack - 1]);
       }
-      else{
+      else {
         mp3.playFolderTrack(myFolder->folder, currentTrack);
       }
       _lastTrackFinished = 0;
@@ -1289,10 +1289,12 @@ void adminMenu(bool fromCard = false) {
     // Invert Functions for Up/Down Buttons
     int temp = voiceMenu(2, 933, 933, false);
     if (temp == 2) {
-      mySettings.invertVolumeButtons = true;
-    }
-    else {
-      mySettings.invertVolumeButtons = false;
+      if (mySettings.invertVolumeButtons == false) {
+        mySettings.invertVolumeButtons = true;
+      }
+      else {
+        mySettings.invertVolumeButtons = false;
+      }
     }
   }
   else if (subMenu == 11) {
