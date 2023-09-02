@@ -5,6 +5,9 @@
 #include <SPI.h>
 #include <SoftwareSerial.h>
 #include <avr/sleep.h>
+#include <ClickEncoder.h>
+#include <TimerOne.h>
+#include <RTClib.h>
 
 /*
    _____         _____ _____ _____ _____
@@ -18,9 +21,24 @@
 */
 
 // uncomment the below line to enable five button support
-//#define FIVEBUTTONS
+#define FIVEBUTTONS
+
+// uncomment the below line to enable the real time clock mode
+//#define RTC
+//#define RTC_SETUP
+// uncomment the below line to enable the rotary encoder mode for volume control
+//#define ROTARY
 
 static const uint32_t cardCookie = 322417479;
+#ifdef RTC
+RTC_DS3231 rtc;
+uint8_t advent[25] = {01, 04, 07, 10, 13, 16, 19, 23, 26, 29, 32, 34, 38, 41, 44, 47, 51, 54, 57, 61, 65, 68, 72, 75, 79};
+#endif
+
+//#ifdef ROTARY // BB
+//Encoder enc(5, 6); // BB
+//long endOldPos  = -999; // BB
+//#endif // BB
 
 // DFPlayer Mini
 SoftwareSerial mySoftwareSerial(2, 3); // RX, TX
@@ -63,6 +81,11 @@ struct adminSettings {
   uint8_t adminMenuLocked;
   uint8_t adminMenuPin[4];
 };
+
+#ifdef ROTARY
+int16_t encOldPos ;
+int16_t encPos = 15;
+#endif
 
 adminSettings mySettings;
 nfcTagObject myCard;
@@ -307,7 +330,7 @@ class FreezeDance: public Modifier {
       if (this->nextStopAtMillis != 0 && millis() > this->nextStopAtMillis) {
         Serial.println(F("== FreezeDance::loop() -> FREEZE!"));
         if (isPlaying()) {
-          mp3.playAdvertisement(301);
+          mp3.playAdvertisement(306); // customized; previous value '301'
           delay(500);
         }
         setNextStopAtMillis();
@@ -534,12 +557,12 @@ static void nextTrack(uint16_t track) {
     setstandbyTimer();
     //    mp3.sleep(); // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
   }
-  if (myFolder->mode == 2 || myFolder->mode == 8) {
+  if (myFolder->mode == 2 || myFolder->mode == 8 || myFolder->mode == 10) {
     if (currentTrack != numTracksInFolder) {
       currentTrack = currentTrack + 1;
       mp3.playFolderTrack(myFolder->folder, currentTrack);
       Serial.print(F("Albummodus ist aktiv -> nächster Track: "));
-      Serial.print(currentTrack);
+      Serial.println(currentTrack);
     } else
       //      mp3.sleep();   // Je nach Modul kommt es nicht mehr zurück aus dem Sleep!
       setstandbyTimer();
@@ -590,7 +613,7 @@ static void previousTrack() {
       Serial.println(F("Hörspielmodus ist aktiv -> Track von vorne spielen"));
       mp3.playFolderTrack(myCard.folder, currentTrack);
     }*/
-  if (myFolder->mode == 2 || myFolder->mode == 8) {
+  if (myFolder->mode == 2 || myFolder->mode == 8 || myFolder->mode == 10) {
     Serial.println(F("Albummodus ist aktiv -> vorheriger Track"));
     if (currentTrack != firstTrack) {
       currentTrack = currentTrack - 1;
@@ -638,18 +661,28 @@ byte blockAddr = 4;
 byte trailerBlock = 7;
 MFRC522::StatusCode status;
 
-#define buttonPause A0
-#define buttonUp A1
-#define buttonDown A2
+// Buttons Piratenbox (mit Rotary): Play/Pause: A5 (Rotary Switch), Vol. Up: A0, Vol. Down: A1, Four: A3, Five: 8
+// Buttons weiße Box (5 Knoepfe): Play/Pause: A5 (Rotary Switch), Vol. Up: A1, Vol. Down: A0, Four: A3, Five: 8
+#define buttonPause A0 // BB - Normaler Switch (kein Rotary Encoder)
+//#define buttonPause A5 // BB - Switch des Rotary Encoders
+#define buttonUp A1 // BB - vorher A1
+#define buttonDown A2 // BB - vorher A2
 #define busyPin 4
 #define shutdownPin 7
 #define openAnalogPin A7
 
 #ifdef FIVEBUTTONS
 #define buttonFourPin A3
-#define buttonFivePin A4
+#define buttonFivePin 8 // BB - vorher A4
 #endif
 
+#ifdef ROTARY
+#define encPinA 6
+#define encPinB 5
+//#define encPinSw A5 // Switch
+#define encSteps 4
+#endif
+       
 #define LONG_PRESS 1000
 
 Button pauseButton(buttonPause);
@@ -665,6 +698,11 @@ bool ignoreDownButton = false;
 #ifdef FIVEBUTTONS
 bool ignoreButtonFour = false;
 bool ignoreButtonFive = false;
+#endif
+
+#ifdef ROTARY
+ClickEncoder encoder(encPinA, encPinB, encSteps);
+//ClickEncoder encoder(encPinA, encPinB, encPinSw, encSteps);
 #endif
 
 /// Funktionen für den Standby Timer (z.B. über Pololu-Switch oder Mosfet)
@@ -740,6 +778,12 @@ void setup() {
   Serial.println(F("created by Thorsten Voß and licensed under GNU/GPL."));
   Serial.println(F("Information and contribution at https://tonuino.de.\n"));
 
+  // Rotary encoder initialisieren
+  #ifdef ROTARY
+  Timer1.initialize(1000);
+  Timer1.attachInterrupt(timerIsr);
+  encoder.setAccelerationEnabled(false);
+  #endif
   // Busy Pin
   pinMode(busyPin, INPUT);
 
@@ -768,6 +812,29 @@ void setup() {
     key.keyByte[i] = 0xFF;
   }
 
+  // Real time clock initialisieren
+  #ifdef RTC
+  if (! rtc.begin()) {
+    Serial.println("Couldn't find RTC");
+  } else {
+    DateTime now = rtc.now();
+    Serial.print("RTC current DateTime: ");
+    Serial.println(now.toString("DD.MM.YYYY hh:mm:ss"));
+    Serial.print("RTC temperature: ");
+    Serial.println(rtc.getTemperature ()); 
+  }
+  if (rtc.lostPower()) {
+    Serial.println("RTC lost power! Set new date and time.");
+    #ifdef RTC_SETUP
+    // following line sets the RTC to the date & time this sketch was compiled
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+    // This line sets the RTC with an explicit date & time, for example to set
+    // January 21, 2014 at 3am you would call:
+    // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
+    #endif
+  }
+  #endif
+
   pinMode(buttonPause, INPUT_PULLUP);
   pinMode(buttonUp, INPUT_PULLUP);
   pinMode(buttonDown, INPUT_PULLUP);
@@ -789,6 +856,9 @@ void setup() {
     loadSettingsFromFlash();
   }
 
+  // BB LED
+  // pinMode(8, OUTPUT);
+  // digitalWrite(8, HIGH);
 
   // Start Shortcut "at Startup" - e.g. Welcome Sound
   playShortCut(3);
@@ -803,7 +873,7 @@ void readButtons() {
   buttonFive.read();
 #endif
 }
-
+   
 void volumeUpButton() {
   if (activeModifier != NULL)
     if (activeModifier->handleVolumeUp() == true)
@@ -829,6 +899,51 @@ void volumeDownButton() {
   }
   Serial.println(volume);
 }
+
+#ifdef ROTARY
+// Volume and switch control for rotary encoder
+void readRotaryEncoder() {
+  // get encoder value and set volume
+  encPos += encoder.getValue();
+  if (encPos != encOldPos) {
+    encOldPos = encPos;
+    if (encPos > mySettings.maxVolume) {
+      volume = mySettings.maxVolume;
+      encPos = mySettings.maxVolume;
+    }
+    else if (encPos < mySettings.minVolume) {
+      volume = mySettings.minVolume;
+      encPos = mySettings.minVolume;
+    }
+    else {
+      volume = encPos;
+    }
+    mp3.setVolume(volume);
+    Serial.println(volume);
+  }
+//  // get encoder button state
+//  uint8_t encButtonState = encoder.getButton();
+//  if (encButtonState != 0) {
+//    Serial.print("Button: "); Serial.println(encButtonState);
+//    switch (encButtonState) {
+//      case ClickEncoder::Open:          //0
+//        break;
+//      case ClickEncoder::Closed:        //1
+//        break;
+//      case ClickEncoder::Pressed:       //2
+//        break;
+//      case ClickEncoder::Held:          //3
+//        break;
+//      case ClickEncoder::Released:      //4
+//        break;
+//      case ClickEncoder::Clicked:       //5
+//        break;
+//      case ClickEncoder::DoubleClicked: //6
+//        break;
+//    }
+//  }
+}
+#endif
 
 void nextButton() {
   if (activeModifier != NULL)
@@ -930,6 +1045,32 @@ void playFolder() {
     currentTrack = 1;
     mp3.playFolderTrack(myFolder->folder, queue[currentTrack - 1]);
   }
+  
+  // Spezialmodus RTC: Spiele Datei auf Basis des aktuellen Datums
+  #ifdef RTC
+  if (myFolder->mode == 10) {
+    Serial.println(
+      F("Spezialmodus RTC: Spiele Datei auf Basis des aktuellen Datums"));
+    DateTime now = rtc.now();
+    //now = DateTime(2019, 12, 28, 0, 0, 0); // BB Debugvariable
+    if (now.day() <= 24) {
+      currentTrack = advent[now.day()-1];
+      numTracksInFolder = advent[now.day()]-1;
+    } else {
+      if (now.month() == 12) {
+        currentTrack = 1;
+      } else {
+        currentTrack = advent[25];
+        numTracksInFolder = 0;
+      }
+    }
+    Serial.print("currentTrack: ");
+    Serial.print(currentTrack);
+    Serial.print(" - numTracksInFolder: ");
+    Serial.println(numTracksInFolder);
+    mp3.playFolderTrack(myFolder->folder, currentTrack);
+  }
+  #endif
 }
 
 void playShortCut(uint8_t shortCut) {
@@ -946,7 +1087,7 @@ void playShortCut(uint8_t shortCut) {
 }
 
 void loop() {
-  do {
+  do {                                                                                    
     checkStandbyAtMillis();
     mp3.loop();
 
@@ -955,6 +1096,11 @@ void loop() {
       activeModifier->loop();
     }
 
+    #ifdef ROTARY
+    // Read Rotary Encoder
+    readRotaryEncoder();
+    #endif ROTARY
+    
     // Buttons werden nun über JS_Button gehandelt, dadurch kann jede Taste
     // doppelt belegt werden
     readButtons();
@@ -1253,10 +1399,10 @@ void adminMenu(bool fromCard = false) {
     tempCard.version = 1;
     tempCard.nfcFolderSettings.mode = 4;
     tempCard.nfcFolderSettings.folder = voiceMenu(99, 301, 0, true);
-    uint8_t special = voiceMenu(mp3.getFolderTrackCount(tempCard.nfcFolderSettings.folder), 321, 0,
-                                true, tempCard.nfcFolderSettings.folder);
-    uint8_t special2 = voiceMenu(mp3.getFolderTrackCount(tempCard.nfcFolderSettings.folder), 322, 0,
-                                 true, tempCard.nfcFolderSettings.folder, special);
+    uint8_t special = voiceMenu(mp3.getFolderTrackCount(tempCard.nfcFolderSettings.folder), 322, 0,
+                                true, tempCard.nfcFolderSettings.folder); // BB
+    uint8_t special2 = voiceMenu(mp3.getFolderTrackCount(tempCard.nfcFolderSettings.folder), 323, 0,
+                                 true, tempCard.nfcFolderSettings.folder, special); // BB
 
     mp3.playMp3FolderTrack(936);
     waitForTrackToFinish();
@@ -1473,7 +1619,7 @@ bool setupFolder(folderSettings * theFolder) {
   if (theFolder->folder == 0) return false;
 
   // Wiedergabemodus abfragen
-  theFolder->mode = voiceMenu(9, 310, 310, false, 0, 0, true);
+  theFolder->mode = voiceMenu(10, 310, 310, false, 0, 0, true);
   if (theFolder->mode == 0) return false;
 
   //  // Hörbuchmodus -> Fortschritt im EEPROM auf 1 setzen
@@ -1481,8 +1627,8 @@ bool setupFolder(folderSettings * theFolder) {
 
   // Einzelmodus -> Datei abfragen
   if (theFolder->mode == 4)
-    theFolder->special = voiceMenu(mp3.getFolderTrackCount(theFolder->folder), 320, 0,
-                                   true, theFolder->folder);
+    theFolder->special = voiceMenu(mp3.getFolderTrackCount(theFolder->folder), 321, 0,
+                                   true, theFolder->folder); // BB
   // Admin Funktionen
   if (theFolder->mode == 6) {
     //theFolder->special = voiceMenu(3, 320, 320);
@@ -1491,10 +1637,10 @@ bool setupFolder(folderSettings * theFolder) {
   }
   // Spezialmodus Von-Bis
   if (theFolder->mode == 7 || theFolder->mode == 8 || theFolder->mode == 9) {
-    theFolder->special = voiceMenu(mp3.getFolderTrackCount(theFolder->folder), 321, 0,
-                                   true, theFolder->folder);
-    theFolder->special2 = voiceMenu(mp3.getFolderTrackCount(theFolder->folder), 322, 0,
-                                    true, theFolder->folder, theFolder->special);
+    theFolder->special = voiceMenu(mp3.getFolderTrackCount(theFolder->folder), 322, 0,
+                                   true, theFolder->folder); // BB
+    theFolder->special2 = voiceMenu(mp3.getFolderTrackCount(theFolder->folder), 323, 0,
+                                    true, theFolder->folder, theFolder->special); // BB
   }
   return true;
 }
@@ -1805,3 +1951,9 @@ bool checkTwo ( uint8_t a[], uint8_t b[] ) {
   }
   return true;
 }
+
+#ifdef ROTARY
+void timerIsr() {
+  encoder.service();
+}
+#endif
