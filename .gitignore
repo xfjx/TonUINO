@@ -29,3 +29,13 @@ Temporary Items
 
 # TonUINO
 /tools/*.pyc
+
+# PlatformIO folders and files
+.pio
+.vscode
+include
+lib
+src
+test
+platformio.ini
+Tonuino.ino.cpp
