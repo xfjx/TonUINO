@@ -68,6 +68,7 @@ adminSettings mySettings;
 nfcTagObject myCard;
 folderSettings *myFolder;
 unsigned long sleepAtMillis = 0;
+unsigned long toggleLoadAtMillis = 0;
 static uint16_t _lastTrackFinished;
 
 static void nextTrack(uint16_t track);
@@ -79,6 +80,7 @@ void writeCard(nfcTagObject nfcTag);
 void dump_byte_array(byte * buffer, byte bufferSize);
 void adminMenu(bool fromCard = false);
 bool knownCard = false;
+void disableLoadTimer();
 
 // implement a notification class,
 // its member methods will get called
@@ -643,6 +645,7 @@ MFRC522::StatusCode status;
 #define buttonDown A2
 #define busyPin 4
 #define shutdownPin 7
+#define loadPin 6
 #define openAnalogPin A7
 
 #ifdef FIVEBUTTONS
@@ -651,6 +654,10 @@ MFRC522::StatusCode status;
 #endif
 
 #define LONG_PRESS 1000
+
+// Set both to 0 to disable, set only LOAD_OFF to 0 for permanent ON
+#define LOAD_ON 150
+#define LOAD_OFF 4800
 
 Button pauseButton(buttonPause);
 Button upButton(buttonUp);
@@ -688,6 +695,7 @@ void checkStandbyAtMillis() {
     Serial.println(F("=== power off!"));
     // enter sleep state
     digitalWrite(shutdownPin, HIGH);
+    disableLoadTimer();
     delay(500);
 
     // http://discourse.voss.earth/t/intenso-s10000-powerbank-automatische-abschaltung-software-only/805
@@ -699,6 +707,36 @@ void checkStandbyAtMillis() {
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);
     cli();  // Disable interrupts
     sleep_mode();
+  }
+}
+
+void setLoadTimer() {
+  Serial.println(F("=== setLoadTimer()"));
+  if (LOAD_ON > 0 && LOAD_OFF > 0) {
+      toggleLoadAtMillis = millis() + LOAD_ON;
+  }
+  if (LOAD_ON > 0) {
+      digitalWrite(loadPin, HIGH);
+  }
+  Serial.println(toggleLoadAtMillis);
+}
+
+void disableLoadTimer() {
+  Serial.println(F("=== disableLoadTimer()"));
+  toggleLoadAtMillis = 0;
+  digitalWrite(loadPin, LOW);
+}
+
+void checkLoadTimer() {
+  if (toggleLoadAtMillis != 0 && millis() > toggleLoadAtMillis) {
+      if (digitalRead(loadPin) == HIGH) {
+	  toggleLoadAtMillis = millis() + LOAD_OFF;
+	  digitalWrite(loadPin, LOW);
+      }
+      else {
+	  toggleLoadAtMillis = millis() + LOAD_ON;
+	  digitalWrite(loadPin, HIGH);
+      }
   }
 }
 
@@ -778,6 +816,9 @@ void setup() {
   pinMode(shutdownPin, OUTPUT);
   digitalWrite(shutdownPin, LOW);
 
+  // Start load timer
+  pinMode(loadPin, OUTPUT);
+  setLoadTimer();
 
   // RESET --- ALLE DREI KNÖPFE BEIM STARTEN GEDRÜCKT HALTEN -> alle EINSTELLUNGEN werden gelöscht
   if (digitalRead(buttonPause) == LOW && digitalRead(buttonUp) == LOW &&
@@ -948,6 +989,7 @@ void playShortCut(uint8_t shortCut) {
 void loop() {
   do {
     checkStandbyAtMillis();
+    checkLoadTimer();
     mp3.loop();
 
     // Modifier : WIP!
