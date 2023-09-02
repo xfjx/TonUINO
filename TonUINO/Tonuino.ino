@@ -219,7 +219,7 @@ void setup() {
   if (digitalRead(buttonPause) == LOW && digitalRead(buttonUp) == LOW &&
       digitalRead(buttonDown) == LOW) {
     Serial.println(F("Reset -> EEPROM wird gelöscht"));
-    for (int i = 0; i < EEPROM.length(); i++) {
+    for (unsigned int i = 0; i < EEPROM.length(); i++) {
       EEPROM.write(i, 0);
     }
   }
@@ -344,7 +344,7 @@ void loop() {
 }
 
 int voiceMenu(int numberOfOptions, int startMessage, int messageOffset,
-              bool preview = false, int previewFromFolder = 0) {
+              bool preview, int previewFromFolder) {
   int returnValue = 0;
   if (startMessage != 0)
     mp3.playMp3FolderTrack(startMessage);
@@ -493,7 +493,7 @@ bool readCard(nfcTagObject *nfcTag) {
     returnValue = false;
     Serial.print(F("PCD_Authenticate() failed: "));
     Serial.println(mfrc522.GetStatusCodeName(status));
-    return;
+    return returnValue;
   }
 
   // Show the whole sector as it currently is
@@ -534,7 +534,6 @@ bool readCard(nfcTagObject *nfcTag) {
 }
 
 void writeCard(nfcTagObject nfcTag) {
-  MFRC522::PICC_Type mifareType;
   byte buffer[16] = {0x13, 0x37, 0xb3, 0x47, // 0x1337 0xb347 magic cookie to
                                              // identify our nfc tags
                      0x01,                   // version 1
@@ -542,10 +541,6 @@ void writeCard(nfcTagObject nfcTag) {
                      nfcTag.mode,    // the playback mode picked by the user
                      nfcTag.special, // track or function for admin cards
                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-
-  byte size = sizeof(buffer);
-
-  mifareType = mfrc522.PICC_GetType(mfrc522.uid.sak);
 
   // Authenticate using key B
   Serial.println(F("Authenticating again using key B..."));
